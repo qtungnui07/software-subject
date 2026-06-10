@@ -1,0 +1,78 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1254" height="1254" viewBox="0 0 1254 1254" role="img" aria-label="Cute green dinosaur mascot face icon">
+  <defs>
+    <radialGradient id="bg" cx="50%" cy="45%" r="70%">
+      <stop offset="0%" stop-color="#57d315"/>
+      <stop offset="100%" stop-color="#33b900"/>
+    </radialGradient>
+    <radialGradient id="face" cx="50%" cy="38%" r="72%">
+      <stop offset="0%" stop-color="#9af01f"/>
+      <stop offset="100%" stop-color="#68cf13"/>
+    </radialGradient>
+    <linearGradient id="snout" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#ffd323"/>
+      <stop offset="100%" stop-color="#ffb400"/>
+    </linearGradient>
+    <linearGradient id="eye" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#ffffff"/>
+      <stop offset="100%" stop-color="#f6f6f6"/>
+    </linearGradient>
+    <linearGradient id="pupil" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#3e3e3e"/>
+      <stop offset="100%" stop-color="#282828"/>
+    </linearGradient>
+
+    <clipPath id="rounded-corners">
+      <rect x="0" y="0" width="1254" height="1254" rx="180" ry="180"/>
+    </clipPath>
+  </defs>
+
+  <g clip-path="url(#rounded-corners)">
+    <rect width="1254" height="1254" fill="url(#bg)"/>
+
+    <!-- Back dinosaur crests -->
+    <ellipse cx="627" cy="259" rx="117" ry="183" fill="#259c08" opacity="0.92"/>
+    <ellipse cx="374" cy="331" rx="89" ry="153" fill="#2fa70a" opacity="0.9" transform="rotate(-18 374 331)"/>
+    <ellipse cx="880" cy="331" rx="89" ry="153" fill="#2fa70a" opacity="0.9" transform="rotate(18 880 331)"/>
+
+    <!-- Head -->
+    <path fill="url(#face)" d="
+      M58 780
+      C58 522 245 325 449 355
+      C490 292 554 258 627 258
+      C700 258 764 292 805 355
+      C1009 325 1196 522 1196 780
+      L1196 780
+      C1243 831 1264 891 1253 957
+      C1231 1087 1109 1186 948 1214
+      C841 1233 737 1240 627 1240
+      C517 1240 413 1233 306 1214
+      C145 1186 23 1087 1 957
+      C-10 891 11 831 58 780
+      Z"/>
+
+    <!-- Cheek spots -->
+    <ellipse cx="84" cy="889" rx="43" ry="34" fill="#3db706" opacity="0.72" transform="rotate(-43 84 889)"/>
+    <ellipse cx="108" cy="977" rx="32" ry="25" fill="#3db706" opacity="0.72" transform="rotate(-66 108 977)"/>
+    <ellipse cx="1170" cy="889" rx="43" ry="34" fill="#3db706" opacity="0.72" transform="rotate(43 1170 889)"/>
+    <ellipse cx="1146" cy="977" rx="32" ry="25" fill="#3db706" opacity="0.72" transform="rotate(66 1146 977)"/>
+
+    <!-- Eyes -->
+    <ellipse cx="330" cy="716" rx="167" ry="227" fill="url(#eye)"/>
+    <ellipse cx="924" cy="716" rx="167" ry="227" fill="url(#eye)"/>
+
+    <!-- Pupils with crescent cutouts -->
+    <path fill="url(#pupil)" d="M264 681 C264 626 302 581 353 581 C404 581 442 626 442 681 L442 766 C442 818 405 852 353 852 C301 852 264 818 264 766 Z"/>
+    <circle cx="288" cy="619" r="62" fill="url(#eye)"/>
+
+    <path fill="url(#pupil)" d="M812 681 C812 626 850 581 901 581 C952 581 990 626 990 681 L990 766 C990 818 953 852 901 852 C849 852 812 818 812 766 Z"/>
+    <circle cx="836" cy="619" r="62" fill="url(#eye)"/>
+
+    <!-- Snout -->
+    <path fill="url(#snout)" d="M397 1118 C401 988 494 872 627 872 C760 872 853 988 857 1118 C793 1146 713 1160 627 1160 C541 1160 461 1146 397 1118 Z"/>
+    <ellipse cx="542" cy="1007" rx="25" ry="44" fill="#f58200" opacity="0.92"/>
+    <ellipse cx="712" cy="1007" rx="25" ry="44" fill="#f58200" opacity="0.92"/>
+
+    <!-- Smile -->
+    <path d="M297 1055 C345 1172 909 1172 957 1055" fill="none" stroke="#3ca803" stroke-width="36" stroke-linecap="round"/>
+  </g>
+</svg>
