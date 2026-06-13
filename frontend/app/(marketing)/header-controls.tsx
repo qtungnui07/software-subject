@@ -182,7 +182,7 @@ export const LanguageDropdown = () => {
   const [selectedLanguage, setSelectedLanguage] = useState(languages[0]);
 
   useEffect(() => {
-    const savedLanguage = localStorage.getItem("dinogo-locale") ?? "vi";
+    const savedLanguage = localStorage.getItem("robogo-locale") ?? "vi";
     const matchedLanguage =
       languages.find((language) => language.code === savedLanguage) ??
       languages[0];
@@ -213,10 +213,10 @@ export const LanguageDropdown = () => {
     setSelectedLanguage(language);
     setIsOpen(false);
 
-    localStorage.setItem("dinogo-locale", language.code);
+    localStorage.setItem("robogo-locale", language.code);
     document.documentElement.lang = language.code;
     document.documentElement.dataset.locale = language.code;
-    document.cookie = `dinogo_locale=${language.code}; path=/; max-age=31536000`;
+    document.cookie = `robogo_locale=${language.code}; path=/; max-age=31536000`;
   };
 
   return (
@@ -282,7 +282,7 @@ export const ThemeToggle = () => {
   const [theme, setTheme] = useState<Theme>("light");
 
   useEffect(() => {
-    const savedTheme = localStorage.getItem("dinogo-theme") as Theme | null;
+    const savedTheme = localStorage.getItem("robogo-theme") as Theme | null;
     const prefersDark = window.matchMedia("(prefers-color-scheme: dark)").matches;
     const initialTheme: Theme = savedTheme ?? (prefersDark ? "dark" : "light");
 
@@ -295,7 +295,7 @@ export const ThemeToggle = () => {
     const nextTheme: Theme = theme === "dark" ? "light" : "dark";
 
     setTheme(nextTheme);
-    localStorage.setItem("dinogo-theme", nextTheme);
+    localStorage.setItem("robogo-theme", nextTheme);
     document.documentElement.classList.toggle("dark", nextTheme === "dark");
     document.documentElement.dataset.theme = nextTheme;
   };

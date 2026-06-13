@@ -84,7 +84,7 @@ export const Footer = () => {
       </div>
 
       <div className="mx-auto mt-10 flex max-w-[1500px] flex-col gap-4 border-t border-slate-200 pt-6 text-sm font-bold text-slate-400 dark:border-slate-800 md:flex-row md:items-center md:justify-between">
-        <p>© 2026 Dinogo. Marketing page demo.</p>
+        <p>© 2026 Robogo. Marketing page demo.</p>
         <div className="flex items-center gap-2">
           <Languages className="h-4 w-4" />
           <span>Tiếng Việt · English · 日本語 · 한국어</span>

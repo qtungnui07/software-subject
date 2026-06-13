@@ -1,10 +1,14 @@
 import { neon } from "@neondatabase/serverless";
 
-if (!process.env.DATABASE_URL) {
-  throw new Error("DATABASE_URL environment variable is not set");
-}
+const databaseUrl = process.env.DATABASE_URL;
 
-export const sql = neon(process.env.DATABASE_URL);
+export const sql = databaseUrl
+  ? neon(databaseUrl)
+  : ((async () => {
+      throw new Error(
+        "DATABASE_URL environment variable is not set. Add it before using database features."
+      );
+    }) as ReturnType<typeof neon>);
 
 export type User = {
   id: string;

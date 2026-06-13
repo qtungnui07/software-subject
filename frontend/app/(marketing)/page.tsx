@@ -387,33 +387,33 @@ export default function Home() {
           to { transform: rotate(360deg); }
         }
 
-        .dinogo-hero-shell {
+        .robogo-hero-shell {
           animation: heroShellGlow 6s ease-in-out infinite;
           will-change: transform, box-shadow;
         }
 
-        .dinogo-hero-art {
+        .robogo-hero-art {
           animation: heroArtFloat 6.2s cubic-bezier(.45,0,.25,1) infinite;
           transform-origin: center;
           will-change: transform;
         }
 
-        .dinogo-float-card-a {
+        .robogo-float-card-a {
           animation: floatCardA 4.4s ease-in-out infinite;
           will-change: transform;
         }
 
-        .dinogo-float-card-b {
+        .robogo-float-card-b {
           animation: floatCardB 4.8s ease-in-out infinite;
           will-change: transform;
         }
 
-        .dinogo-float-card-c {
+        .robogo-float-card-c {
           animation: floatCardC 5.2s ease-in-out infinite;
           will-change: transform;
         }
 
-        .dinogo-orbit-ring::before {
+        .robogo-orbit-ring::before {
           content: "";
           position: absolute;
           inset: 12%;
@@ -422,122 +422,122 @@ export default function Home() {
           animation: slowSpin 22s linear infinite;
         }
 
-        .dinogo-metric-pop {
+        .robogo-metric-pop {
           animation: popMetric 720ms cubic-bezier(.2,1.2,.3,1) both, metricLivePulse 4.8s ease-in-out 1.1s infinite;
           will-change: transform, opacity, box-shadow;
         }
 
-        .dinogo-marquee-track {
+        .robogo-marquee-track {
           animation: marquee 22s linear infinite;
           will-change: transform;
         }
 
-        .dinogo-marquee-track:hover {
+        .robogo-marquee-track:hover {
           animation-play-state: paused;
         }
 
-        .dinogo-language-pill {
+        .robogo-language-pill {
           animation: pillBounce 4.2s ease-in-out infinite;
           will-change: transform;
         }
 
-        .dinogo-reveal-card {
+        .robogo-reveal-card {
           animation: cardRise .75s cubic-bezier(.22,1,.36,1) both, cardHoverBreath 5.2s ease-in-out 1.2s infinite;
           will-change: transform, opacity, box-shadow;
         }
 
-        .dinogo-card-shine {
+        .robogo-card-shine {
           animation: shineSweep 6.6s ease-in-out infinite;
           will-change: transform, opacity;
         }
 
-        .dinogo-streak-line {
+        .robogo-streak-line {
           transform-origin: left center;
           animation: streakRail 3.8s cubic-bezier(.22,1,.36,1) infinite;
           will-change: transform, opacity;
         }
 
-        .dinogo-dot-travel {
+        .robogo-dot-travel {
           animation: streakDotLoop 3.8s cubic-bezier(.4,0,.2,1) infinite;
           will-change: transform, opacity;
         }
 
-        .dinogo-streak-card {
+        .robogo-streak-card {
           animation: streakCardLoop 5.8s cubic-bezier(.22,1,.36,1) infinite;
           will-change: transform, opacity;
         }
 
-        .dinogo-streak-progress {
+        .robogo-streak-progress {
           transform-origin: left center;
           animation: streakFillLoop 5.8s cubic-bezier(.22,1,.36,1) infinite;
           will-change: transform, filter;
         }
 
-        .dinogo-icon-pop {
+        .robogo-icon-pop {
           animation: iconPop 3s ease-in-out infinite;
           will-change: transform;
         }
 
-        .dinogo-dashboard-card {
+        .robogo-dashboard-card {
           animation: dashboardBreath 6.2s ease-in-out infinite;
           will-change: transform, box-shadow;
         }
 
-        .dinogo-chart-bar {
+        .robogo-chart-bar {
           transform-origin: bottom;
           animation: chartGrowLoop 5.6s cubic-bezier(.22,1,.36,1) infinite;
           will-change: transform, filter, opacity;
         }
 
-        .dinogo-chart-spark {
+        .robogo-chart-spark {
           animation: chartSpark 3.2s ease-in-out infinite;
           will-change: transform, opacity;
         }
 
-        .dinogo-final-cta {
+        .robogo-final-cta {
           animation: finalGlow 4.8s ease-in-out infinite;
           will-change: box-shadow;
         }
 
-        .dinogo-shine {
+        .robogo-shine {
           animation: shineSweep 4.6s ease-in-out infinite;
           will-change: transform, opacity;
         }
 
         @media (max-width: 768px) {
-          .dinogo-marquee-track {
+          .robogo-marquee-track {
             animation-duration: 28s;
           }
 
-          .dinogo-hero-art {
+          .robogo-hero-art {
             animation-duration: 7s;
           }
 
-          .dinogo-streak-card,
-          .dinogo-chart-bar,
-          .dinogo-dashboard-card {
+          .robogo-streak-card,
+          .robogo-chart-bar,
+          .robogo-dashboard-card {
             animation-duration: 6.8s;
           }
         }
 
         @media (prefers-reduced-motion: reduce) {
-          .dinogo-marquee-track,
-          .dinogo-hero-art,
-          .dinogo-float-card-a,
-          .dinogo-float-card-b,
-          .dinogo-float-card-c,
-          .dinogo-streak-card,
-          .dinogo-streak-progress,
-          .dinogo-chart-bar,
-          .dinogo-dashboard-card,
-          .dinogo-final-cta {
+          .robogo-marquee-track,
+          .robogo-hero-art,
+          .robogo-float-card-a,
+          .robogo-float-card-b,
+          .robogo-float-card-c,
+          .robogo-streak-card,
+          .robogo-streak-progress,
+          .robogo-chart-bar,
+          .robogo-dashboard-card,
+          .robogo-final-cta {
             animation-duration: 14s !important;
           }
 
-          .dinogo-card-shine,
-          .dinogo-shine,
-          .dinogo-chart-spark,
-          .dinogo-dot-travel {
+          .robogo-card-shine,
+          .robogo-shine,
+          .robogo-chart-spark,
+          .robogo-dot-travel {
             animation: none !important;
           }
         }
@@ -547,10 +547,10 @@ export default function Home() {
         <div className="pointer-events-none absolute left-0 top-20 h-64 w-64 rounded-full bg-sky-200/35 blur-3xl dark:bg-sky-500/10" />
         <div className="pointer-events-none absolute bottom-12 right-10 h-72 w-72 rounded-full bg-blue-300/25 blur-3xl dark:bg-blue-500/10" />
 
-        <div className="mx-auto grid max-w-[1500px] items-center gap-10 rounded-[2.2rem] border border-sky-100/70 bg-white/75 p-5 shadow-[0_28px_90px_rgba(15,23,42,0.08)] backdrop-blur dinogo-hero-shell md:p-10 lg:grid-cols-[0.95fr_1.05fr] lg:gap-14 lg:p-14 dark:border-slate-800 dark:bg-slate-900/60">
+        <div className="mx-auto grid max-w-[1500px] items-center gap-10 rounded-[2.2rem] border border-sky-100/70 bg-white/75 p-5 shadow-[0_28px_90px_rgba(15,23,42,0.08)] backdrop-blur robogo-hero-shell md:p-10 lg:grid-cols-[0.95fr_1.05fr] lg:gap-14 lg:p-14 dark:border-slate-800 dark:bg-slate-900/60">
           <div className="relative order-2 mx-auto flex min-h-[360px] w-full max-w-[650px] items-center justify-center sm:min-h-[460px] lg:order-1 lg:min-h-[540px]">
-            <div className="absolute inset-3 rounded-[2.5rem] bg-gradient-to-br dinogo-orbit-ring from-sky-100 via-white to-blue-50 shadow-inner sm:inset-8 sm:rounded-[3rem] dark:from-sky-950/50 dark:via-slate-900 dark:to-blue-950/40" />
-            <div className="absolute left-0 top-7 z-10 rounded-3xl bg-white px-4 py-3 shadow-2xl ring-1 ring-slate-100 dinogo-float-card-a sm:left-2 sm:top-10 sm:px-5 sm:py-4 dark:bg-slate-900 dark:ring-slate-800">
+            <div className="absolute inset-3 rounded-[2.5rem] bg-gradient-to-br robogo-orbit-ring from-sky-100 via-white to-blue-50 shadow-inner sm:inset-8 sm:rounded-[3rem] dark:from-sky-950/50 dark:via-slate-900 dark:to-blue-950/40" />
+            <div className="absolute left-0 top-7 z-10 rounded-3xl bg-white px-4 py-3 shadow-2xl ring-1 ring-slate-100 robogo-float-card-a sm:left-2 sm:top-10 sm:px-5 sm:py-4 dark:bg-slate-900 dark:ring-slate-800">
               <div className="flex items-center gap-3">
                 <span className="flex h-11 w-11 items-center justify-center rounded-2xl bg-orange-100 text-orange-600">
                   <Flame className="h-6 w-6" />
@@ -562,7 +562,7 @@ export default function Home() {
               </div>
             </div>
 
-            <div className="absolute bottom-7 right-0 z-10 rounded-3xl bg-white px-4 py-3 shadow-2xl ring-1 ring-slate-100 dinogo-float-card-b sm:bottom-12 sm:px-5 sm:py-4 dark:bg-slate-900 dark:ring-slate-800">
+            <div className="absolute bottom-7 right-0 z-10 rounded-3xl bg-white px-4 py-3 shadow-2xl ring-1 ring-slate-100 robogo-float-card-b sm:bottom-12 sm:px-5 sm:py-4 dark:bg-slate-900 dark:ring-slate-800">
               <div className="flex items-center gap-3">
                 <span className="flex h-11 w-11 items-center justify-center rounded-2xl bg-yellow-100 text-yellow-600">
                   <Zap className="h-6 w-6" />
@@ -574,17 +574,17 @@ export default function Home() {
               </div>
             </div>
 
-            <div className="absolute right-12 top-14 z-10 hidden rounded-3xl bg-white px-4 py-3 shadow-xl ring-1 ring-slate-100 dinogo-float-card-c dark:bg-slate-900 dark:ring-slate-800 sm:block">
+            <div className="absolute right-12 top-14 z-10 hidden rounded-3xl bg-white px-4 py-3 shadow-xl ring-1 ring-slate-100 robogo-float-card-c dark:bg-slate-900 dark:ring-slate-800 sm:block">
               <div className="flex items-center gap-2">
                 <ShieldCheck className="h-5 w-5 text-emerald-500" />
                 <span className="text-sm font-black text-slate-700 dark:text-slate-200">15 phút đã hoàn thành</span>
               </div>
             </div>
 
-            <div className="relative h-[310px] w-[310px] dinogo-hero-art sm:h-[430px] sm:w-[430px] md:h-[500px] md:w-[500px] lg:h-[580px] lg:w-[580px]">
+            <div className="relative h-[310px] w-[310px] robogo-hero-art sm:h-[430px] sm:w-[430px] md:h-[500px] md:w-[500px] lg:h-[580px] lg:w-[580px]">
               <Image
                 src="/hero.svg"
-                alt="Nhân vật Dinogo đang học ngôn ngữ"
+                alt="Nhân vật Robogo đang học ngôn ngữ"
                 fill
                 priority
                 className="object-contain drop-shadow-[0_28px_38px_rgba(29,155,240,0.18)]"
@@ -619,7 +619,7 @@ export default function Home() {
               ].map(([value, label], index) => (
                 <div
                   key={label}
-                  className="rounded-3xl border border-slate-200 bg-white p-5 text-center shadow-sm dinogo-metric-pop transition-transform hover:-translate-y-1 dark:border-slate-800 dark:bg-slate-900"
+                  className="rounded-3xl border border-slate-200 bg-white p-5 text-center shadow-sm robogo-metric-pop transition-transform hover:-translate-y-1 dark:border-slate-800 dark:bg-slate-900"
                   style={{ animationDelay: `${0.1 + index * 0.08}s` }}
                 >
                   <p className="text-2xl font-black text-slate-950 dark:text-white">{value}</p>
@@ -633,7 +633,7 @@ export default function Home() {
 
       <section className="border-b border-slate-200 bg-[#075985] py-5 dark:border-slate-800 dark:bg-slate-900">
         <div className="mx-auto max-w-[1500px] overflow-hidden px-4 lg:px-8">
-          <div className="flex w-max gap-4 dinogo-marquee-track">
+          <div className="flex w-max gap-4 robogo-marquee-track">
             {[...languageItems, ...languageItems].map((language, index) => (
               <Link
                 key={`${language.label}-${index}`}
@@ -659,7 +659,7 @@ export default function Home() {
         <SectionHeading
           eyebrow="Catalog khóa học"
           title="Bắt đầu từ ngôn ngữ bạn thích"
-          description="Dinogo tập trung vào những lộ trình phổ biến với người học Việt Nam: rõ mục tiêu, dễ bắt đầu và có nhịp học hằng ngày."
+          description="Robogo tập trung vào những lộ trình phổ biến với người học Việt Nam: rõ mục tiêu, dễ bắt đầu và có nhịp học hằng ngày."
         />
 
         <div className="mx-auto grid max-w-[1500px] gap-6 md:grid-cols-2 xl:grid-cols-4">
@@ -670,7 +670,7 @@ export default function Home() {
               style={{ animationDelay: `${index * 0.08}s, ${1 + index * 0.12}s` }}
             >
               <div className="absolute -right-14 -top-14 h-36 w-36 rounded-full bg-white/50 blur-2xl" />
-              <div className="pointer-events-none absolute inset-y-0 -left-1/2 w-1/2 bg-white/35 blur-xl dinogo-card-shine" />
+              <div className="pointer-events-none absolute inset-y-0 -left-1/2 w-1/2 bg-white/35 blur-xl robogo-card-shine" />
               <div className="relative flex items-start justify-between gap-4">
                 <FlagIcon code={course.code} className="h-12 w-16" />
                 <span className="rounded-full bg-white/80 px-3 py-1 text-xs font-black uppercase text-slate-500 shadow-sm dark:bg-slate-900/70 dark:text-slate-300">
@@ -704,7 +704,7 @@ export default function Home() {
         <SectionHeading
           eyebrow="Tính năng nổi bật"
           title="Học như chơi, nhưng tiến bộ thật"
-          description="Mục tiêu của Dinogo không phải giữ bạn bấm app cho vui. Mục tiêu là giúp bạn duy trì thời gian học đủ đều để kỹ năng thật sự tăng lên."
+          description="Mục tiêu của Robogo không phải giữ bạn bấm app cho vui. Mục tiêu là giúp bạn duy trì thời gian học đủ đều để kỹ năng thật sự tăng lên."
         />
 
         <div className="mx-auto grid max-w-[1500px] gap-6 md:grid-cols-2 xl:grid-cols-4">
@@ -714,10 +714,10 @@ export default function Home() {
             return (
               <article
                 key={feature.title}
-                className="group relative overflow-hidden rounded-[2rem] border border-slate-200 bg-white p-7 shadow-sm dinogo-reveal-card transition-all duration-300 hover:-translate-y-2 hover:shadow-2xl dark:border-slate-800 dark:bg-slate-950"
+                className="group relative overflow-hidden rounded-[2rem] border border-slate-200 bg-white p-7 shadow-sm robogo-reveal-card transition-all duration-300 hover:-translate-y-2 hover:shadow-2xl dark:border-slate-800 dark:bg-slate-950"
                 style={{ animationDelay: `${index * 0.08}s` }}
               >
-                <div className="pointer-events-none absolute inset-y-0 -left-1/2 w-1/2 bg-sky-100/40 blur-xl dinogo-card-shine" />
+                <div className="pointer-events-none absolute inset-y-0 -left-1/2 w-1/2 bg-sky-100/40 blur-xl robogo-card-shine" />
                 <div className={`relative mb-6 flex h-14 w-14 items-center justify-center rounded-2xl ${feature.color}`}>
                   <Icon className="h-7 w-7" />
                 </div>
@@ -750,17 +750,17 @@ export default function Home() {
             </div>
 
             <div className="relative grid gap-5 md:grid-cols-3">
-              <div className="pointer-events-none absolute left-8 right-8 top-10 hidden h-1 origin-left rounded-full bg-white/20 dinogo-streak-line md:block" />
-              <div className="pointer-events-none absolute left-8 top-[2.35rem] hidden h-3 w-3 rounded-full bg-sky-200 shadow-[0_0_18px_rgba(186,230,253,.9)] dinogo-dot-travel md:block" />
+              <div className="pointer-events-none absolute left-8 right-8 top-10 hidden h-1 origin-left rounded-full bg-white/20 robogo-streak-line md:block" />
+              <div className="pointer-events-none absolute left-8 top-[2.35rem] hidden h-3 w-3 rounded-full bg-sky-200 shadow-[0_0_18px_rgba(186,230,253,.9)] robogo-dot-travel md:block" />
               {streakTiers.map((tier, index) => (
                 <article
                   key={tier.title}
-                  className={`rounded-[2rem] bg-white p-6 text-slate-950 shadow-2xl ring-4 dinogo-streak-card ${tier.ring} transition-transform duration-300 hover:-translate-y-2 dark:bg-slate-950 dark:text-white`}
+                  className={`rounded-[2rem] bg-white p-6 text-slate-950 shadow-2xl ring-4 robogo-streak-card ${tier.ring} transition-transform duration-300 hover:-translate-y-2 dark:bg-slate-950 dark:text-white`}
                   style={{
                     animationDelay: `${index * 0.42}s`,
                   }}
                 >
-                  <div className="mb-5 text-5xl dinogo-icon-pop">
+                  <div className="mb-5 text-5xl robogo-icon-pop">
                     {tier.icon}
                   </div>
                   <h3 className="text-xl font-black">{tier.title}</h3>
@@ -770,7 +770,7 @@ export default function Home() {
                   </p>
                   <div className="mt-5 h-3 overflow-hidden rounded-full bg-slate-100 dark:bg-slate-800">
                     <div
-                      className="h-full origin-left rounded-full bg-[#1D9BF0] shadow-[0_0_18px_rgba(29,155,240,0.45)] dinogo-streak-progress"
+                      className="h-full origin-left rounded-full bg-[#1D9BF0] shadow-[0_0_18px_rgba(29,155,240,0.45)] robogo-streak-progress"
                       style={{
                         width: tier.progress,
                         animationDelay: `${0.2 + index * 0.45}s`,
@@ -794,7 +794,7 @@ export default function Home() {
               Nhìn thấy mình đang tiến bộ từng tuần.
             </h2>
             <p className="mt-5 text-lg font-medium leading-8 text-slate-500 dark:text-slate-300">
-              Dinogo gom thời gian học, mục tiêu ngày, XP và streak vào một dashboard dễ hiểu, để người học biết mình đang tiến bộ thật chứ không chỉ hoàn thành nhiệm vụ cho có.
+              Robogo gom thời gian học, mục tiêu ngày, XP và streak vào một dashboard dễ hiểu, để người học biết mình đang tiến bộ thật chứ không chỉ hoàn thành nhiệm vụ cho có.
             </p>
             <div className="mt-8 grid gap-4 sm:grid-cols-2">
               {[
@@ -813,7 +813,7 @@ export default function Home() {
             </div>
           </div>
 
-          <div className="rounded-[2rem] border border-slate-200 bg-white p-5 shadow-2xl dinogo-dashboard-card dark:border-slate-800 dark:bg-slate-900 sm:p-6">
+          <div className="rounded-[2rem] border border-slate-200 bg-white p-5 shadow-2xl robogo-dashboard-card dark:border-slate-800 dark:bg-slate-900 sm:p-6">
             <div className="mb-6 flex items-center justify-between">
               <div>
                 <p className="text-sm font-black uppercase text-slate-400">Tuần này</p>
@@ -828,15 +828,15 @@ export default function Home() {
               <div className="pointer-events-none absolute inset-x-5 top-1/4 border-t border-slate-200/70 dark:border-slate-800" />
               <div className="pointer-events-none absolute inset-x-5 top-1/2 border-t border-slate-200/70 dark:border-slate-800" />
               <div className="pointer-events-none absolute inset-x-5 top-3/4 border-t border-slate-200/70 dark:border-slate-800" />
-              <div className="pointer-events-none absolute bottom-9 left-[18%] h-2 w-2 rounded-full bg-sky-300/80 dinogo-chart-spark" />
-              <div className="pointer-events-none absolute bottom-11 left-[52%] h-2 w-2 rounded-full bg-sky-300/80 dinogo-chart-spark" style={{ animationDelay: "1.1s" }} />
-              <div className="pointer-events-none absolute bottom-8 left-[78%] h-2 w-2 rounded-full bg-sky-300/80 dinogo-chart-spark" style={{ animationDelay: "2s" }} />
+              <div className="pointer-events-none absolute bottom-9 left-[18%] h-2 w-2 rounded-full bg-sky-300/80 robogo-chart-spark" />
+              <div className="pointer-events-none absolute bottom-11 left-[52%] h-2 w-2 rounded-full bg-sky-300/80 robogo-chart-spark" style={{ animationDelay: "1.1s" }} />
+              <div className="pointer-events-none absolute bottom-8 left-[78%] h-2 w-2 rounded-full bg-sky-300/80 robogo-chart-spark" style={{ animationDelay: "2s" }} />
               {weeklyProgress.map((item, index) => (
                 <div key={item.day} className="flex flex-1 flex-col items-center gap-3">
                   <div className="flex h-40 items-end">
                     <div
                       title={`${item.minutes} phút`}
-                      className={`${item.height} w-6 origin-bottom rounded-t-2xl bg-gradient-to-t from-[#1486CC] to-sky-300 shadow-lg dinogo-chart-bar transition-all hover:scale-105 sm:w-10`}
+                      className={`${item.height} w-6 origin-bottom rounded-t-2xl bg-gradient-to-t from-[#1486CC] to-sky-300 shadow-lg robogo-chart-bar transition-all hover:scale-105 sm:w-10`}
                       style={{
                         animationDelay: `${index * 0.18}s`,
                       }}
@@ -867,7 +867,7 @@ export default function Home() {
         <SectionHeading
           eyebrow="Cộng đồng"
           title="Học một mình rất dễ bỏ. Học cùng nhau thì dễ quay lại hơn."
-          description="Dinogo dùng bảng xếp hạng, thử thách nhóm và bạn học cùng mục tiêu để tạo động lực vừa đủ, không biến việc học thành áp lực."
+          description="Robogo dùng bảng xếp hạng, thử thách nhóm và bạn học cùng mục tiêu để tạo động lực vừa đủ, không biến việc học thành áp lực."
         />
 
         <div className="mx-auto grid max-w-[1500px] gap-6 lg:grid-cols-[0.9fr_1.1fr]">
@@ -919,8 +919,8 @@ export default function Home() {
       </section>
 
       <section className="px-4 py-24 dark:bg-slate-950 lg:px-8">
-        <div className="relative mx-auto max-w-[1500px] overflow-hidden rounded-[2.5rem] bg-[#1D9BF0] p-10 text-center shadow-[0_28px_90px_rgba(29,155,240,0.32)] dinogo-final-cta md:p-16">
-          <div className="absolute inset-y-0 left-0 w-1/2 bg-white/10 blur-3xl dinogo-shine" />
+        <div className="relative mx-auto max-w-[1500px] overflow-hidden rounded-[2.5rem] bg-[#1D9BF0] p-10 text-center shadow-[0_28px_90px_rgba(29,155,240,0.32)] robogo-final-cta md:p-16">
+          <div className="absolute inset-y-0 left-0 w-1/2 bg-white/10 blur-3xl robogo-shine" />
           <div className="relative mx-auto max-w-3xl">
             <div className="mx-auto mb-6 flex h-16 w-16 items-center justify-center rounded-3xl bg-white/20 text-white">
               <GraduationCap className="h-9 w-9" />
@@ -929,7 +929,7 @@ export default function Home() {
               Sẵn sàng học đều mỗi ngày?
             </h2>
             <p className="mt-5 text-lg font-semibold leading-8 text-sky-50">
-              Bắt đầu miễn phí với Dinogo và biến việc học ngoại ngữ thành một thói quen có thể giữ lâu dài.
+              Bắt đầu miễn phí với Robogo và biến việc học ngoại ngữ thành một thói quen có thể giữ lâu dài.
             </p>
             <div className="mt-9 flex flex-col justify-center gap-4 sm:flex-row">
               <Link

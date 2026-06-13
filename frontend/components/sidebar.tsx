@@ -5,22 +5,20 @@ import { SidebarItem } from "./sidebar-item";
 
 import { cn } from "@/lib/utils";
 
-import { Loader } from "lucide-react"
-
 type Props = {
     className?: string;
 };
 
 export const Sidebar = ({className}: Props) => {
     return (
-        <div className={cn("flex h-full lg:w-[256px] lg:fixed left-0 top-0 px-4 border-r-2 flex-col",
+        <div className={cn("flex h-full w-full lg:w-[304px] lg:fixed left-0 top-0 px-5 border-r-2 flex-col bg-white",
             className, 
         )}>
             <Link href="/learn">
-                <div className="pt-8 pl-4 pb-7 flex items-center gap-x-3">
-                    <Image src="/logo.svg" height={40} width={40} alt="Logo"/>
-                    <h1 className="text-2xl font-extrabold text-[#1486CC] tracking-wide">
-                        Dinogo
+                <div className="pt-8 pl-3 pb-8 flex items-center gap-x-4">
+                    <Image src="/logo.svg" height={56} width={56} alt="Logo"/>
+                    <h1 className="text-[32px] font-extrabold text-[#1486CC] tracking-wide">
+                        Robogo
                     </h1>
                 </div>
             </Link>  
@@ -31,17 +29,17 @@ export const Sidebar = ({className}: Props) => {
                     iconSrc="/learn.svg"
                 />
                 <SidebarItem 
-                    label="Leadeboard"
+                    label="Leaderboard"
                     href="/leaderboard"
                     iconSrc="/leaderboard.svg"
                 />
                 <SidebarItem 
-                    label="quests" 
+                    label="Quests" 
                     href="/quests"
                     iconSrc="/quests.svg"
                 />
                 <SidebarItem 
-                    label="shop" 
+                    label="Shop" 
                     href="/shop"
                     iconSrc="/shop.svg"
                 />
