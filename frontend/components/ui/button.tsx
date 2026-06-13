@@ -34,9 +34,9 @@ const buttonVariants = cva(
         "super-outline":
           "bg-white text-indigo-500 hover:bg-slate-100 border-transparent",
         sidebar:
-          "bg-transparent text-slate-500 border-2 border-transparent hover:bg-slate-100 transition-none",
+          "bg-transparent text-slate-500 border-2 border-transparent hover:bg-[#f4f9fc] hover:text-slate-700 transition-all",
         "sidebar-outline":
-          "bg-[#1486CC]/15 text-[#1486CC] border-[#106BA3] border-2 hover:bg-[#1486CC]/20 transition-none",
+          "bg-[#e8f5ff] text-[#1486CC] border-[#1486CC] border-2 shadow-[0_4px_0_#b7def5] hover:bg-[#dff1ff] transition-all",
               },
       size: {
         default:
