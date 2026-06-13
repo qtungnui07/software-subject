@@ -82,7 +82,7 @@ const features: {
     },
     {
       title: "Streak dựa trên thời gian học thật",
-      description: "Dinogo không khuyến khích vào điểm danh cho có. Chuỗi học được tính bằng 15–60 phút luyện tập mỗi ngày.",
+      description: "Robogo không khuyến khích vào điểm danh cho có. Chuỗi học được tính bằng 15–60 phút luyện tập mỗi ngày.",
       icon: Flame,
       color: "bg-orange-100 text-orange-600 dark:bg-orange-500/15 dark:text-orange-300",
     },
@@ -603,7 +603,7 @@ export default function Home() {
             </h1>
 
             <p className="mt-7 max-w-2xl text-lg font-medium leading-9 text-slate-600 dark:text-slate-300 md:text-xl">
-              Dinogo giúp bạn học ngoại ngữ bằng bài học ngắn, nhiệm vụ giống game và hệ thống streak tính theo thời gian học thật — không chỉ mở app để điểm danh.
+              Robogo giúp bạn học ngoại ngữ bằng bài học ngắn, nhiệm vụ giống game và hệ thống streak tính theo thời gian học thật — không chỉ mở app để điểm danh.
             </p>
 
             <div className="mt-9 flex flex-col justify-center gap-4 sm:flex-row lg:justify-start">

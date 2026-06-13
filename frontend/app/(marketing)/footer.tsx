@@ -36,8 +36,8 @@ export const Footer = () => {
       <div className="mx-auto grid max-w-[1500px] gap-10 lg:grid-cols-[1.2fr_1.8fr]">
         <div>
           <Link href="/" className="inline-flex items-center gap-3">
-            <Image src="/logo.svg" alt="Dinogo logo" height={54} width={54} className="rounded-2xl" />
-            <span className="text-3xl font-black text-[#1486CC]">Dinogo</span>
+            <Image src="/logo.svg" alt="Robogo logo" height={54} width={54} className="rounded-2xl" />
+            <span className="text-3xl font-black text-[#1486CC]">Robogo</span>
           </Link>
           <p className="mt-5 max-w-md text-base font-medium leading-8 text-slate-500 dark:text-slate-300">
             Nền tảng học ngoại ngữ giúp người học duy trì 15–60 phút mỗi ngày bằng bài học ngắn, streak thật và nhiệm vụ giống game.

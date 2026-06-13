@@ -28,12 +28,12 @@ export const Header = async () => {
               src="/logo.svg"
               height={58}
               width={58}
-              alt="Dinogo logo"
+              alt="Robogo logo"
               className="rounded-2xl shadow-sm"
             />
 
             <span className="text-3xl font-black tracking-tight text-[#1486CC] lg:text-[34px]">
-              Dinogo
+              Robogo
             </span>
           </Link>
 
