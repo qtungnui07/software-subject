@@ -4,42 +4,12 @@ import Link from "next/link";
 import { FeedWrapper } from "@/components/feed-wrapper";
 import { StickyWrapper } from "@/components/sticky-wrapper";
 import { UserProgress } from "@/components/user-progress";
-import { UnitList } from "@/components/unit-list";
+import { LessonPath } from "@/components/lesson-path";
 import { Button } from "@/components/ui/button";
 
-import { GuideDialog } from "./guide-dialog";
 import { Header } from "./header";
 
 const todayMinutes = 43;
-
-const mockUnits = [
-  {
-    id: 1,
-    title: "Bài 1: Nền tảng",
-    description:
-      "Xây dựng những từ đầu tiên, ngữ pháp đơn giản và các mẫu câu hằng ngày.",
-    iconSrc: "/learn.svg",
-    progress: 100,
-    active: false,
-  },
-  {
-    id: 2,
-    title: "Bài 2: Chào hỏi & Giới thiệu",
-    description:
-      "Luyện cách chào hỏi, giới thiệu bản thân và bắt đầu hội thoại ngắn.",
-    iconSrc: "/learn.svg",
-    progress: 50,
-    active: true,
-  },
-  {
-    id: 3,
-    title: "Bài 3: Đồ ăn & Đồ uống",
-    description: "Học từ vựng hữu ích khi gọi món và trò chuyện về đồ ăn.",
-    iconSrc: "/learn.svg",
-    progress: 0,
-    active: false,
-  },
-];
 
 const sidebarCards = [
   {
@@ -59,43 +29,16 @@ const LearnPage = () => {
     <div className="grid grid-cols-1 gap-6 xl:grid-cols-[minmax(0,1fr)_400px] 2xl:grid-cols-[minmax(0,1fr)_425px] xl:items-start xl:gap-10">
       <FeedWrapper>
         <section className="rounded-[28px] border-2 border-sky-100 bg-white shadow-sm">
-          <div className="sticky top-[56px] z-20 rounded-t-[26px] bg-white/95 px-4 backdrop-blur sm:px-6 lg:top-8">
-            <Header title="Tiếng Anh" subtitle="Giao tiếp cơ bản" />
+          <div className="sticky top-[56px] z-40 bg-white/95 px-4 py-4 backdrop-blur sm:px-6 lg:top-4">
+            <Header
+              courseTitle="Tiếng Anh"
+              sectionLabel="Phần 1, Chương 1"
+              chapterTitle="Giao tiếp cơ bản"
+            />
           </div>
 
-          <div className="px-4 pb-6 pt-5 sm:px-6 sm:pb-8">
-            <div className="relative overflow-hidden rounded-[26px] border-b-4 border-[#0B6FAE] bg-[#1D9BF0] p-5 text-white shadow-[0_16px_32px_rgba(29,155,240,0.22)] sm:p-6">
-              <div className="pointer-events-none absolute -right-16 -top-16 h-44 w-44 rounded-full bg-white/15" />
-              <div className="pointer-events-none absolute -bottom-20 right-14 h-36 w-36 rounded-full bg-sky-200/20" />
-
-              <div className="relative flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-                <div>
-                  <p className="text-sm font-black uppercase tracking-[0.18em] text-sky-100">
-                    Phần 1, Chương 1
-                  </p>
-                  <h2 className="mt-2 text-2xl font-black sm:text-3xl">
-                    Giao tiếp cơ bản
-                  </h2>
-                  <p className="mt-2 max-w-xl text-sm font-bold text-sky-50 sm:text-base">
-                    Học những từ đầu tiên bạn cần dùng trong các cuộc trò chuyện hằng ngày.
-                  </p>
-                </div>
-
-                <GuideDialog />
-              </div>
-            </div>
-
-            <div className="mt-8 flex items-center gap-4">
-              <div className="h-px flex-1 bg-slate-200" />
-              <p className="text-sm font-black uppercase tracking-[0.18em] text-slate-400">
-                Lộ trình hiện tại
-              </p>
-              <div className="h-px flex-1 bg-slate-200" />
-            </div>
-
-            <div className="mt-7">
-              <UnitList units={mockUnits} />
-            </div>
+          <div className="px-4 pb-7 pt-2 sm:px-6 sm:pb-9">
+            <LessonPath todayMinutes={todayMinutes} />
           </div>
         </section>
       </FeedWrapper>
