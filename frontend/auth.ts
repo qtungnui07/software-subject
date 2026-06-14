@@ -7,12 +7,12 @@ import type { User } from "@/lib/db";
 
 async function getUser(email: string): Promise<User | null> {
   try {
-    const rows = await sql`
+    const rows = (await sql`
       SELECT id, name, email, password, created_at
       FROM users
       WHERE email = ${email}
       LIMIT 1
-    `;
+    `) as any[];
     return (rows[0] as User) ?? null;
   } catch {
     return null;

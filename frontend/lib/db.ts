@@ -8,7 +8,7 @@ export const sql = databaseUrl
       throw new Error(
         "DATABASE_URL environment variable is not set. Add it before using database features."
       );
-    }) as ReturnType<typeof neon>);
+    }) as unknown as ReturnType<typeof neon>);
 
 export type User = {
   id: string;

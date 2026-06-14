@@ -53,7 +53,7 @@ export async function signupAction(
   const { name, email, password } = parsed.data;
 
   // Check email đã tồn tại chưa
-  const existing = await sql`SELECT id FROM users WHERE email = ${email} LIMIT 1`;
+  const existing = (await sql`SELECT id FROM users WHERE email = ${email} LIMIT 1`) as any[];
   if (existing.length > 0) {
     return { errors: { email: ["Email này đã được sử dụng."] } };
   }
