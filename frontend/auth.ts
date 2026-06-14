@@ -13,7 +13,10 @@ async function getUser(email: string): Promise<User | null> {
       WHERE email = ${email}
       LIMIT 1
     `;
-    return (rows[0] as User) ?? null;
+    if (Array.isArray(rows) && rows.length > 0) {
+      return (rows[0] as User);
+    }
+    return null;
   } catch {
     return null;
   }

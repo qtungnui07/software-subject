@@ -54,7 +54,7 @@ export async function signupAction(
 
   // Check email đã tồn tại chưa
   const existing = await sql`SELECT id FROM users WHERE email = ${email} LIMIT 1`;
-  if (existing.length > 0) {
+  if (Array.isArray(existing) && existing.length > 0) {
     return { errors: { email: ["Email này đã được sử dụng."] } };
   }
 
