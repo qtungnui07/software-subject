@@ -1,14 +1,15 @@
 {
-  "name": "dinogo",
+  "name": "robogo",
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "dev": "next dev",
+    "dev": "next dev --webpack",
     "build": "next build",
     "start": "next start",
     "lint": "eslint",
     "db:studio": "npx drizzle-kit studio",
-    "db:push": "npx drizzle-kit push"
+    "db:push": "npx drizzle-kit push",
+    "dev:turbo": "next dev --turbopack"
   },
   "dependencies": {
     "@neondatabase/serverless": "^1.1.0",

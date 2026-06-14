@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 
 export const metadata: Metadata = {
-  title: "Xác thực — Dinogo",
+  title: "Xác thực — Robogo",
 };
 
 export default function AuthLayout({
