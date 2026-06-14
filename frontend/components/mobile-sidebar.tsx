@@ -27,7 +27,7 @@ export const MobileSidebar = () => {
         <button
           type="button"
           className="flex size-10 items-center justify-center rounded-2xl border-2 border-[#d6ecfb] bg-[#e8f5ff] text-[#1486CC] transition hover:bg-[#d8efff]"
-          aria-label="Open navigation menu"
+          aria-label="Mở menu điều hướng"
         >
           <Menu className="size-6" />
         </button>

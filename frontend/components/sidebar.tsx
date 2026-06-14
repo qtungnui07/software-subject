@@ -3,6 +3,7 @@ import Link from "next/link";
 
 import { SidebarItem } from "./sidebar-item";
 
+import { getStudyTier } from "@/lib/study-tier";
 import { cn } from "@/lib/utils";
 
 type Props = {
@@ -11,37 +12,37 @@ type Props = {
 
 const routes = [
   {
-    label: "Learn",
+    label: "Học",
     href: "/learn",
     iconSrc: "/learn.svg",
   },
   {
-    label: "Courses",
+    label: "Khóa học",
     href: "/courses",
     iconSrc: "/globe.svg",
   },
   {
-    label: "Leaderboard",
+    label: "Bảng xếp hạng",
     href: "/leaderboard",
     iconSrc: "/leaderboard.svg",
   },
   {
-    label: "Quests",
+    label: "Nhiệm vụ",
     href: "/quests",
     iconSrc: "/quests.svg",
   },
   {
-    label: "Shop",
+    label: "Cửa hàng",
     href: "/shop",
     iconSrc: "/shop.svg",
   },
   {
-    label: "Profile",
+    label: "Hồ sơ",
     href: "/profile",
     iconSrc: "/heart.svg",
   },
   {
-    label: "More",
+    label: "Xem thêm",
     href: "/more",
     iconSrc: "/window.svg",
   },
@@ -53,6 +54,8 @@ const progressPercent = Math.min(
   Math.round((currentMinutes / goalMinutes) * 100),
   100,
 );
+
+const currentTier = getStudyTier(currentMinutes);
 
 const milestones = [
   {
@@ -116,16 +119,21 @@ export const Sidebar = ({ className }: Props) => {
 
       <div className="mt-6 rounded-[22px] border-2 border-[#d6ecfb] bg-white p-4 shadow-[0_10px_30px_rgba(20,134,204,0.10)]">
         <div className="flex items-center gap-x-3">
-          <div className="flex size-12 shrink-0 items-center justify-center rounded-2xl bg-[#e8f5ff] text-sm font-black text-[#1486CC]">
-            {currentMinutes}m
+          <div className="flex size-12 shrink-0 flex-col items-center justify-center rounded-2xl bg-[#e8f5ff] text-[#1486CC] shadow-sm">
+            <span className="text-lg leading-none" aria-hidden="true">
+              {currentTier.icon}
+            </span>
+            <span className="mt-0.5 text-[10px] font-black leading-none">
+              {currentMinutes}m
+            </span>
           </div>
 
           <div className="min-w-0">
             <p className="text-sm font-black uppercase tracking-wide text-slate-700">
-              Daily goal
+              Mục tiêu ngày
             </p>
             <p className="text-xs font-bold text-slate-400">
-              {currentMinutes}m studied today
+              {currentMinutes}m hôm nay · {currentTier.label}
             </p>
           </div>
         </div>
@@ -151,9 +159,9 @@ export const Sidebar = ({ className }: Props) => {
           </div>
 
           <div className="mt-3 grid grid-cols-3 text-[10px] font-black uppercase tracking-wide text-slate-400">
-            <span>15m Bronze</span>
-            <span className="text-center">30m Silver</span>
-            <span className="text-right">1h Gold</span>
+            <span>15m Đồng</span>
+            <span className="text-center">30m Bạc</span>
+            <span className="text-right">1h Vàng</span>
           </div>
         </div>
       </div>

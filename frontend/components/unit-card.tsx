@@ -11,6 +11,8 @@ type Props = {
 };
 
 export const UnitCard = ({ title, description, iconSrc, progress, active }: Props) => {
+    const actionLabel = progress === 100 ? "Ôn tập" : progress > 0 ? "Tiếp tục" : "Bắt đầu";
+
     return (
         <div className={`w-full border-2 rounded-xl p-5 flex flex-col sm:flex-row items-center gap-x-6 gap-y-4 transition-colors shadow-sm ${active ? "border-[#1486CC]/30 bg-[#1486CC]/5" : "border-neutral-200 hover:bg-slate-50"}`}>
             <div className="flex-shrink-0 bg-white p-3 rounded-xl border-2 shadow-sm">
@@ -29,7 +31,7 @@ export const UnitCard = ({ title, description, iconSrc, progress, active }: Prop
                     variant={active ? "primary" : "secondary"} 
                     className="w-full sm:w-[150px]"
                 >
-                    {progress === 100 ? "Review" : progress > 0 ? "Continue" : "Start"}
+                    {actionLabel}
                 </Button>
             </div>
         </div>
