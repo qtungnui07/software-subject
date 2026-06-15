@@ -1,64 +1,22 @@
-import NextAuth from "next-auth";
-import Credentials from "next-auth/providers/credentials";
-import bcrypt from "bcryptjs";
-import { z } from "zod";
-import { sql } from "@/lib/db";
-import type { User } from "@/lib/db";
+import { auth as clerkAuth, currentUser } from "@clerk/nextjs/server";
 
-async function getUser(email: string): Promise<User | null> {
+export const auth = async () => {
   try {
-    const rows = await sql`
-      SELECT id, name, email, password, created_at
-      FROM users
-      WHERE email = ${email}
-      LIMIT 1
-    `;
-    if (Array.isArray(rows) && rows.length > 0) {
-      return (rows[0] as User);
-    }
-    return null;
-  } catch {
+    const { userId } = await clerkAuth();
+    if (!userId) return null;
+
+    const user = await currentUser();
+
+    return {
+      user: {
+        id: userId,
+        name: user ? `${user.firstName ?? ""} ${user.lastName ?? ""}`.trim() || user.username || "User" : "User",
+        email: user?.emailAddresses[0]?.emailAddress ?? "",
+        image: user?.imageUrl ?? "",
+      },
+    };
+  } catch (error) {
+    console.error("Error in Clerk auth bridge:", error);
     return null;
   }
-}
-
-export const { handlers, auth, signIn, signOut } = NextAuth({
-  session: { strategy: "jwt" },
-  pages: {
-    signIn: "/sign-in",
-  },
-  providers: [
-    Credentials({
-      async authorize(credentials) {
-        const parsed = z
-          .object({ email: z.string().email(), password: z.string().min(6) })
-          .safeParse(credentials);
-
-        if (!parsed.success) return null;
-
-        const { email, password } = parsed.data;
-        const user = await getUser(email);
-        if (!user) return null;
-
-        const passwordsMatch = await bcrypt.compare(password, user.password);
-        if (!passwordsMatch) return null;
-
-        return { id: user.id, name: user.name, email: user.email };
-      },
-    }),
-  ],
-  callbacks: {
-    jwt({ token, user }) {
-      if (user) {
-        token.id = user.id;
-      }
-      return token;
-    },
-    session({ session, token }) {
-      if (token?.id && session.user) {
-        session.user.id = token.id as string;
-      }
-      return session;
-    },
-  },
-});
+};
