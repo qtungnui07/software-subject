@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import type { ElementType } from "react";
+import type { ElementType, MouseEvent as ReactMouseEvent } from "react";
 import Link from "next/link";
 import {
   BarChart3,
@@ -291,13 +291,49 @@ export const ThemeToggle = () => {
     document.documentElement.dataset.theme = initialTheme;
   }, []);
 
-  const handleToggleTheme = () => {
+  const handleToggleTheme = (event: ReactMouseEvent<HTMLButtonElement>) => {
     const nextTheme: Theme = theme === "dark" ? "light" : "dark";
 
-    setTheme(nextTheme);
-    localStorage.setItem("robogo-theme", nextTheme);
-    document.documentElement.classList.toggle("dark", nextTheme === "dark");
-    document.documentElement.dataset.theme = nextTheme;
+    // @ts-ignore
+    if (!document.startViewTransition) {
+      setTheme(nextTheme);
+      localStorage.setItem("robogo-theme", nextTheme);
+      document.documentElement.classList.toggle("dark", nextTheme === "dark");
+      document.documentElement.dataset.theme = nextTheme;
+      return;
+    }
+
+    const x = event.clientX;
+    const y = event.clientY;
+    const endRadius = Math.hypot(
+      Math.max(x, window.innerWidth - x),
+      Math.max(y, window.innerHeight - y)
+    );
+
+    // @ts-ignore
+    const transition = document.startViewTransition(() => {
+      setTheme(nextTheme);
+      localStorage.setItem("robogo-theme", nextTheme);
+      document.documentElement.classList.toggle("dark", nextTheme === "dark");
+      document.documentElement.dataset.theme = nextTheme;
+    });
+
+    transition.ready.then(() => {
+      const clipPath = [
+        `circle(0px at ${x}px ${y}px)`,
+        `circle(${endRadius}px at ${x}px ${y}px)`,
+      ];
+      document.documentElement.animate(
+        {
+          clipPath: clipPath,
+        },
+        {
+          duration: 1500,
+          easing: "ease-in-out",
+          pseudoElement: "::view-transition-new(root)",
+        }
+      );
+    });
   };
 
   return (
