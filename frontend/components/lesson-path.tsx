@@ -1,6 +1,7 @@
 "use client";
 
 import Image from "next/image";
+import Link from "next/link";
 import { useState } from "react";
 import { Check, Gift, Lock, Play, Star, Trophy, X } from "lucide-react";
 
@@ -24,7 +25,7 @@ type Props = {
   todayMinutes: number;
 };
 
-const lessonNodes: LessonNode[] = [
+export const lessonNodes: LessonNode[] = [
   {
     id: 1,
     title: "Bài 1: Từ đầu tiên",
@@ -279,17 +280,17 @@ const LessonPopover = ({
         </div>
       ) : null}
 
-      <button
-        type="button"
+      <Link
+        href={isLocked ? "#" : `/lesson?id=${node.id}`}
         className={cn(
-          "mt-4 h-10 w-full rounded-2xl text-sm font-black uppercase tracking-wide transition active:translate-y-1 active:shadow-none",
-          content.buttonClass
+          "flex items-center justify-center mt-4 h-10 w-full rounded-2xl text-sm font-black uppercase tracking-wide transition active:translate-y-1 active:shadow-none",
+          content.buttonClass,
+          isLocked && "pointer-events-none opacity-50"
         )}
         aria-disabled={isLocked}
-        disabled={isLocked}
       >
         {content.action}
-      </button>
+      </Link>
     </div>
   );
 };

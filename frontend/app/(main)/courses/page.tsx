@@ -2,6 +2,8 @@ export const dynamic = "force-dynamic";
 
 import { getCourses, getUserProgress } from "@/db/queries";
 
+export const dynamic = "force-dynamic";
+
 import { List } from "./list";
 import { userProgress, courses } from '../../../db/schema';
 
