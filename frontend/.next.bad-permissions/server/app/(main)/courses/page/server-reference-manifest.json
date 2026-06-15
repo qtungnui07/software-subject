@@ -1,0 +1,65 @@
+{
+  "node": {
+    "00b79866325ba6e53230c57ff069ae3cfcf98e5c55": {
+      "workers": {
+        "app/(main)/courses/page": {
+          "moduleId": 70024,
+          "async": false,
+          "exportedName": "invalidateCacheAction",
+          "filename": "node_modules/@clerk/nextjs/dist/esm/app-router/server-actions.js"
+        }
+      },
+      "exportedName": "invalidateCacheAction",
+      "filename": "node_modules/@clerk/nextjs/dist/esm/app-router/server-actions.js"
+    },
+    "002317fa3cd6f9970a4450f590d567003c4862ea7b": {
+      "workers": {
+        "app/(main)/courses/page": {
+          "moduleId": 70024,
+          "async": false,
+          "exportedName": "createOrReadKeylessAction",
+          "filename": "node_modules/@clerk/nextjs/dist/esm/app-router/keyless-actions.js"
+        }
+      },
+      "exportedName": "createOrReadKeylessAction",
+      "filename": "node_modules/@clerk/nextjs/dist/esm/app-router/keyless-actions.js"
+    },
+    "0017793826697692354d6d4a733719c2eb30d41aaa": {
+      "workers": {
+        "app/(main)/courses/page": {
+          "moduleId": 70024,
+          "async": false,
+          "exportedName": "deleteKeylessAction",
+          "filename": "node_modules/@clerk/nextjs/dist/esm/app-router/keyless-actions.js"
+        }
+      },
+      "exportedName": "deleteKeylessAction",
+      "filename": "node_modules/@clerk/nextjs/dist/esm/app-router/keyless-actions.js"
+    },
+    "404b094e2bfbeff6f30492cd4123abe739118152fb": {
+      "workers": {
+        "app/(main)/courses/page": {
+          "moduleId": 70024,
+          "async": false,
+          "exportedName": "syncKeylessConfigAction",
+          "filename": "node_modules/@clerk/nextjs/dist/esm/app-router/keyless-actions.js"
+        }
+      },
+      "exportedName": "syncKeylessConfigAction",
+      "filename": "node_modules/@clerk/nextjs/dist/esm/app-router/keyless-actions.js"
+    },
+    "404329d24235faec35d112755d2a5f8ea3099f920e": {
+      "workers": {
+        "app/(main)/courses/page": {
+          "moduleId": 70024,
+          "async": false,
+          "exportedName": "upsertUserProgress",
+          "filename": "actions/user-progress.ts"
+        }
+      },
+      "exportedName": "upsertUserProgress",
+      "filename": "actions/user-progress.ts"
+    }
+  },
+  "edge": {}
+}

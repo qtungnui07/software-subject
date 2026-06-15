@@ -2,6 +2,7 @@
 
 import { getCourseById, getUserProgress } from '@/db/queries';
 import { courses, userProgress } from '../db/schema';
+import { eq } from 'drizzle-orm';
 import db from '@/db/drizzle';
 import { revalidatePath } from 'next/cache';
 import { redirect } from 'next/navigation';
@@ -38,7 +39,7 @@ export const upsertUserProgress = async (courseId: number) => {
         await db.update(userProgress).set({
             activeCourseId: courseId,
             userName: user.name || "User",
-            userImageSrc: user.image || "/logo.svg",
+            userImageSrc: user.image || "/logo.webp",
         });
             
         revalidatePath("/courses");
@@ -50,10 +51,44 @@ export const upsertUserProgress = async (courseId: number) => {
         userId,
         activeCourseId: courseId,
         userName: user.name || "User",
-        userImageSrc: user.image || "/logo.svg",  
+        userImageSrc: user.image || "/logo.webp",  
     });
 
     revalidatePath("/courses");
     revalidatePath("/learn");
     redirect("/learn");
+};
+
+export const updateUserProfile = async (userName: string, userImageSrc: string) => {
+    const session = await auth();
+    const userId = session?.user?.id;
+
+    if (!userId) {
+        throw new Error("Unauthorized");
+    }
+
+    if (!userName.trim()) {
+        throw new Error("Tên hiển thị không được để trống");
+    }
+
+    const existingUserProgress = await getUserProgress();
+
+    if (existingUserProgress) {
+        await db.update(userProgress)
+            .set({
+                userName,
+                userImageSrc,
+            })
+            .where(eq(userProgress.userId, userId));
+    } else {
+        await db.insert(userProgress).values({
+            userId,
+            userName,
+            userImageSrc,
+        });
+    }
+
+    revalidatePath("/profile");
+    revalidatePath("/courses");
+    revalidatePath("/learn");
 };

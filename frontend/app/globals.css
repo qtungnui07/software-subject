@@ -55,6 +55,8 @@ body,
 }
 
 :root {
+  --font-sans: "Nunito", "Avenir Next", "Segoe UI", Arial, sans-serif;
+  --font-geist-mono: "SFMono-Regular", Consolas, "Liberation Mono", monospace;
   --background: oklch(1 0 0);
   --foreground: oklch(0.145 0 0);
   --card: oklch(1 0 0);
@@ -148,4 +150,4 @@ body,
 
 ::view-transition-new(root) {
   z-index: 9999;
-}
+}

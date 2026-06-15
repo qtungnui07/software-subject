@@ -2,20 +2,15 @@ export const dynamic = "force-dynamic";
 
 import { getCourses, getUserProgress } from "@/db/queries";
 
-export const dynamic = "force-dynamic";
-
 import { List } from "./list";
-import { userProgress, courses } from '../../../db/schema';
 
 const CoursesPage = async () => {
-    const coursesData = await getCourses();
-    const userProgressData =await getUserProgress();
     const [
         courses,
         userProgress,
     ] = await Promise.all([
-        coursesData,
-        userProgressData, 
+        getCourses(),
+        getUserProgress(),
     ]);
     return (
         <div className="h-full max-w-228 px-3 mx-auto">

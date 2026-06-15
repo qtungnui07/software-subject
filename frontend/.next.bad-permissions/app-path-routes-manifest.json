@@ -1,0 +1,14 @@
+{
+  "/(auth)/sign-in/page": "/sign-in",
+  "/(auth)/sign-up/page": "/sign-up",
+  "/(main)/courses/page": "/courses",
+  "/(main)/learn/page": "/learn",
+  "/(main)/profile/page": "/profile",
+  "/(marketing)/page": "/",
+  "/_global-error/page": "/_global-error",
+  "/_not-found/page": "/_not-found",
+  "/buttons/page": "/buttons",
+  "/favicon.ico/route": "/favicon.ico",
+  "/lesson/page": "/lesson",
+  "/sso-callback/page": "/sso-callback"
+}

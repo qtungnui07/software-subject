@@ -1,0 +1,16 @@
+services:
+  frontend:
+    image: node:22-slim
+    container_name: duolingo-frontend
+    working_dir: /app
+    ports:
+      - "3000:3000"
+    volumes:
+      - .:/app
+      - /app/.next
+    environment:
+      - NODE_ENV=development
+    env_file:
+      - .env.local
+    command: npm run dev:turbo -- --hostname 0.0.0.0
+    restart: unless-stopped

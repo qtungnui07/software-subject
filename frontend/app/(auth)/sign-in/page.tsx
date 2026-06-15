@@ -185,6 +185,9 @@ export default function SignInPage() {
           </div>
         </div>
 
+        {/* Captcha mount point */}
+        <div id="clerk-captcha" className="my-2" />
+
         {/* Submit */}
         <button
           id="signin-submit"

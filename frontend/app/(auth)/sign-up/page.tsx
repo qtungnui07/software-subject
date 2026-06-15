@@ -353,6 +353,9 @@ export default function SignUpPage() {
           </div>
         </div>
 
+        {/* Captcha mount point */}
+        <div id="clerk-captcha" className="my-2" />
+
         {/* Submit */}
         <button
           id="signup-submit"

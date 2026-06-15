@@ -1,12 +1,7 @@
 import type { Metadata } from "next";
-import { Nunito } from "next/font/google";
-import { Toaster } from "@/components/ui/sonner";
 import { ClerkProvider } from "@clerk/nextjs";
+import { ToasterLoader } from "@/components/toaster-loader";
 import "./globals.css";
-
-const font = Nunito({
-  subsets: ["latin"],
-});
 
 export const metadata: Metadata = {
   title: "Robogo - Learn languages every day",
@@ -21,9 +16,9 @@ export default function RootLayout({
 }>) {
   return (
     <ClerkProvider>
-      <html lang="vi" className={`${font.className} h-full antialiased`}>
+      <html lang="vi" className="h-full antialiased">
         <body className="min-h-full flex flex-col">
-          <Toaster />
+          <ToasterLoader />
           {children}
         </body>
       </html>

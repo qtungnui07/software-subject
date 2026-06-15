@@ -1,0 +1,14 @@
+{
+  "/(auth)/sign-in/page": "app/(auth)/sign-in/page.js",
+  "/(auth)/sign-up/page": "app/(auth)/sign-up/page.js",
+  "/(main)/courses/page": "app/(main)/courses/page.js",
+  "/(main)/learn/page": "app/(main)/learn/page.js",
+  "/(main)/profile/page": "app/(main)/profile/page.js",
+  "/(marketing)/page": "app/(marketing)/page.js",
+  "/_global-error/page": "app/_global-error/page.js",
+  "/_not-found/page": "app/_not-found/page.js",
+  "/buttons/page": "app/buttons/page.js",
+  "/favicon.ico/route": "app/favicon.ico/route.js",
+  "/lesson/page": "app/lesson/page.js",
+  "/sso-callback/page": "app/sso-callback/page.js"
+}

@@ -30,7 +30,7 @@ export const MobileHeader = () => {
           aria-label="Về trang học Robogo"
         >
           <Image
-            src="/logo.svg"
+            src="/logo.webp"
             height={34}
             width={34}
             alt="Robogo logo"
