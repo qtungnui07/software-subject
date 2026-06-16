@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Nunito } from "next/font/google";
 import { Toaster } from "@/components/ui/sonner";
+import { ClerkProvider } from "@clerk/nextjs";
 import "./globals.css";
 
 const font = Nunito({
@@ -19,11 +20,13 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="vi" className={`${font.className} h-full antialiased`}>
-      <body className="min-h-full flex flex-col">
-        <Toaster />
-        {children}
-      </body>
-    </html>
+    <ClerkProvider>
+      <html lang="vi" className={`${font.className} h-full antialiased`}>
+        <body className="min-h-full flex flex-col">
+          <Toaster />
+          {children}
+        </body>
+      </html>
+    </ClerkProvider>
   );
 }
