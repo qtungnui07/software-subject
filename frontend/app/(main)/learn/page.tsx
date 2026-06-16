@@ -2,10 +2,14 @@ import Image from "next/image";
 import Link from "next/link";
 
 import { FeedWrapper } from "@/components/feed-wrapper";
+import { ProgressOverview } from "@/components/progress/progress-overview";
+import { UnitProgressList } from "@/components/progress/unit-progress-list";
 import { StickyWrapper } from "@/components/sticky-wrapper";
 import { UserProgress } from "@/components/user-progress";
 import { LessonPath } from "@/components/lesson-path";
 import { Button } from "@/components/ui/button";
+import { englishProgressCourse, progressUnits } from "@/data/progress-data";
+import { getCourseProgressSummary } from "@/lib/progress-utils";
 
 import { Header } from "./header";
 
@@ -25,6 +29,8 @@ const sidebarCards = [
 ];
 
 const LearnPage = () => {
+  const courseProgress = getCourseProgressSummary(englishProgressCourse);
+
   return (
     <div className="grid grid-cols-1 gap-6 xl:grid-cols-[minmax(0,1fr)_400px] 2xl:grid-cols-[minmax(0,1fr)_425px] xl:items-start xl:gap-10">
       <FeedWrapper>
@@ -35,6 +41,18 @@ const LearnPage = () => {
               sectionLabel="Phần 1, Chương 1"
               chapterTitle="Giao tiếp cơ bản"
             />
+          </div>
+
+          <div className="space-y-4 px-4 pb-4 pt-2 sm:px-6 xl:hidden">
+            <ProgressOverview
+              totalLessons={courseProgress.totalLessons}
+              completedLessons={courseProgress.completedLessons}
+              completionPercent={courseProgress.completionPercent}
+              earnedXp={courseProgress.earnedXp}
+              completedMinutes={courseProgress.completedMinutes}
+            />
+
+            <UnitProgressList units={progressUnits} />
           </div>
 
           <div className="px-4 pb-7 pt-2 sm:px-6 sm:pb-9">
@@ -52,6 +70,17 @@ const LearnPage = () => {
             todayMinutes={todayMinutes}
           />
         </div>
+
+        <ProgressOverview
+          className="hidden xl:block"
+          totalLessons={courseProgress.totalLessons}
+          completedLessons={courseProgress.completedLessons}
+          completionPercent={courseProgress.completionPercent}
+          earnedXp={courseProgress.earnedXp}
+          completedMinutes={courseProgress.completedMinutes}
+        />
+
+        <UnitProgressList className="hidden xl:block" units={progressUnits} />
 
         {sidebarCards.map((card) => (
           <div
