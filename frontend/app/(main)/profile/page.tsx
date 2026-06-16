@@ -1,129 +1,218 @@
-import { redirect } from "next/navigation";
-import { auth } from "@/auth";
-import { getUserProgress } from "@/db/queries";
-import { FeedWrapper } from "@/components/feed-wrapper";
-import { StickyWrapper } from "@/components/sticky-wrapper";
-import { UserProgress } from "@/components/user-progress";
-import { ProfileForm } from "./profile-form";
 import Image from "next/image";
+import Link from "next/link";
 
-export const dynamic = "force-dynamic";
+import { Button } from "@/components/ui/button";
+import { profileData } from "@/data/profile-data";
 
-const todayMinutes = 43;
+const quickStats = [
+  {
+    label: "Streak",
+    value: `${profileData.learningStats.streakDays} ngày`,
+    description: "Giữ nhịp học đều",
+    icon: "🔥",
+    tone: "border-orange-100 bg-orange-50 text-orange-600",
+  },
+  {
+    label: "XP",
+    value: `${profileData.learningStats.xp} XP`,
+    description: "Điểm kinh nghiệm",
+    icon: "⚡",
+    tone: "border-sky-100 bg-sky-50 text-sky-600",
+  },
+  {
+    label: "Hôm nay",
+    value: `${profileData.learningStats.todayMinutes} phút`,
+    description: "Thời gian học",
+    icon: "⏱️",
+    tone: "border-emerald-100 bg-emerald-50 text-emerald-600",
+  },
+];
 
-export default async function ProfilePage() {
-  const session = await auth();
-  const user = session?.user;
-
-  if (!user) {
-    redirect("/sign-in");
-  }
-
-  const userProgressData = await getUserProgress();
-
-  // Determine fallback details if userProgress is empty/null
-  const userName = userProgressData?.userName || user.name || "Học viên";
-  const userImageSrc = userProgressData?.userImageSrc || user.image || "/logo.webp";
-  const points = userProgressData?.points ?? 0;
-  const hearts = userProgressData?.hearts ?? 5;
-  const activeCourse = userProgressData?.activeCourse || {
-    title: "Chưa chọn khóa học",
-    imageSrc: "/logo.webp",
-  };
+const ProfilePage = () => {
+  const { user, currentCourse, achievements } = profileData;
 
   return (
-    <div className="grid grid-cols-1 gap-6 xl:grid-cols-[minmax(0,1fr)_400px] 2xl:grid-cols-[minmax(0,1fr)_425px] xl:items-start xl:gap-10">
-      <FeedWrapper>
-        <section className="rounded-[28px] border-2 border-sky-100 bg-white p-6 shadow-sm sm:p-8">
-          <div className="mb-6 flex items-center justify-between border-b-2 border-slate-100 pb-4">
-            <div>
-              <h1 className="text-2xl font-black text-slate-800 tracking-tight sm:text-3xl">
-                Thông tin hồ sơ
-              </h1>
-              <p className="mt-1 text-sm font-bold text-slate-400">
-                Quản lý thông tin cá nhân và hình đại diện của bạn
-              </p>
+    <main className="mx-auto w-full max-w-6xl space-y-6 px-4 pb-10 sm:px-6 lg:px-8">
+      <section className="overflow-hidden rounded-[32px] border-2 border-sky-100 bg-gradient-to-br from-sky-50 via-white to-cyan-50 shadow-sm">
+        <div className="grid gap-6 p-5 sm:p-7 lg:grid-cols-[minmax(0,1fr)_280px] lg:items-center lg:p-8">
+          <div>
+            <div className="inline-flex rounded-full border-2 border-sky-100 bg-white px-4 py-2 text-xs font-black uppercase tracking-[0.18em] text-sky-600 shadow-sm">
+              Hồ sơ học tập
             </div>
+            <h1 className="mt-5 text-3xl font-black tracking-tight text-slate-800 sm:text-4xl lg:text-5xl">
+              Theo dõi hành trình học của bạn
+            </h1>
+            <p className="mt-4 max-w-2xl text-base font-bold leading-7 text-slate-500 sm:text-lg">
+              Xem thông tin cá nhân, khóa học đang theo đuổi và các chỉ số học tập quan trọng của bạn trên Robogo.
+            </p>
           </div>
 
-          <ProfileForm
-            initialName={userName}
-            initialImageSrc={userImageSrc}
-            email={user.email}
-          />
-        </section>
-      </FeedWrapper>
-
-      <StickyWrapper>
-        <div className="rounded-[24px] border-2 border-sky-100 bg-white p-4 shadow-sm">
-          <UserProgress
-            activeCourse={{
-              title: activeCourse.title,
-              imageSrc: activeCourse.imageSrc,
-            }}
-            hearts={hearts}
-            points={points}
-            todayMinutes={todayMinutes}
-          />
-        </div>
-
-        <div className="rounded-[24px] border-2 border-sky-100 bg-white p-6 shadow-sm">
-          <h2 className="text-lg font-black text-slate-700 mb-4">
-            Thống kê học tập
-          </h2>
-          
-          <div className="space-y-4">
-            <div className="flex items-center gap-x-3 rounded-2xl border-2 border-orange-100 bg-orange-50/50 p-4">
-              <div className="relative size-12 shrink-0">
-                <Image src="/points.svg" alt="XP" fill className="object-contain" />
+          <div className="rounded-[28px] border-2 border-white bg-white/80 p-4 shadow-sm backdrop-blur">
+            <div className="flex items-center gap-4 lg:flex-col lg:text-center">
+              <div className="relative size-24 shrink-0 overflow-hidden rounded-[28px] border-4 border-sky-100 bg-white p-3 shadow-sm sm:size-28">
+                <Image
+                  src={user.avatarSrc}
+                  alt={`${user.displayName} avatar`}
+                  fill
+                  className="object-contain p-2"
+                  priority
+                />
               </div>
               <div>
-                <p className="text-xs font-black uppercase tracking-wide text-orange-600">
-                  Tổng điểm kinh nghiệm
-                </p>
-                <p className="text-xl font-extrabold text-slate-700">
-                  {points} XP
-                </p>
-              </div>
-            </div>
-
-            <div className="flex items-center gap-x-3 rounded-2xl border-2 border-rose-100 bg-rose-50/50 p-4">
-              <div className="relative size-12 shrink-0">
-                <Image src="/heart.svg" alt="Hearts" fill className="object-contain" />
-              </div>
-              <div>
-                <p className="text-xs font-black uppercase tracking-wide text-rose-500">
-                  Số tim hiện tại
-                </p>
-                <p className="text-xl font-extrabold text-slate-700">
-                  {hearts} / 5 Tim
-                </p>
-              </div>
-            </div>
-
-            <div className="flex items-center gap-x-3 rounded-2xl border-2 border-sky-100 bg-sky-50/30 p-4">
-              <div className="relative size-12 shrink-0 bg-white rounded-xl shadow-sm border border-slate-100 p-2 flex items-center justify-center">
-                <div className="relative size-8">
-                  <Image
-                    src={activeCourse.imageSrc}
-                    alt={activeCourse.title}
-                    fill
-                    className="object-contain rounded-md"
-                  />
+                <p className="text-2xl font-black text-slate-800">{user.displayName}</p>
+                <p className="mt-1 text-sm font-bold text-slate-400">@{user.username}</p>
+                <div className="mt-3 inline-flex rounded-full bg-sky-100 px-3 py-1 text-xs font-black text-sky-700">
+                  {user.rankLabel}
                 </div>
               </div>
-              <div>
-                <p className="text-xs font-black uppercase tracking-wide text-slate-400">
-                  Khóa học hiện tại
-                </p>
-                <p className="text-lg font-extrabold text-slate-700 truncate max-w-[200px]">
-                  {activeCourse.title}
-                </p>
-              </div>
             </div>
           </div>
         </div>
-      </StickyWrapper>
-    </div>
+      </section>
+
+      <section className="grid gap-6 lg:grid-cols-[minmax(0,1.2fr)_minmax(320px,0.8fr)]">
+        <div className="space-y-6">
+          <article className="rounded-[28px] border-2 border-slate-200 bg-white p-5 shadow-sm sm:p-6">
+            <div className="flex flex-col gap-5 sm:flex-row sm:items-center">
+              <div className="relative size-24 shrink-0 overflow-hidden rounded-[28px] border-4 border-sky-100 bg-sky-50 p-3 shadow-sm">
+                <Image
+                  src={user.avatarSrc}
+                  alt="Ảnh đại diện"
+                  fill
+                  className="object-contain p-2"
+                />
+              </div>
+
+              <div className="min-w-0 flex-1">
+                <div className="flex flex-wrap items-center gap-2">
+                  <h2 className="text-3xl font-black text-slate-800">{user.displayName}</h2>
+                  <span className="rounded-full border-2 border-sky-100 bg-sky-50 px-3 py-1 text-xs font-black uppercase tracking-wide text-sky-600">
+                    {user.roleLabel}
+                  </span>
+                </div>
+                <p className="mt-2 break-all text-sm font-bold text-slate-400">{user.email}</p>
+                <p className="mt-3 text-sm font-bold text-slate-500">
+                  Tham gia Robogo từ <span className="text-slate-700">16/06/2026</span>
+                </p>
+              </div>
+            </div>
+          </article>
+
+          <article className="rounded-[28px] border-2 border-sky-100 bg-white p-5 shadow-sm sm:p-6">
+            <div className="flex flex-col gap-5 sm:flex-row sm:items-start sm:justify-between">
+              <div>
+                <p className="text-xs font-black uppercase tracking-[0.18em] text-sky-500">
+                  Khóa học hiện tại
+                </p>
+                <h2 className="mt-3 text-2xl font-black text-slate-800">
+                  {currentCourse.title}
+                </h2>
+                <p className="mt-3 max-w-2xl text-sm font-bold leading-6 text-slate-500">
+                  {currentCourse.description}
+                </p>
+              </div>
+
+              <div className="flex shrink-0 flex-wrap gap-2 sm:justify-end">
+                <span className="rounded-full border-2 border-emerald-100 bg-emerald-50 px-4 py-2 text-sm font-black text-emerald-600">
+                  {currentCourse.statusLabel}
+                </span>
+                <span className="rounded-full border-2 border-slate-100 bg-slate-50 px-4 py-2 text-sm font-black text-slate-500">
+                  {currentCourse.level}
+                </span>
+              </div>
+            </div>
+
+            <div className="mt-6 grid gap-3 sm:grid-cols-3">
+              <div className="rounded-2xl border-2 border-slate-100 bg-slate-50/70 p-4">
+                <p className="text-xs font-black uppercase tracking-wide text-slate-400">Ngôn ngữ</p>
+                <p className="mt-2 text-lg font-black text-slate-700">{currentCourse.language}</p>
+              </div>
+              <div className="rounded-2xl border-2 border-slate-100 bg-slate-50/70 p-4">
+                <p className="text-xs font-black uppercase tracking-wide text-slate-400">Mục tiêu ngày</p>
+                <p className="mt-2 text-lg font-black text-slate-700">
+                  {profileData.learningStats.dailyGoalMinutes} phút
+                </p>
+              </div>
+              <div className="rounded-2xl border-2 border-slate-100 bg-slate-50/70 p-4">
+                <p className="text-xs font-black uppercase tracking-wide text-slate-400">Mục tiêu tuần</p>
+                <p className="mt-2 text-lg font-black text-slate-700">
+                  {profileData.learningStats.weeklyGoalMinutes} phút
+                </p>
+              </div>
+            </div>
+          </article>
+        </div>
+
+        <aside className="space-y-6">
+          <article className="rounded-[28px] border-2 border-slate-200 bg-white p-5 shadow-sm sm:p-6">
+            <div className="flex items-center justify-between gap-4">
+              <div>
+                <p className="text-xs font-black uppercase tracking-[0.18em] text-sky-500">
+                  Tổng quan
+                </p>
+                <h2 className="mt-2 text-2xl font-black text-slate-800">Thống kê học tập</h2>
+              </div>
+              <Button asChild variant="primary-outline" className="hidden rounded-2xl sm:inline-flex">
+                <Link href="/learn">Tiếp tục học</Link>
+              </Button>
+            </div>
+
+            <div className="mt-5 grid gap-3">
+              {quickStats.map((stat) => (
+                <div
+                  key={stat.label}
+                  className={`rounded-2xl border-2 p-4 ${stat.tone}`}
+                >
+                  <div className="flex items-center gap-4">
+                    <div className="flex size-12 shrink-0 items-center justify-center rounded-2xl bg-white text-2xl shadow-sm">
+                      {stat.icon}
+                    </div>
+                    <div>
+                      <p className="text-xs font-black uppercase tracking-wide opacity-80">
+                        {stat.label}
+                      </p>
+                      <p className="mt-1 text-xl font-black text-slate-800">{stat.value}</p>
+                      <p className="mt-1 text-xs font-bold opacity-80">{stat.description}</p>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            <Button asChild variant="primary" className="mt-5 h-12 w-full rounded-2xl sm:hidden">
+              <Link href="/learn">Tiếp tục học</Link>
+            </Button>
+          </article>
+
+          <article className="rounded-[28px] border-2 border-slate-200 bg-white p-5 shadow-sm sm:p-6">
+            <p className="text-xs font-black uppercase tracking-[0.18em] text-sky-500">
+              Thành tựu
+            </p>
+            <h2 className="mt-2 text-2xl font-black text-slate-800">Mở khóa gần đây</h2>
+
+            <div className="mt-5 space-y-3">
+              {achievements.map((achievement) => (
+                <div
+                  key={achievement.id}
+                  className="flex items-start gap-3 rounded-2xl border-2 border-slate-100 bg-slate-50/60 p-4"
+                >
+                  <div className="flex size-12 shrink-0 items-center justify-center rounded-2xl bg-white text-2xl shadow-sm">
+                    {achievement.icon}
+                  </div>
+                  <div>
+                    <p className="font-black text-slate-700">{achievement.title}</p>
+                    <p className="mt-1 text-sm font-bold leading-5 text-slate-500">
+                      {achievement.description}
+                    </p>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </article>
+        </aside>
+      </section>
+    </main>
   );
-}
+};
+
+export default ProfilePage;
