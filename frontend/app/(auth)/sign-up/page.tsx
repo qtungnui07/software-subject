@@ -1,13 +1,31 @@
 "use client";
 
 import { useState, useTransition } from "react";
-import { useSignUp } from "@clerk/nextjs";
+import { useSignUp } from "@clerk/nextjs/legacy";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { User, Mail, Lock, CheckCircle2 } from "lucide-react";
 
+const getErrorMessage = (error: unknown, fallback: string) => {
+  if (
+    typeof error === "object" &&
+    error !== null &&
+    "errors" in error &&
+    Array.isArray(error.errors) &&
+    error.errors[0]?.message
+  ) {
+    return String(error.errors[0].message);
+  }
+
+  if (error instanceof Error) {
+    return error.message;
+  }
+
+  return fallback;
+};
+
 export default function SignUpPage() {
-  const { signUp } = useSignUp();
+  const { isLoaded, signUp, setActive } = useSignUp();
   const router = useRouter();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -24,7 +42,7 @@ export default function SignUpPage() {
 
   const handleSignUp = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!signUp) return;
+    if (!isLoaded) return;
 
     setError(undefined);
 
@@ -62,62 +80,50 @@ export default function SignUpPage() {
           firstName: name,
         });
 
-        if (result.error) {
-          setError(result.error.message || "Đăng ký thất bại. Vui lòng kiểm tra lại thông tin.");
+        if (result.status === "complete" && result.createdSessionId) {
+          await setActive({ session: result.createdSessionId });
+          router.push("/learn");
           return;
         }
 
-        const verificationResult = await signUp.verifications.sendEmailCode();
-        if (verificationResult.error) {
-          setError(verificationResult.error.message || "Không thể gửi mã xác thực.");
-        } else {
-          setVerifying(true);
-        }
-      } catch (err: any) {
-        setError("Đăng ký thất bại. Vui lòng kiểm tra lại thông tin.");
+        await result.prepareEmailAddressVerification({ strategy: "email_code" });
+        setVerifying(true);
+      } catch (err: unknown) {
+        setError(getErrorMessage(err, "Đăng ký thất bại. Vui lòng kiểm tra lại thông tin."));
       }
     });
   };
 
   const handleVerify = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!signUp) return;
+    if (!isLoaded) return;
 
     setError(undefined);
 
     startTransition(async () => {
       try {
-        const verifyResult = await signUp.verifications.verifyEmailCode({
+        const verifyResult = await signUp.attemptEmailAddressVerification({
           code,
         });
 
-        if (verifyResult.error) {
-          setError(verifyResult.error.message || "Mã xác thực không chính xác.");
-          return;
-        }
-
-        if (signUp.status === "complete") {
-          const finalizeResult = await signUp.finalize();
-          if (finalizeResult.error) {
-            setError(finalizeResult.error.message || "Lỗi hoàn tất phiên đăng nhập.");
-          } else {
-            router.push("/learn");
-          }
+        if (verifyResult.status === "complete" && verifyResult.createdSessionId) {
+          await setActive({ session: verifyResult.createdSessionId });
+          router.push("/learn");
         } else {
           setError("Xác thực chưa hoàn tất. Vui lòng thử lại.");
         }
-      } catch (err: any) {
-        setError("Mã xác thực không chính xác.");
+      } catch (err: unknown) {
+        setError(getErrorMessage(err, "Mã xác thực không chính xác."));
       }
     });
   };
 
   const handleSocialLogin = (strategy: "oauth_google" | "oauth_facebook") => {
-    if (!signUp) return;
-    signUp.sso({
+    if (!isLoaded) return;
+    signUp.authenticateWithRedirect({
       strategy,
       redirectUrl: window.location.origin + "/sso-callback",
-      redirectCallbackUrl: window.location.origin + "/learn",
+      redirectUrlComplete: window.location.origin + "/learn",
     });
   };
 
@@ -165,7 +171,7 @@ export default function SignUpPage() {
 
           <button
             type="submit"
-            disabled={isPending || !signUp}
+            disabled={isPending || !isLoaded}
             className="w-full py-3.5 px-6 rounded-2xl bg-[#8b5cf6] hover:bg-[#7c3aed] border-b-4 border-[#6d28d9] active:border-b-2 active:translate-y-[2px] disabled:opacity-60 disabled:cursor-not-allowed text-white font-black text-base transition-all duration-100 flex items-center justify-center gap-2 shadow-[0_4px_12px_rgba(139,92,246,0.15)] mt-4 cursor-pointer"
           >
             {isPending ? "Đang xác thực..." : "Xác thực tài khoản"}
@@ -360,7 +366,7 @@ export default function SignUpPage() {
         <button
           id="signup-submit"
           type="submit"
-          disabled={isPending || !signUp}
+          disabled={isPending || !isLoaded}
           className="w-full py-3.5 px-6 rounded-2xl bg-[#8b5cf6] hover:bg-[#7c3aed] border-b-4 border-[#6d28d9] active:border-b-2 active:translate-y-[2px] disabled:opacity-60 disabled:cursor-not-allowed text-white font-black text-base transition-all duration-100 flex items-center justify-center gap-2 shadow-[0_4px_12px_rgba(139,92,246,0.15)] mt-4 cursor-pointer"
         >
           {isPending ? "Đang tạo tài khoản..." : "Tạo tài khoản"}

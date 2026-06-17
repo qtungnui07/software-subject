@@ -1,13 +1,31 @@
 "use client";
 
 import { useState, useTransition } from "react";
-import { useSignIn } from "@clerk/nextjs";
+import { useSignIn } from "@clerk/nextjs/legacy";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { Mail, Lock } from "lucide-react";
 
+const getErrorMessage = (error: unknown, fallback: string) => {
+  if (
+    typeof error === "object" &&
+    error !== null &&
+    "errors" in error &&
+    Array.isArray(error.errors) &&
+    error.errors[0]?.message
+  ) {
+    return String(error.errors[0].message);
+  }
+
+  if (error instanceof Error) {
+    return error.message;
+  }
+
+  return fallback;
+};
+
 export default function SignInPage() {
-  const { signIn } = useSignIn();
+  const { isLoaded, signIn, setActive } = useSignIn();
   const router = useRouter();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -16,7 +34,7 @@ export default function SignInPage() {
 
   const handleSignIn = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!signIn) return;
+    if (!isLoaded) return;
 
     setError(undefined);
 
@@ -45,33 +63,24 @@ export default function SignInPage() {
           password,
         });
 
-        if (result.error) {
-          setError(result.error.message || "Đăng nhập thất bại. Vui lòng kiểm tra lại thông tin.");
-          return;
-        }
-
-        if (signIn.status === "complete") {
-          const finalResult = await signIn.finalize();
-          if (finalResult.error) {
-            setError(finalResult.error.message || "Lỗi hoàn tất phiên đăng nhập.");
-          } else {
-            router.push("/learn");
-          }
+        if (result.status === "complete" && result.createdSessionId) {
+          await setActive({ session: result.createdSessionId });
+          router.push("/learn");
         } else {
           setError("Yêu cầu xác thực thêm chưa được hỗ trợ.");
         }
-      } catch (err: any) {
-        setError("Đăng nhập thất bại. Vui lòng kiểm tra lại thông tin.");
+      } catch (err: unknown) {
+        setError(getErrorMessage(err, "Đăng nhập thất bại. Vui lòng kiểm tra lại thông tin."));
       }
     });
   };
 
   const handleSocialLogin = (strategy: "oauth_google" | "oauth_facebook") => {
-    if (!signIn) return;
-    signIn.sso({
+    if (!isLoaded) return;
+    signIn.authenticateWithRedirect({
       strategy,
       redirectUrl: window.location.origin + "/sso-callback",
-      redirectCallbackUrl: window.location.origin + "/learn",
+      redirectUrlComplete: window.location.origin + "/learn",
     });
   };
 
@@ -192,7 +201,7 @@ export default function SignInPage() {
         <button
           id="signin-submit"
           type="submit"
-          disabled={isPending || !signIn}
+          disabled={isPending || !isLoaded}
           className="w-full py-3.5 px-6 rounded-2xl bg-[#1D9BF0] hover:bg-[#1486CC] border-b-4 border-[#0B6FAE] active:border-b-2 active:translate-y-[2px] disabled:opacity-60 disabled:cursor-not-allowed text-white font-black text-base transition-all duration-100 flex items-center justify-center gap-2 shadow-[0_4px_12px_rgba(29,155,240,0.15)] mt-4 animate-in fade-in slide-in-from-bottom-2 duration-350 delay-300 ease-out fill-mode-both cursor-pointer"
         >
           {isPending ? (
