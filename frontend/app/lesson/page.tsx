@@ -8,7 +8,7 @@ import { CheckCircle2, XCircle, Trophy, RefreshCw, Home, Heart } from "lucide-re
 import { LessonHeader } from "@/components/lesson-header";
 import { ExitModal } from "@/components/exit-modal";
 import { Button } from "@/components/ui/button";
-import { lessonNodes } from "@/components/lesson-path";
+import { lessonNodes } from "@/constants/lessons";
 
 // 5 mock questions related to English Communication
 const MOCK_QUESTIONS = [
