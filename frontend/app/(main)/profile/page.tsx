@@ -3,33 +3,49 @@ import Link from "next/link";
 
 import { Button } from "@/components/ui/button";
 import { profileData } from "@/data/profile-data";
+import { englishProgressCourse } from "@/data/progress-data";
+import { getCourseProgressSummary } from "@/lib/progress-utils";
 
-const quickStats = [
-  {
-    label: "Streak",
-    value: `${profileData.learningStats.streakDays} ngày`,
-    description: "Giữ nhịp học đều",
-    icon: "🔥",
-    tone: "border-orange-100 bg-orange-50 text-orange-600",
-  },
-  {
-    label: "XP",
-    value: `${profileData.learningStats.xp} XP`,
-    description: "Điểm kinh nghiệm",
-    icon: "⚡",
-    tone: "border-sky-100 bg-sky-50 text-sky-600",
-  },
-  {
-    label: "Hôm nay",
-    value: `${profileData.learningStats.todayMinutes} phút`,
-    description: "Thời gian học",
-    icon: "⏱️",
-    tone: "border-emerald-100 bg-emerald-50 text-emerald-600",
-  },
-];
+const formatJoinedDate = (dateValue: string) => {
+  const [year, month, day] = dateValue.split("-");
+
+  return `${day}/${month}/${year}`;
+};
 
 const ProfilePage = () => {
   const { user, currentCourse, achievements } = profileData;
+  const courseProgress = getCourseProgressSummary(englishProgressCourse);
+
+  const quickStats = [
+    {
+      label: "Streak",
+      value: `${profileData.learningStats.streakDays} ngày`,
+      description: "Giữ nhịp học đều",
+      icon: "🔥",
+      tone: "border-orange-100 bg-orange-50 text-orange-600",
+    },
+    {
+      label: "XP",
+      value: `${courseProgress.earnedXp} XP`,
+      description: "Điểm kinh nghiệm",
+      icon: "⚡",
+      tone: "border-sky-100 bg-sky-50 text-sky-600",
+    },
+    {
+      label: "Hôm nay",
+      value: `${profileData.learningStats.todayMinutes} phút`,
+      description: "Thời gian học",
+      icon: "⏱️",
+      tone: "border-emerald-100 bg-emerald-50 text-emerald-600",
+    },
+    {
+      label: "Bài học",
+      value: `${courseProgress.completedLessons} / ${courseProgress.totalLessons}`,
+      description: "Đã hoàn thành",
+      icon: "📘",
+      tone: "border-violet-100 bg-violet-50 text-violet-600",
+    },
+  ];
 
   return (
     <main className="mx-auto w-full max-w-6xl space-y-6 px-4 pb-10 sm:px-6 lg:px-8">
@@ -92,7 +108,8 @@ const ProfilePage = () => {
                 </div>
                 <p className="mt-2 break-all text-sm font-bold text-slate-400">{user.email}</p>
                 <p className="mt-3 text-sm font-bold text-slate-500">
-                  Tham gia Robogo từ <span className="text-slate-700">16/06/2026</span>
+                  Tham gia Robogo từ{" "}
+                  <span className="text-slate-700">{formatJoinedDate(user.joinedAt)}</span>
                 </p>
               </div>
             </div>
@@ -120,6 +137,33 @@ const ProfilePage = () => {
                   {currentCourse.level}
                 </span>
               </div>
+            </div>
+
+            <div className="mt-6 rounded-[24px] border-2 border-sky-100 bg-sky-50/60 p-4">
+              <div className="flex items-center justify-between gap-4">
+                <div>
+                  <p className="text-xs font-black uppercase tracking-[0.16em] text-sky-500">
+                    Tiến độ khóa học
+                  </p>
+                  <p className="mt-1 text-sm font-bold text-slate-500">
+                    {courseProgress.completedLessons} / {courseProgress.totalLessons} bài học đã hoàn thành
+                  </p>
+                </div>
+                <div className="rounded-2xl bg-white px-3 py-2 text-lg font-black text-sky-600 shadow-sm">
+                  {courseProgress.completionPercent}%
+                </div>
+              </div>
+
+              <div className="mt-4 h-4 overflow-hidden rounded-full bg-white shadow-inner">
+                <div
+                  className="h-full rounded-full bg-sky-500 transition-all duration-700 ease-out"
+                  style={{ width: `${courseProgress.completionPercent}%` }}
+                />
+              </div>
+
+              <p className="mt-3 text-xs font-black uppercase tracking-wide text-slate-400">
+                {courseProgress.completedLessons} bài đã xong · {courseProgress.currentLessons} bài đang học · {courseProgress.lockedLessons} bài đang khóa
+              </p>
             </div>
 
             <div className="mt-6 grid gap-3 sm:grid-cols-3">
@@ -157,7 +201,7 @@ const ProfilePage = () => {
               </Button>
             </div>
 
-            <div className="mt-5 grid gap-3">
+            <div className="mt-5 grid gap-3 sm:grid-cols-2 lg:grid-cols-1 xl:grid-cols-2">
               {quickStats.map((stat) => (
                 <div
                   key={stat.label}
