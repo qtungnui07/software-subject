@@ -1,11 +1,16 @@
 import { MobileHeader } from "@/components/mobile-header";
 import { Sidebar } from "@/components/sidebar";
+import { auth } from "@/auth";
+
+export const dynamic = "force-dynamic";
 
 type Props = {
   children: React.ReactNode;
 };
 
-const MainLayout = ({ children }: Props) => {
+const MainLayout = async ({ children }: Props) => {
+  await auth();
+
   return (
     <div className="min-h-screen bg-[#f6fbff] text-slate-800">
       <MobileHeader />

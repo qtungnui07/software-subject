@@ -5,7 +5,12 @@ import postgres from "postgres";
 import { drizzle } from "drizzle-orm/postgres-js";
 import { courses } from "../db/schema";
 
-const databaseUrl = process.env.DATABASE_URL || "postgresql://qtitpc:21107qt@localhost:5432/duolingo";
+const databaseUrl = process.env.DATABASE_URL;
+
+if (!databaseUrl) {
+    throw new Error("DATABASE_URL is not set");
+}
+
 const client = postgres(databaseUrl);
 const db = drizzle(client);
 

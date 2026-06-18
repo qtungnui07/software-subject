@@ -1,10 +1,14 @@
 import { clerkMiddleware, createRouteMatcher } from "@clerk/nextjs/server";
 import { NextResponse } from "next/server";
 
+const LOCAL_SESSION_COOKIE = "local_session";
+
 const isProtectedRoute = createRouteMatcher([
   "/learn(.*)",
   "/courses(.*)",
   "/dashboard(.*)",
+  "/admin(.*)",
+  "/api/admin(.*)",
   "/profile(.*)"
 ]);
 
@@ -14,6 +18,16 @@ const isAuthRoute = createRouteMatcher([
 ]);
 
 export default clerkMiddleware(async (auth, req) => {
+  const hasLocalSession = Boolean(req.cookies.get(LOCAL_SESSION_COOKIE)?.value);
+
+  if (hasLocalSession && isAuthRoute(req)) {
+    return NextResponse.redirect(new URL("/learn", req.url));
+  }
+
+  if (hasLocalSession && isProtectedRoute(req)) {
+    return NextResponse.next();
+  }
+
   const { userId } = await auth();
 
   // If the user is logged in and tries to access sign-in/sign-up, redirect to /learn

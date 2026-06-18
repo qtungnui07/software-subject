@@ -6,6 +6,7 @@
     "dev": "next dev --webpack",
     "build": "NODE_OPTIONS=--disable-warning=DEP0205 next build",
     "start": "next start",
+    "backend": "sh ../backend/scripts/run-backend.sh",
     "lint": "eslint",
     "db:studio": "npx drizzle-kit studio",
     "db:push": "npx drizzle-kit push",

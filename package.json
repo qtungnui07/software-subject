@@ -1,0 +1,11 @@
+{
+  "name": "software-subject",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "backend": "sh backend/scripts/run-backend.sh",
+    "backend:install": "npm --prefix backend install",
+    "frontend": "npm --prefix frontend run dev",
+    "frontend:install": "npm --prefix frontend install"
+  }
+}

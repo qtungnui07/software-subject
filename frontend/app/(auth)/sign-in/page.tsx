@@ -12,9 +12,19 @@ const getErrorMessage = (error: unknown, fallback: string) => {
     error !== null &&
     "errors" in error &&
     Array.isArray(error.errors) &&
-    error.errors[0]?.message
+    error.errors[0]
   ) {
-    return String(error.errors[0].message);
+    const firstError = error.errors[0] as {
+      code?: string;
+      message?: string;
+      longMessage?: string;
+      meta?: { paramName?: string };
+    };
+    const detail = firstError.longMessage || firstError.message || fallback;
+    const field = firstError.meta?.paramName ? `${firstError.meta.paramName}: ` : "";
+    const code = firstError.code ? ` (${firstError.code})` : "";
+
+    return `${field}${detail}${code}`;
   }
 
   if (error instanceof Error) {
@@ -25,7 +35,7 @@ const getErrorMessage = (error: unknown, fallback: string) => {
 };
 
 export default function SignInPage() {
-  const { isLoaded, signIn, setActive } = useSignIn();
+  const { isLoaded, signIn } = useSignIn();
   const router = useRouter();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -34,7 +44,6 @@ export default function SignInPage() {
 
   const handleSignIn = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!isLoaded) return;
 
     setError(undefined);
 
@@ -58,17 +67,22 @@ export default function SignInPage() {
 
     startTransition(async () => {
       try {
-        const result = await signIn.create({
-          identifier: email,
-          password,
+        const response = await fetch("/api/auth/local/sign-in", {
+          method: "POST",
+          headers: { "content-type": "application/json" },
+          body: JSON.stringify({
+            email,
+            password,
+          }),
         });
 
-        if (result.status === "complete" && result.createdSessionId) {
-          await setActive({ session: result.createdSessionId });
-          router.push("/learn");
-        } else {
-          setError("Yêu cầu xác thực thêm chưa được hỗ trợ.");
+        if (!response.ok) {
+          const data = await response.json().catch(() => null);
+          throw new Error(data?.error || "Email hoặc mật khẩu không đúng.");
         }
+
+        router.push("/learn");
+        router.refresh();
       } catch (err: unknown) {
         setError(getErrorMessage(err, "Đăng nhập thất bại. Vui lòng kiểm tra lại thông tin."));
       }
@@ -201,7 +215,7 @@ export default function SignInPage() {
         <button
           id="signin-submit"
           type="submit"
-          disabled={isPending || !isLoaded}
+          disabled={isPending}
           className="w-full py-3.5 px-6 rounded-2xl bg-[#1D9BF0] hover:bg-[#1486CC] border-b-4 border-[#0B6FAE] active:border-b-2 active:translate-y-[2px] disabled:opacity-60 disabled:cursor-not-allowed text-white font-black text-base transition-all duration-100 flex items-center justify-center gap-2 shadow-[0_4px_12px_rgba(29,155,240,0.15)] mt-4 animate-in fade-in slide-in-from-bottom-2 duration-350 delay-300 ease-out fill-mode-both cursor-pointer"
         >
           {isPending ? (

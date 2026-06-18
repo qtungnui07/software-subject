@@ -12,9 +12,19 @@ const getErrorMessage = (error: unknown, fallback: string) => {
     error !== null &&
     "errors" in error &&
     Array.isArray(error.errors) &&
-    error.errors[0]?.message
+    error.errors[0]
   ) {
-    return String(error.errors[0].message);
+    const firstError = error.errors[0] as {
+      code?: string;
+      message?: string;
+      longMessage?: string;
+      meta?: { paramName?: string };
+    };
+    const detail = firstError.longMessage || firstError.message || fallback;
+    const field = firstError.meta?.paramName ? `${firstError.meta.paramName}: ` : "";
+    const code = firstError.code ? ` (${firstError.code})` : "";
+
+    return `${field}${detail}${code}`;
   }
 
   if (error instanceof Error) {
@@ -42,7 +52,6 @@ export default function SignUpPage() {
 
   const handleSignUp = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!isLoaded) return;
 
     setError(undefined);
 
@@ -74,20 +83,23 @@ export default function SignUpPage() {
 
     startTransition(async () => {
       try {
-        const result = await signUp.create({
-          emailAddress: email,
-          password,
-          firstName: name,
+        const response = await fetch("/api/auth/local/sign-up", {
+          method: "POST",
+          headers: { "content-type": "application/json" },
+          body: JSON.stringify({
+            name,
+            email,
+            password,
+          }),
         });
 
-        if (result.status === "complete" && result.createdSessionId) {
-          await setActive({ session: result.createdSessionId });
-          router.push("/learn");
-          return;
+        if (!response.ok) {
+          const data = await response.json().catch(() => null);
+          throw new Error(data?.error || "Không thể tạo tài khoản.");
         }
 
-        await result.prepareEmailAddressVerification({ strategy: "email_code" });
-        setVerifying(true);
+        router.push("/learn");
+        router.refresh();
       } catch (err: unknown) {
         setError(getErrorMessage(err, "Đăng ký thất bại. Vui lòng kiểm tra lại thông tin."));
       }
@@ -113,6 +125,7 @@ export default function SignUpPage() {
           setError("Xác thực chưa hoàn tất. Vui lòng thử lại.");
         }
       } catch (err: unknown) {
+        console.error("Clerk verification error:", err);
         setError(getErrorMessage(err, "Mã xác thực không chính xác."));
       }
     });
@@ -366,7 +379,7 @@ export default function SignUpPage() {
         <button
           id="signup-submit"
           type="submit"
-          disabled={isPending || !isLoaded}
+          disabled={isPending}
           className="w-full py-3.5 px-6 rounded-2xl bg-[#8b5cf6] hover:bg-[#7c3aed] border-b-4 border-[#6d28d9] active:border-b-2 active:translate-y-[2px] disabled:opacity-60 disabled:cursor-not-allowed text-white font-black text-base transition-all duration-100 flex items-center justify-center gap-2 shadow-[0_4px_12px_rgba(139,92,246,0.15)] mt-4 cursor-pointer"
         >
           {isPending ? "Đang tạo tài khoản..." : "Tạo tài khoản"}
