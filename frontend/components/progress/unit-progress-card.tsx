@@ -16,26 +16,26 @@ const statusConfig = {
   completed: {
     label: "Hoàn thành",
     icon: CheckCircle2,
-    cardClass: "border-emerald-200 bg-emerald-50/70",
-    badgeClass: "border-emerald-200 bg-emerald-50 text-emerald-600",
+    cardClass: "border-emerald-200 bg-emerald-50/70 dark:border-emerald-950/40 dark:bg-emerald-950/20",
+    badgeClass: "border-emerald-200 bg-emerald-50 text-emerald-600 dark:border-emerald-900/30 dark:bg-emerald-950/40 dark:text-emerald-400",
     iconClass: "text-emerald-500",
     barClass: "bg-emerald-500",
   },
   active: {
     label: "Đang học",
     icon: PlayCircle,
-    cardClass: "border-sky-200 bg-sky-50/80 shadow-sm",
-    badgeClass: "border-sky-200 bg-sky-50 text-sky-600",
+    cardClass: "border-sky-200 bg-sky-50/80 shadow-sm dark:border-[#202f36] dark:bg-[#182226]",
+    badgeClass: "border-sky-200 bg-sky-50 text-sky-600 dark:border-[#202f36] dark:bg-[#1f2d33] dark:text-sky-400",
     iconClass: "text-sky-500",
     barClass: "bg-sky-500",
   },
   locked: {
     label: "Chưa mở khóa",
     icon: Lock,
-    cardClass: "border-slate-200 bg-slate-50/70",
-    badgeClass: "border-slate-200 bg-white text-slate-500",
+    cardClass: "border-slate-200 bg-slate-50/70 dark:border-[#202f36]/40 dark:bg-[#141f23]/60",
+    badgeClass: "border-slate-200 bg-white text-slate-500 dark:border-[#202f36] dark:bg-[#1f2d33] dark:text-slate-400",
     iconClass: "text-slate-400",
-    barClass: "bg-slate-300",
+    barClass: "bg-slate-300 dark:bg-[#202f36]",
   },
 } as const;
 
@@ -72,7 +72,7 @@ export const UnitProgressCard = ({ unit, summary }: Props) => {
             Unit {unit.id}
           </div>
 
-          <h3 className="mt-1 line-clamp-2 text-base font-black leading-5 text-slate-800">
+          <h3 className="mt-1 line-clamp-2 text-base font-black leading-5 text-slate-800 dark:text-slate-100">
             {unit.title.replace(`Unit ${unit.id}: `, "")}
           </h3>
         </div>
@@ -88,20 +88,20 @@ export const UnitProgressCard = ({ unit, summary }: Props) => {
         </div>
       </div>
 
-      <p className="mt-2.5 line-clamp-2 text-sm font-bold leading-5 text-slate-500">
+      <p className="mt-2.5 line-clamp-2 text-sm font-bold leading-5 text-slate-500 dark:text-slate-400">
         {unit.description}
       </p>
 
       <div className="mt-3.5 flex items-end justify-between gap-3">
-        <p className="text-sm font-extrabold text-slate-600">
+        <p className="text-sm font-extrabold text-slate-600 dark:text-slate-300">
           {summary.completedLessons} / {summary.totalLessons} bài học
         </p>
-        <p className="text-2xl font-black leading-none text-slate-800">
+        <p className="text-2xl font-black leading-none text-slate-800 dark:text-slate-100">
           {targetPercent}%
         </p>
       </div>
 
-      <div className="mt-2.5 h-3 overflow-hidden rounded-full bg-white shadow-inner">
+      <div className="mt-2.5 h-3 overflow-hidden rounded-full bg-white dark:bg-[#141f23] shadow-inner">
         <div
           className={cn(
             "h-full rounded-full transition-all duration-700 ease-out",

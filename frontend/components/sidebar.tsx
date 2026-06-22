@@ -113,7 +113,7 @@ export const Sidebar = ({ className, isLoggedIn = false }: Props) => {
     >
       <Link
         href="/learn"
-        className="mb-7 flex items-center gap-x-4 rounded-[22px] px-3 py-3 transition-all hover:bg-[#f4faff]"
+        className="mb-7 flex items-center gap-x-4 rounded-[22px] px-3 py-3 transition-all hover:bg-[#f4faff] dark:hover:bg-[#1f2d33]"
       >
         <div className="relative size-[64px] shrink-0 drop-shadow-[0_8px_18px_rgba(20,134,204,0.18)]">
           <Image
@@ -209,9 +209,9 @@ export const Sidebar = ({ className, isLoggedIn = false }: Props) => {
         </div>
       </nav>
 
-      <div className="mt-6 rounded-[22px] border-2 border-[#d6ecfb] bg-white p-4 shadow-[0_10px_30px_rgba(20,134,204,0.10)]">
+      <div className="mt-6 rounded-[22px] border-2 border-[#d6ecfb] dark:border-[#202f36] bg-white dark:bg-[#182226] p-4 shadow-[0_10px_30px_rgba(20,134,204,0.10)] dark:shadow-none">
         <div className="flex items-center gap-x-3">
-          <div className="flex size-12 shrink-0 flex-col items-center justify-center rounded-2xl bg-[#e8f5ff] text-[#1486CC] shadow-sm">
+          <div className="flex size-12 shrink-0 flex-col items-center justify-center rounded-2xl bg-[#e8f5ff] dark:bg-[#1c3547] text-[#1486CC] dark:text-[#38bdf8] shadow-sm">
             <span className="text-lg leading-none" aria-hidden="true">
               {currentTier.icon}
             </span>
@@ -221,17 +221,17 @@ export const Sidebar = ({ className, isLoggedIn = false }: Props) => {
           </div>
 
           <div className="min-w-0">
-            <p className="text-sm font-black uppercase tracking-wide text-slate-700">
+            <p className="text-sm font-black uppercase tracking-wide text-slate-700 dark:text-slate-200">
               Mục tiêu ngày
             </p>
-            <p className="text-xs font-bold text-slate-400">
+            <p className="text-xs font-bold text-slate-400 dark:text-slate-400">
               {currentMinutes}m hôm nay · {currentTier.label}
             </p>
           </div>
         </div>
 
         <div className="mt-5">
-          <div className="relative h-3 rounded-full bg-slate-100">
+          <div className="relative h-3 rounded-full bg-slate-100 dark:bg-[#141f23]">
             <div
               className="h-full rounded-full bg-[#1486CC] shadow-[0_3px_10px_rgba(20,134,204,0.25)]"
               style={{ width: `${progressPercent}%` }}
@@ -250,7 +250,7 @@ export const Sidebar = ({ className, isLoggedIn = false }: Props) => {
             ))}
           </div>
 
-          <div className="mt-3 grid grid-cols-3 text-[10px] font-black uppercase tracking-wide text-slate-400">
+          <div className="mt-3 grid grid-cols-3 text-[10px] font-black uppercase tracking-wide text-slate-400 dark:text-slate-400">
             <span>15m Đồng</span>
             <span className="text-center">30m Bạc</span>
             <span className="text-right">1h Vàng</span>
