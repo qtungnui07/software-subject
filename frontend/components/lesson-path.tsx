@@ -302,7 +302,7 @@ export const LessonPath = ({ todayMinutes }: Props) => {
         <svg
           className="pointer-events-none absolute left-1/2 top-0 h-[1400px] w-full -translate-x-1/2 overflow-visible"
           viewBox="0 0 720 1400"
-          preserveAspectRatio="xMidYMin meet"
+          preserveAspectRatio="none"
           aria-hidden="true"
         >
           <defs>

@@ -16,13 +16,13 @@ const tierStyles = {
   gold: "border-amber-200 bg-amber-50 text-amber-700",
 };
 
-export const MobileHeader = () => {
+export const MobileHeader = ({ isLoggedIn = false }: { isLoggedIn?: boolean }) => {
   const studyTier = getStudyTier(todayMinutes);
 
   return (
     <nav className="fixed top-0 z-50 flex h-[56px] w-full items-center border-b-2 border-[#e4edf5] bg-white/95 px-3 shadow-[0_8px_24px_rgba(15,23,42,0.04)] backdrop-blur sm:px-4 lg:hidden">
       <div className="flex w-full items-center justify-between gap-1.5 sm:gap-2">
-        <MobileSidebar />
+        <MobileSidebar isLoggedIn={isLoggedIn} />
 
         <Link
           href="/learn"

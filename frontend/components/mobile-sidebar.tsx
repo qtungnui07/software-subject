@@ -10,7 +10,7 @@ import {
   SheetTrigger,
 } from "@/components/ui/sheet";
 
-export const MobileSidebar = () => {
+export const MobileSidebar = ({ isLoggedIn = false }: { isLoggedIn?: boolean }) => {
   const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
@@ -34,7 +34,7 @@ export const MobileSidebar = () => {
       </SheetTrigger>
 
       <SheetContent className="z-[100] w-[304px] max-w-[88vw] p-0" side="left">
-        <Sidebar />
+        <Sidebar isLoggedIn={isLoggedIn} />
       </SheetContent>
     </Sheet>
   );

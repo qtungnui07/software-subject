@@ -1,13 +1,20 @@
+"use client";
+
 import Image from "next/image";
 import Link from "next/link";
+import { useState } from "react";
+import { useClerk } from "@clerk/nextjs";
+import { toast } from "sonner";
 
 import { SidebarItem } from "./sidebar-item";
+import { Button } from "@/components/ui/button";
 
 import { getStudyTier } from "@/lib/study-tier";
 import { cn } from "@/lib/utils";
 
 type Props = {
   className?: string;
+  isLoggedIn?: boolean;
 };
 
 const routes = [
@@ -41,11 +48,6 @@ const routes = [
     href: "/profile",
     iconSrc: "/heart.svg",
   },
-  {
-    label: "Xem thêm",
-    href: "/more",
-    iconSrc: "/window.svg",
-  },
 ];
 
 const currentMinutes = 43;
@@ -78,11 +80,34 @@ const milestones = [
   },
 ];
 
-export const Sidebar = ({ className }: Props) => {
+export const Sidebar = ({ className, isLoggedIn = false }: Props) => {
+  const [isMoreOpen, setIsMoreOpen] = useState(false);
+  const { signOut } = useClerk();
+
+  const handleHelp = () => {
+    setIsMoreOpen(false);
+    toast.info("Tính năng Trợ giúp đang được phát triển!");
+  };
+
+  const handleSignOut = async () => {
+    setIsMoreOpen(false);
+    try {
+      await fetch("/api/auth/local/sign-out", { method: "POST" });
+    } catch (e) {
+      console.error("Local sign out error:", e);
+    }
+    try {
+      await signOut();
+    } catch (e) {
+      console.error("Clerk sign out error:", e);
+    }
+    window.location.href = "/";
+  };
+
   return (
     <aside
       className={cn(
-        "flex h-full w-full flex-col overflow-y-auto border-r-2 border-[#e4edf5] bg-gradient-to-b from-white via-white to-[#f7fbff] px-5 py-6 lg:fixed lg:left-0 lg:top-0 lg:w-[304px]",
+        "flex h-full w-full flex-col overflow-y-auto lg:overflow-visible border-r-2 border-[#e4edf5] dark:border-[#202f36] bg-gradient-to-b from-white dark:from-[#131f24] via-white dark:via-[#131f24] to-[#f7fbff] dark:to-[#131f24] px-5 py-6 lg:fixed lg:left-0 lg:top-0 lg:w-[304px] lg:z-40 transition-colors duration-300",
         className,
       )}
     >
@@ -115,6 +140,73 @@ export const Sidebar = ({ className }: Props) => {
         {routes.map((route) => (
           <SidebarItem key={route.href} {...route} />
         ))}
+
+        {/* Xem thêm Popover Button */}
+        <div
+          className="relative"
+          onMouseEnter={() => setIsMoreOpen(true)}
+          onMouseLeave={() => setIsMoreOpen(false)}
+        >
+          {isMoreOpen && (
+            <div className="absolute bottom-[calc(100%+8px)] left-0 lg:bottom-0 lg:left-full lg:pl-4 z-50 w-full lg:w-[256px]">
+              <div className="w-full rounded-[20px] border-2 border-[#202f36] bg-[#141f23] p-1.5 shadow-[0_12px_30px_rgba(0,0,0,0.35)] animate-in fade-in slide-in-from-bottom-2 lg:slide-in-from-left-2 duration-150">
+                <Link
+                  href="/settings/account"
+                  className="flex w-full items-center rounded-xl px-4 py-3 text-[13px] font-black uppercase tracking-[0.12em] text-[#afbfcb] transition hover:bg-[#1f2d33] hover:text-white"
+                  onClick={() => setIsMoreOpen(false)}
+                >
+                  Cài đặt
+                </Link>
+                <button
+                  type="button"
+                  onClick={handleHelp}
+                  className="flex w-full items-center rounded-xl px-4 py-3 text-[13px] font-black uppercase tracking-[0.12em] text-[#afbfcb] transition hover:bg-[#1f2d33] hover:text-white text-left cursor-pointer"
+                >
+                  Trợ giúp
+                </button>
+                {isLoggedIn ? (
+                  <button
+                    type="button"
+                    onClick={handleSignOut}
+                    className="flex w-full items-center rounded-xl px-4 py-3 text-[13px] font-black uppercase tracking-[0.12em] text-[#afbfcb] transition hover:bg-[#1f2d33] hover:text-white text-left cursor-pointer"
+                  >
+                    Đăng xuất
+                  </button>
+                ) : (
+                  <Link
+                    href="/sign-in"
+                    className="flex w-full items-center rounded-xl px-4 py-3 text-[13px] font-black uppercase tracking-[0.12em] text-[#afbfcb] transition hover:bg-[#1f2d33] hover:text-white"
+                    onClick={() => setIsMoreOpen(false)}
+                  >
+                    Đăng nhập
+                  </Link>
+                )}
+              </div>
+            </div>
+          )}
+
+          <Button
+            variant="sidebar"
+            className={cn(
+              "h-[58px] w-full justify-start rounded-[18px] px-4 text-[15px] hover:bg-[#f4faff] active:bg-[#e8f5ff] transition",
+              isMoreOpen && "bg-[#f4faff]",
+            )}
+            onClick={() => {
+              if (window.innerWidth < 1024) {
+                setIsMoreOpen((prev) => !prev);
+              }
+            }}
+          >
+            <Image
+              src="/window.svg"
+              alt=""
+              className="mr-4 size-8 object-contain"
+              height={32}
+              width={32}
+            />
+            <span className="truncate">XEM THÊM</span>
+          </Button>
+        </div>
       </nav>
 
       <div className="mt-6 rounded-[22px] border-2 border-[#d6ecfb] bg-white p-4 shadow-[0_10px_30px_rgba(20,134,204,0.10)]">

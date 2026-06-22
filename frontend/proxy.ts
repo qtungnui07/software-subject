@@ -9,7 +9,8 @@ const isProtectedRoute = createRouteMatcher([
   "/dashboard(.*)",
   "/admin(.*)",
   "/api/admin(.*)",
-  "/profile(.*)"
+  "/profile(.*)",
+  "/settings(.*)"
 ]);
 
 const isAuthRoute = createRouteMatcher([
