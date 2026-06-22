@@ -202,7 +202,7 @@ export default function SettingsAccountPage() {
         </div>
 
         {/* Right Column: Menu Cài đặt & Hỗ trợ */}
-        <div className="space-y-6">
+        <div className="lg:sticky lg:top-8 space-y-6">
           {/* Card 1: Cài đặt */}
           <div className="rounded-[24px] border-2 border-slate-200 bg-white p-5 shadow-sm dark:border-[#202f36] dark:bg-[#141f23]">
             <div className="flex flex-col gap-y-1">

@@ -149,10 +149,10 @@ export const Sidebar = ({ className, isLoggedIn = false }: Props) => {
         >
           {isMoreOpen && (
             <div className="absolute bottom-[calc(100%+8px)] left-0 lg:bottom-0 lg:left-full lg:pl-4 z-50 w-full lg:w-[256px]">
-              <div className="w-full rounded-[20px] border-2 border-[#202f36] bg-[#141f23] p-1.5 shadow-[0_12px_30px_rgba(0,0,0,0.35)] animate-in fade-in slide-in-from-bottom-2 lg:slide-in-from-left-2 duration-150">
+              <div className="w-full rounded-[20px] border-2 border-slate-200 dark:border-[#202f36] bg-white dark:bg-[#141f23] p-1.5 shadow-[0_12px_30px_rgba(20,134,204,0.15)] dark:shadow-[0_12px_30px_rgba(0,0,0,0.35)] animate-in fade-in slide-in-from-bottom-2 lg:slide-in-from-left-2 duration-150">
                 <Link
                   href="/settings/account"
-                  className="flex w-full items-center rounded-xl px-4 py-3 text-[13px] font-black uppercase tracking-[0.12em] text-[#afbfcb] transition hover:bg-[#1f2d33] hover:text-white"
+                  className="flex w-full items-center rounded-xl px-4 py-3 text-[13px] font-black uppercase tracking-[0.12em] text-slate-600 dark:text-[#afbfcb] transition hover:bg-[#f4faff] hover:text-[#1486CC] dark:hover:bg-[#1f2d33] dark:hover:text-white"
                   onClick={() => setIsMoreOpen(false)}
                 >
                   Cài đặt
@@ -160,7 +160,7 @@ export const Sidebar = ({ className, isLoggedIn = false }: Props) => {
                 <button
                   type="button"
                   onClick={handleHelp}
-                  className="flex w-full items-center rounded-xl px-4 py-3 text-[13px] font-black uppercase tracking-[0.12em] text-[#afbfcb] transition hover:bg-[#1f2d33] hover:text-white text-left cursor-pointer"
+                  className="flex w-full items-center rounded-xl px-4 py-3 text-[13px] font-black uppercase tracking-[0.12em] text-slate-600 dark:text-[#afbfcb] transition hover:bg-[#f4faff] hover:text-[#1486CC] dark:hover:bg-[#1f2d33] dark:hover:text-white text-left cursor-pointer"
                 >
                   Trợ giúp
                 </button>
@@ -168,14 +168,14 @@ export const Sidebar = ({ className, isLoggedIn = false }: Props) => {
                   <button
                     type="button"
                     onClick={handleSignOut}
-                    className="flex w-full items-center rounded-xl px-4 py-3 text-[13px] font-black uppercase tracking-[0.12em] text-[#afbfcb] transition hover:bg-[#1f2d33] hover:text-white text-left cursor-pointer"
+                    className="flex w-full items-center rounded-xl px-4 py-3 text-[13px] font-black uppercase tracking-[0.12em] text-slate-600 dark:text-[#afbfcb] transition hover:bg-[#f4faff] hover:text-[#1486CC] dark:hover:bg-[#1f2d33] dark:hover:text-white text-left cursor-pointer"
                   >
                     Đăng xuất
                   </button>
                 ) : (
                   <Link
                     href="/sign-in"
-                    className="flex w-full items-center rounded-xl px-4 py-3 text-[13px] font-black uppercase tracking-[0.12em] text-[#afbfcb] transition hover:bg-[#1f2d33] hover:text-white"
+                    className="flex w-full items-center rounded-xl px-4 py-3 text-[13px] font-black uppercase tracking-[0.12em] text-slate-600 dark:text-[#afbfcb] transition hover:bg-[#f4faff] hover:text-[#1486CC] dark:hover:bg-[#1f2d33] dark:hover:text-white"
                     onClick={() => setIsMoreOpen(false)}
                   >
                     Đăng nhập
