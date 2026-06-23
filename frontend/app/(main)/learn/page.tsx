@@ -1,5 +1,6 @@
 import Image from "next/image";
 import Link from "next/link";
+import { redirect } from "next/navigation";
 
 import { FeedWrapper } from "@/components/feed-wrapper";
 import { ProgressOverview } from "@/components/progress/progress-overview";
@@ -10,6 +11,8 @@ import { LessonPath } from "@/components/lesson-path";
 import { Button } from "@/components/ui/button";
 import { englishProgressCourse, progressUnits } from "@/data/progress-data";
 import { getCourseProgressSummary } from "@/lib/progress-utils";
+import { getUserProgress } from "@/db/queries";
+import { StreakCard } from "@/components/streak/streak-card";
 
 import { Header } from "./header";
 
@@ -28,16 +31,23 @@ const sidebarCards = [
   },
 ];
 
-const LearnPage = () => {
+const LearnPage = async () => {
+  const userProgressData = await getUserProgress();
+
+  if (!userProgressData || !userProgressData.activeCourseId) {
+    redirect("/courses");
+  }
+
+  const activeCourse = userProgressData.activeCourse || { title: "Tiếng Anh", imageSrc: "/globe.svg" };
   const courseProgress = getCourseProgressSummary(englishProgressCourse);
 
   return (
     <div className="grid grid-cols-1 gap-6 xl:grid-cols-[minmax(0,1fr)_400px] 2xl:grid-cols-[minmax(0,1fr)_425px] xl:items-start xl:gap-10">
       <FeedWrapper>
-        <section className="rounded-[28px] border-2 border-sky-100 bg-white shadow-sm">
-          <div className="sticky top-[56px] z-40 bg-white/95 px-4 py-4 backdrop-blur sm:px-6 lg:top-4">
+        <section className="rounded-[28px] border-2 border-sky-100 dark:border-[#202f36] bg-white dark:bg-[#182226] shadow-sm">
+          <div className="sticky top-[56px] z-40 bg-white/95 dark:bg-[#182226]/95 px-4 py-4 backdrop-blur sm:px-6 lg:top-4">
             <Header
-              courseTitle="Tiếng Anh"
+              courseTitle={activeCourse.title}
               sectionLabel="Phần 1, Chương 1"
               chapterTitle="Giao tiếp cơ bản"
             />
@@ -62,14 +72,15 @@ const LearnPage = () => {
       </FeedWrapper>
 
       <StickyWrapper>
-        <div className="rounded-[24px] border-2 border-sky-100 bg-white p-4 shadow-sm">
+        <div className="rounded-[24px] border-2 border-sky-100 dark:border-[#202f36] bg-white dark:bg-[#182226] p-4 shadow-sm">
           <UserProgress
-            activeCourse={{ title: "Tiếng Anh", imageSrc: "/globe.svg" }}
-            hearts={5}
-            points={100}
-            todayMinutes={todayMinutes}
+            activeCourse={{ title: activeCourse.title, imageSrc: activeCourse.imageSrc }}
+            hearts={userProgressData.hearts}
+            points={userProgressData.points}
           />
         </div>
+
+        <StreakCard />
 
         <ProgressOverview
           className="hidden xl:block"
@@ -85,10 +96,10 @@ const LearnPage = () => {
         {sidebarCards.map((card) => (
           <div
             key={card.title}
-            className="rounded-[24px] border-2 border-slate-200 bg-white p-5 shadow-sm"
+            className="rounded-[24px] border-2 border-slate-200 dark:border-[#202f36] bg-white dark:bg-[#182226] p-5 shadow-sm"
           >
             <div className="flex items-start gap-4">
-              <div className="flex h-16 w-16 shrink-0 items-center justify-center rounded-2xl bg-sky-50">
+              <div className="flex h-16 w-16 shrink-0 items-center justify-center rounded-2xl bg-sky-50 dark:bg-slate-800">
                 <Image
                   src={card.iconSrc}
                   alt=""
@@ -98,8 +109,8 @@ const LearnPage = () => {
                 />
               </div>
               <div>
-                <h3 className="text-lg font-black text-slate-700">{card.title}</h3>
-                <p className="mt-2 text-sm font-bold leading-6 text-slate-500">
+                <h3 className="text-lg font-black text-slate-700 dark:text-slate-100">{card.title}</h3>
+                <p className="mt-2 text-sm font-bold leading-6 text-slate-500 dark:text-slate-400">
                   {card.description}
                 </p>
               </div>
@@ -107,9 +118,9 @@ const LearnPage = () => {
           </div>
         ))}
 
-        <div className="rounded-[24px] border-2 border-slate-200 bg-white p-5 shadow-sm">
-          <h3 className="text-lg font-black text-slate-700">Tạo hồ sơ</h3>
-          <p className="mt-2 text-sm font-bold leading-6 text-slate-500">
+        <div className="rounded-[24px] border-2 border-slate-200 dark:border-[#202f36] bg-white dark:bg-[#182226] p-5 shadow-sm">
+          <h3 className="text-lg font-black text-slate-700 dark:text-slate-100">Tạo hồ sơ</h3>
+          <p className="mt-2 text-sm font-bold leading-6 text-slate-500 dark:text-slate-400">
             Lưu chuỗi ngày học, tiến độ và phần thưởng trên mọi thiết bị.
           </p>
           <div className="mt-5 grid gap-3">

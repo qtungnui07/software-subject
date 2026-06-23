@@ -20,23 +20,23 @@ const buttonVariants = cva(
         primary:
           "bg-[#1486CC] text-primary-foreground hover:bg-[#1486CC]/90 border-[#106BA3] border-b-4 active:border-b-0",
         "primary-outline":
-          "bg-white text-[#1486CC] hover:bg-slate-100 border-transparent ",
+          "bg-white text-[#1486CC] hover:bg-slate-100 border-transparent dark:bg-[#141f23] dark:text-[#38bdf8] dark:hover:bg-[#1f2d33] dark:border-[#202f36] dark:border-2",
         secondary:
           "bg-green-500 text-primary-foreground hover:bg-green-500/90 border-green-600 border-b-4 active:border-b-0",
         "secondary-outline":
-          "bg-white text-green-500 hover:bg-slate-100 border-transparent",
+          "bg-white text-green-500 hover:bg-slate-100 border-transparent dark:bg-[#141f23] dark:text-green-400 dark:hover:bg-[#1f2d33] dark:border-[#202f36] dark:border-2",
         danger:
           "bg-rose-500 text-primary-foreground hover:bg-rose-500/90 border-rose-600 border-b-4 active:border-b-0",
         "danger-outline":
-          "bg-white text-rose-500 hover:bg-slate-100 border-transparent",
+          "bg-white text-rose-500 hover:bg-slate-100 border-transparent dark:bg-[#141f23] dark:text-rose-400 dark:hover:bg-[#1f2d33] dark:border-[#202f36] dark:border-2",
         super:
           "bg-indigo-500 text-primary-foreground hover:bg-indigo-500/90 border-indigo-600 border-b-4 active:border-b-0",
         "super-outline":
-          "bg-white text-indigo-500 hover:bg-slate-100 border-transparent",
+          "bg-white text-indigo-500 hover:bg-slate-100 border-transparent dark:bg-[#141f23] dark:text-indigo-400 dark:hover:bg-[#1f2d33] dark:border-[#202f36] dark:border-2",
         sidebar:
-          "bg-transparent text-slate-500 border-2 border-transparent hover:bg-[#f4f9fc] hover:text-slate-700 transition-all",
+          "bg-transparent text-slate-500 border-2 border-transparent hover:bg-[#f4f9fc] hover:text-slate-700 dark:text-slate-400 dark:hover:bg-[#1f2d33] dark:hover:text-slate-200 transition-all",
         "sidebar-outline":
-          "bg-[#e8f5ff] text-[#1486CC] border-[#1486CC] border-2 shadow-[0_4px_0_#b7def5] hover:bg-[#dff1ff] transition-all",
+          "bg-[#e8f5ff] text-[#1486CC] border-[#1486CC] border-2 shadow-[0_4px_0_#b7def5] hover:bg-[#dff1ff] dark:bg-[#1c3547] dark:text-[#38bdf8] dark:border-[#38bdf8] dark:shadow-[0_4px_0_#142230] dark:hover:bg-[#203f54] transition-all",
               },
       size: {
         default:

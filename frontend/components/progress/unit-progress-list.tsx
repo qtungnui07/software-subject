@@ -15,7 +15,7 @@ export const UnitProgressList = ({ units, className }: Props) => {
   return (
     <section
       className={cn(
-        "rounded-[24px] border-2 border-sky-100 bg-white p-4 shadow-sm",
+        "rounded-[24px] border-2 border-sky-100 dark:border-[#202f36] bg-white dark:bg-[#182226] p-4 shadow-sm",
         className
       )}
     >
@@ -25,7 +25,7 @@ export const UnitProgressList = ({ units, className }: Props) => {
             <BarChart3 className="h-4 w-4" />
             Từng Unit
           </p>
-          <h2 className="mt-1 text-xl font-extrabold text-slate-800">
+          <h2 className="mt-1 text-xl font-extrabold text-slate-800 dark:text-slate-100">
             Tiến độ từng Unit
           </h2>
         </div>
