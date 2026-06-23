@@ -13,6 +13,7 @@ import { englishProgressCourse, progressUnits } from "@/data/progress-data";
 import { getCourseProgressSummary } from "@/lib/progress-utils";
 import { getUserProgress } from "@/db/queries";
 import { StreakCard } from "@/components/streak/streak-card";
+import { auth } from "@/auth";
 
 import { Header } from "./header";
 
@@ -32,6 +33,7 @@ const sidebarCards = [
 ];
 
 const LearnPage = async () => {
+  const session = await auth();
   const userProgressData = await getUserProgress();
 
   if (!userProgressData || !userProgressData.activeCourseId) {
@@ -118,20 +120,22 @@ const LearnPage = async () => {
           </div>
         ))}
 
-        <div className="rounded-[24px] border-2 border-slate-200 dark:border-[#202f36] bg-white dark:bg-[#182226] p-5 shadow-sm">
-          <h3 className="text-lg font-black text-slate-700 dark:text-slate-100">Tạo hồ sơ</h3>
-          <p className="mt-2 text-sm font-bold leading-6 text-slate-500 dark:text-slate-400">
-            Lưu chuỗi ngày học, tiến độ và phần thưởng trên mọi thiết bị.
-          </p>
-          <div className="mt-5 grid gap-3">
-            <Button asChild variant="primary" className="h-12 rounded-2xl">
-              <Link href="/sign-up">Tạo hồ sơ</Link>
-            </Button>
-            <Button asChild variant="primary-outline" className="h-12 rounded-2xl">
-              <Link href="/sign-in">Đăng nhập</Link>
-            </Button>
+        {!session?.user && (
+          <div className="rounded-[24px] border-2 border-slate-200 dark:border-[#202f36] bg-white dark:bg-[#182226] p-5 shadow-sm">
+            <h3 className="text-lg font-black text-slate-700 dark:text-slate-100">Tạo hồ sơ</h3>
+            <p className="mt-2 text-sm font-bold leading-6 text-slate-500 dark:text-slate-400">
+              Lưu chuỗi ngày học, tiến độ và phần thưởng trên mọi thiết bị.
+            </p>
+            <div className="mt-5 grid gap-3">
+              <Button asChild variant="primary" className="h-12 rounded-2xl">
+                <Link href="/sign-up">Tạo hồ sơ</Link>
+              </Button>
+              <Button asChild variant="primary-outline" className="h-12 rounded-2xl">
+                <Link href="/sign-in">Đăng nhập</Link>
+              </Button>
+            </div>
           </div>
-        </div>
+        )}
       </StickyWrapper>
     </div>
   );

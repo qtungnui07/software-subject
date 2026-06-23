@@ -16,7 +16,7 @@ export default function RootLayout({
 }>) {
   return (
     <ClerkProvider>
-      <html lang="vi" className="h-full antialiased">
+      <html lang="vi" className="min-h-screen antialiased" suppressHydrationWarning>
         <head>
           <script
             dangerouslySetInnerHTML={{
