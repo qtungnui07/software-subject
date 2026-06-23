@@ -93,6 +93,56 @@ export const updateUserProfile = async (userName: string, userImageSrc: string) 
     revalidatePath("/learn");
 };
 
+export const updateUserLeague = async (league: number) => {
+    const session = await auth();
+    const userId = session?.user?.id;
+
+    if (!userId) {
+        throw new Error("Unauthorized");
+    }
+
+    try {
+        const existingUserProgress = await getUserProgress();
+
+        if (existingUserProgress) {
+            await db.update(userProgress)
+                .set({
+                    league,
+                })
+                .where(eq(userProgress.userId, userId));
+        }
+    } catch (error) {
+        console.warn("Could not update league in database (migration may be missing):", error);
+    }
+
+    revalidatePath("/leaderboard");
+};
+
+export const updateUserStatusEmoji = async (statusEmoji: string | null) => {
+    const session = await auth();
+    const userId = session?.user?.id;
+
+    if (!userId) {
+        throw new Error("Unauthorized");
+    }
+
+    try {
+        const existingUserProgress = await getUserProgress();
+
+        if (existingUserProgress) {
+            await db.update(userProgress)
+                .set({
+                    statusEmoji,
+                })
+                .where(eq(userProgress.userId, userId));
+        }
+    } catch (error) {
+        console.warn("Could not update statusEmoji in database (migration may be missing):", error);
+    }
+
+    revalidatePath("/leaderboard");
+};
+
 export const updateUserAccountSettings = async (userName: string, email: string) => {
     const session = await auth();
     const userId = session?.user?.id;

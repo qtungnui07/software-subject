@@ -40,6 +40,8 @@ export const userProgress = pgTable("user_progress", {
     }),
     hearts: integer("hearts").notNull().default(5),
     points: integer("points").notNull().default(0),
+    league: integer("league").notNull().default(1),
+    statusEmoji: text("status_emoji"),
 });
 
 export const userStreaks = pgTable("user_streaks", {
