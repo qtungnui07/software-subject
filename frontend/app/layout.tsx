@@ -3,6 +3,8 @@ import { ClerkProvider } from "@clerk/nextjs";
 import { ToasterLoader } from "@/components/toaster-loader";
 import "./globals.css";
 
+import Script from "next/script";
+
 export const metadata: Metadata = {
   title: "Robogo - Learn languages every day",
   description:
@@ -18,7 +20,9 @@ export default function RootLayout({
     <ClerkProvider>
       <html lang="vi" className="min-h-screen antialiased" suppressHydrationWarning>
         <head>
-          <script
+          <Script
+            id="theme-script"
+            strategy="beforeInteractive"
             dangerouslySetInnerHTML={{
               __html: `
                 (function() {
