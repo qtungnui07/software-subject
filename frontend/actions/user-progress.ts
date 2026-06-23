@@ -1,8 +1,8 @@
 "use server";
 
 import { getCourseById, getUserProgress } from '@/db/queries';
-import { courses, userProgress } from '../db/schema';
-import { eq } from 'drizzle-orm';
+import { courses, userProgress, users } from '../db/schema';
+import { eq, and, ne } from 'drizzle-orm';
 import db from '@/db/drizzle';
 import { revalidatePath } from 'next/cache';
 import { redirect } from 'next/navigation';
@@ -91,4 +91,95 @@ export const updateUserProfile = async (userName: string, userImageSrc: string) 
     revalidatePath("/profile");
     revalidatePath("/courses");
     revalidatePath("/learn");
+};
+
+export const updateUserAccountSettings = async (userName: string, email: string) => {
+    const session = await auth();
+    const userId = session?.user?.id;
+
+    if (!userId) {
+        throw new Error("Unauthorized");
+    }
+
+    if (!userName.trim()) {
+        throw new Error("Tên hiển thị không được để trống");
+    }
+
+    if (!email.trim()) {
+        throw new Error("Email không được để trống");
+    }
+
+    const isClerk = userId.startsWith("user_");
+
+    // Check if email already exists for another user
+    if (!isClerk) {
+        const emailExists = await db.query.users.findFirst({
+            where: and(
+                eq(users.email, email.trim().toLowerCase()),
+                ne(users.id, Number(userId))
+            ),
+        });
+
+        if (emailExists) {
+            throw new Error("Email đã được sử dụng bởi người dùng khác");
+        }
+    } else {
+        const emailExists = await db.query.users.findFirst({
+            where: and(
+                eq(users.email, email.trim().toLowerCase()),
+                ne(users.clerkUserId, userId)
+            ),
+        });
+
+        if (emailExists) {
+            throw new Error("Email đã được sử dụng bởi người dùng khác");
+        }
+    }
+
+    // Update users table
+    if (isClerk) {
+        await db.update(users)
+            .set({ name: userName, email: email.trim().toLowerCase() })
+            .where(eq(users.clerkUserId, userId));
+    } else {
+        await db.update(users)
+            .set({ name: userName, email: email.trim().toLowerCase() })
+            .where(eq(users.id, Number(userId)));
+    }
+
+    // Update userProgress table
+    const existingUserProgress = await getUserProgress();
+    if (existingUserProgress) {
+        await db.update(userProgress)
+            .set({
+                userName,
+            })
+            .where(eq(userProgress.userId, userId));
+    } else {
+        await db.insert(userProgress).values({
+            userId,
+            userName,
+        });
+    }
+
+    revalidatePath("/profile");
+    revalidatePath("/courses");
+    revalidatePath("/learn");
+};
+
+export const getUserAccountDetails = async () => {
+    const session = await auth();
+    const user = session?.user;
+
+    if (!user) {
+        throw new Error("Unauthorized");
+    }
+
+    const progress = await getUserProgress();
+
+    return {
+        name: progress?.userName || user.name || "User",
+        email: user.email || "",
+        isClerk: user.id.startsWith("user_"),
+    };
 };

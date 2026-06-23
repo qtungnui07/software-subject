@@ -339,7 +339,7 @@ export const LessonPath = ({ todayMinutes }: Props) => {
 
         <div className="absolute left-[8%] top-[238px] z-10 hidden md:block">
           <div className="relative h-24 w-24 rounded-[28px] bg-white/90 dark:bg-slate-800/90 p-2 shadow-[0_16px_34px_rgba(15,23,42,0.13)] ring-2 ring-sky-100 dark:ring-[#202f36]">
-            <Image src="/logo.webp" alt="Robogo" fill className="p-2" sizes="96px" />
+            <Image src="/logo.webp" alt="Robogo" fill className="p-2 rounded-[20px]" sizes="96px" />
           </div>
           <div className="mx-auto mt-2 w-fit rounded-full border-2 border-sky-100 dark:border-[#202f36] bg-white dark:bg-slate-800 px-3 py-1 text-xs font-black text-[#1486CC] dark:text-sky-400 shadow-sm">
             Bạn đang ở đây

@@ -10,6 +10,8 @@ import { LessonPath } from "@/components/lesson-path";
 import { Button } from "@/components/ui/button";
 import { englishProgressCourse, progressUnits } from "@/data/progress-data";
 import { getCourseProgressSummary } from "@/lib/progress-utils";
+import { getUserProgress } from "@/db/queries";
+import { redirect } from "next/navigation";
 
 import { Header } from "./header";
 
@@ -28,7 +30,14 @@ const sidebarCards = [
   },
 ];
 
-const LearnPage = () => {
+const LearnPage = async () => {
+  const userProgressData = await getUserProgress();
+
+  if (!userProgressData || !userProgressData.activeCourseId) {
+    redirect("/courses");
+  }
+
+  const activeCourse = userProgressData.activeCourse || { title: "Tiếng Anh", imageSrc: "/globe.svg" };
   const courseProgress = getCourseProgressSummary(englishProgressCourse);
 
   return (
@@ -37,7 +46,7 @@ const LearnPage = () => {
         <section className="rounded-[28px] border-2 border-sky-100 dark:border-[#202f36] bg-white dark:bg-[#182226] shadow-sm">
           <div className="sticky top-[56px] z-40 bg-white/95 dark:bg-[#182226]/95 px-4 py-4 backdrop-blur sm:px-6 lg:top-4">
             <Header
-              courseTitle="Tiếng Anh"
+              courseTitle={activeCourse.title}
               sectionLabel="Phần 1, Chương 1"
               chapterTitle="Giao tiếp cơ bản"
             />
@@ -64,9 +73,9 @@ const LearnPage = () => {
       <StickyWrapper>
         <div className="rounded-[24px] border-2 border-sky-100 dark:border-[#202f36] bg-white dark:bg-[#182226] p-4 shadow-sm">
           <UserProgress
-            activeCourse={{ title: "Tiếng Anh", imageSrc: "/globe.svg" }}
-            hearts={5}
-            points={100}
+            activeCourse={{ title: activeCourse.title, imageSrc: activeCourse.imageSrc }}
+            hearts={userProgressData.hearts}
+            points={userProgressData.points}
             todayMinutes={todayMinutes}
           />
         </div>

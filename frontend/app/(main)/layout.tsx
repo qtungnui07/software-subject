@@ -1,6 +1,7 @@
 import { MobileHeader } from "@/components/mobile-header";
 import { Sidebar } from "@/components/sidebar";
 import { auth } from "@/auth";
+import { getUserProgress } from "@/db/queries";
 
 export const dynamic = "force-dynamic";
 
@@ -11,10 +12,15 @@ type Props = {
 const MainLayout = async ({ children }: Props) => {
   const session = await auth();
   const isLoggedIn = !!session?.user;
+  const userProgressData = isLoggedIn ? await getUserProgress() : null;
 
   return (
     <div className="min-h-screen bg-[#f6fbff] dark:bg-[#131f24] text-slate-800 dark:text-slate-100 transition-colors duration-300">
-      <MobileHeader isLoggedIn={isLoggedIn} />
+      <MobileHeader
+        isLoggedIn={isLoggedIn}
+        hearts={userProgressData?.hearts ?? 5}
+        points={userProgressData?.points ?? 0}
+      />
       <Sidebar className="hidden lg:flex" isLoggedIn={isLoggedIn} />
 
       <main className="min-h-screen pt-[56px] lg:pl-[304px] lg:pt-0">

@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { Menu } from "lucide-react";
+import { usePathname } from "next/navigation";
 
 import { Sidebar } from "@/components/sidebar";
 import {
@@ -12,17 +13,23 @@ import {
 
 export const MobileSidebar = ({ isLoggedIn = false }: { isLoggedIn?: boolean }) => {
   const [mounted, setMounted] = useState(false);
+  const [open, setOpen] = useState(false);
+  const pathname = usePathname();
 
   useEffect(() => {
     setMounted(true);
   }, []);
+
+  useEffect(() => {
+    setOpen(false);
+  }, [pathname]);
 
   if (!mounted) {
     return <div className="size-10" aria-hidden="true" />;
   }
 
   return (
-    <Sheet>
+    <Sheet open={open} onOpenChange={setOpen}>
       <SheetTrigger asChild>
         <button
           type="button"

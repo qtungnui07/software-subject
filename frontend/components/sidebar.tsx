@@ -4,6 +4,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { useState } from "react";
 import { useClerk } from "@clerk/nextjs";
+import { usePathname } from "next/navigation";
 import { toast } from "sonner";
 
 import { SidebarItem } from "./sidebar-item";
@@ -81,6 +82,7 @@ const milestones = [
 ];
 
 export const Sidebar = ({ className, isLoggedIn = false }: Props) => {
+  const pathname = usePathname();
   const [isMoreOpen, setIsMoreOpen] = useState(false);
   const { signOut } = useClerk();
 
@@ -121,7 +123,7 @@ export const Sidebar = ({ className, isLoggedIn = false }: Props) => {
             alt="Robogo logo"
             fill
             priority
-            className="object-contain"
+            className="object-contain rounded-2xl"
             sizes="64px"
           />
         </div>
@@ -152,7 +154,12 @@ export const Sidebar = ({ className, isLoggedIn = false }: Props) => {
               <div className="w-full rounded-[20px] border-2 border-slate-200 dark:border-[#202f36] bg-white dark:bg-[#141f23] p-1.5 shadow-[0_12px_30px_rgba(20,134,204,0.15)] dark:shadow-[0_12px_30px_rgba(0,0,0,0.35)] animate-in fade-in slide-in-from-bottom-2 lg:slide-in-from-left-2 duration-150">
                 <Link
                   href="/settings/account"
-                  className="flex w-full items-center rounded-xl px-4 py-3 text-[13px] font-black uppercase tracking-[0.12em] text-slate-600 dark:text-[#afbfcb] transition hover:bg-[#f4faff] hover:text-[#1486CC] dark:hover:bg-[#1f2d33] dark:hover:text-white"
+                  className={cn(
+                    "flex w-full items-center rounded-xl px-4 py-3 text-[13px] font-black uppercase tracking-[0.12em] transition",
+                    pathname.startsWith("/settings")
+                      ? "bg-slate-100 text-[#1486CC] dark:bg-[#1f2d33] dark:text-white"
+                      : "text-slate-600 dark:text-[#afbfcb] hover:bg-[#f4faff] hover:text-[#1486CC] dark:hover:bg-[#1f2d33] dark:hover:text-white"
+                  )}
                   onClick={() => setIsMoreOpen(false)}
                 >
                   Cài đặt
@@ -186,7 +193,7 @@ export const Sidebar = ({ className, isLoggedIn = false }: Props) => {
           )}
 
           <Button
-            variant="sidebar"
+            variant={pathname.startsWith("/settings") ? "sidebar-outline" : "sidebar"}
             className={cn(
               "h-[58px] w-full justify-start rounded-[18px] px-4 text-[15px] hover:bg-[#f4faff] active:bg-[#e8f5ff] transition",
               isMoreOpen && "bg-[#f4faff]",

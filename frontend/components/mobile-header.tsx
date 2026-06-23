@@ -6,8 +6,13 @@ import { cn } from "@/lib/utils";
 
 import { MobileSidebar } from "./mobile-sidebar";
 
+type Props = {
+  isLoggedIn?: boolean;
+  hearts?: number;
+  points?: number;
+};
+
 const todayMinutes = 43;
-const hearts = 5;
 
 const tierStyles = {
   none: "border-slate-200 bg-slate-50 text-slate-500",
@@ -16,7 +21,7 @@ const tierStyles = {
   gold: "border-amber-200 bg-amber-50 text-amber-700",
 };
 
-export const MobileHeader = ({ isLoggedIn = false }: { isLoggedIn?: boolean }) => {
+export const MobileHeader = ({ isLoggedIn = false, hearts = 5, points = 0 }: Props) => {
   const studyTier = getStudyTier(todayMinutes);
 
   return (
