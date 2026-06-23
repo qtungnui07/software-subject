@@ -271,7 +271,6 @@ const LessonDetailPage = async ({ params }: Props) => {
             activeCourse={{ title: activeCourse.title, imageSrc: activeCourse.imageSrc }}
             hearts={hearts}
             points={points}
-            todayMinutes={todayMinutes}
           />
         </div>
       </StickyWrapper>

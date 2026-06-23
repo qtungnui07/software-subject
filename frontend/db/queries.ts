@@ -3,7 +3,7 @@ import { cache } from "react";
 import { courses, dailyStreakLogs, userProgress, userStreaks } from "@/db/schema";
 
 import db from "@/db/drizzle";
-import { eq, sql } from "drizzle-orm";
+import { eq, sql, desc } from "drizzle-orm";
 import { auth } from "@/auth";
 
 export const getUserProgress = cache(async ()=> {
@@ -48,11 +48,11 @@ export const getUserStreak = async (userId: string) => {
 export const getRecentStreakLogs = async (userId: string, limit = 7) => {
     const data = await db.query.dailyStreakLogs.findMany({
         where: eq(dailyStreakLogs.userId, userId),
-        orderBy: (logs, { desc }) => [desc(logs.studyDate)],
+        orderBy: desc(dailyStreakLogs.studyDate),
         limit,
     });
 
-    return data.map((log) => ({
+    return data.map((log: any) => ({
         studyDate: log.studyDate,
         completedLessons: log.completedLessons,
         earnedXp: log.earnedXp,
