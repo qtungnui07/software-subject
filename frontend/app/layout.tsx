@@ -20,25 +20,8 @@ export default function RootLayout({
     <ClerkProvider>
       <html lang="vi" className="min-h-screen antialiased" suppressHydrationWarning>
         <head>
-          <Script
-            id="theme-script"
-            strategy="beforeInteractive"
-            dangerouslySetInnerHTML={{
-              __html: `
-                (function() {
-                  try {
-                    const savedTheme = localStorage.getItem('robogo-theme');
-                    const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
-                    const resolvedTheme = savedTheme === 'dark' || (savedTheme === 'system' && prefersDark) || (!savedTheme && prefersDark) ? 'dark' : 'light';
-                    document.documentElement.classList.toggle('dark', resolvedTheme === 'dark');
-                    document.documentElement.dataset.theme = resolvedTheme;
-                  } catch (e) {}
-                })();
-              `
-            }}
-          />
         </head>
-        <body className="min-h-full flex flex-col">
+        <body className="min-h-screen flex flex-col">
           <ToasterLoader />
           {children}
         </body>

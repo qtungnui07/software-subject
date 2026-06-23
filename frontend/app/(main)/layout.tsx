@@ -15,7 +15,7 @@ const MainLayout = async ({ children }: Props) => {
   const userProgressData = isLoggedIn ? await getUserProgress() : null;
 
   return (
-    <div className="flex flex-col flex-1 min-h-screen w-full bg-[#f6fbff] dark:bg-[#131f24] text-slate-800 dark:text-slate-100 transition-colors duration-300">
+    <div className="flex flex-1 min-h-screen w-full flex-col bg-[#f6fbff] text-slate-800 transition-colors duration-300 dark:bg-[#131f24] dark:text-slate-100">
       <MobileHeader
         isLoggedIn={isLoggedIn}
         hearts={userProgressData?.hearts ?? 5}
