@@ -1,5 +1,6 @@
 import Image from "next/image";
 import Link from "next/link";
+import { redirect } from "next/navigation";
 
 import { FeedWrapper } from "@/components/feed-wrapper";
 import { ProgressOverview } from "@/components/progress/progress-overview";
@@ -11,7 +12,7 @@ import { Button } from "@/components/ui/button";
 import { englishProgressCourse, progressUnits } from "@/data/progress-data";
 import { getCourseProgressSummary } from "@/lib/progress-utils";
 import { getUserProgress } from "@/db/queries";
-import { redirect } from "next/navigation";
+import { StreakCard } from "@/components/streak/streak-card";
 
 import { Header } from "./header";
 
@@ -76,9 +77,10 @@ const LearnPage = async () => {
             activeCourse={{ title: activeCourse.title, imageSrc: activeCourse.imageSrc }}
             hearts={userProgressData.hearts}
             points={userProgressData.points}
-            todayMinutes={todayMinutes}
           />
         </div>
+
+        <StreakCard />
 
         <ProgressOverview
           className="hidden xl:block"
