@@ -2,7 +2,6 @@ import Image from "next/image";
 import Link from "next/link";
 
 import { auth } from "@/auth";
-import { SignOutButton } from "@clerk/nextjs";
 
 import {
   CourseDropdown,
@@ -10,6 +9,7 @@ import {
   LanguageDropdown,
   ThemeToggle,
 } from "./header-controls";
+import { HeaderSignOutButton } from "./header-signout-button";
 
 export const Header = async () => {
   const session = await auth();
@@ -76,14 +76,7 @@ export const Header = async () => {
                 </span>
               </div>
 
-              <SignOutButton signOutOptions={{ redirectUrl: "/" }}>
-                <button
-                  id="header-signout-btn"
-                  className="rounded-2xl px-4 py-3 text-base font-black text-slate-500 transition-colors hover:bg-slate-100 hover:text-slate-900 dark:text-slate-300 dark:hover:bg-slate-800 dark:hover:text-white cursor-pointer"
-                >
-                  Đăng xuất
-                </button>
-              </SignOutButton>
+              <HeaderSignOutButton />
             </div>
           ) : (
             <div className="flex items-center gap-3">

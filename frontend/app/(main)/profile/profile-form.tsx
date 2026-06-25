@@ -2,9 +2,9 @@
 
 import { useState, useTransition } from "react";
 import Image from "next/image";
+import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
-import { updateUserProfile } from "@/actions/user-progress";
 
 type Props = {
   initialName: string;
@@ -22,6 +22,7 @@ const PRESET_AVATARS = [
 ];
 
 export const ProfileForm = ({ initialName, initialImageSrc, email }: Props) => {
+  const router = useRouter();
   const [name, setName] = useState(initialName);
   const [selectedAvatar, setSelectedAvatar] = useState(initialImageSrc);
   const [customAvatarUrl, setCustomAvatarUrl] = useState(
@@ -55,10 +56,21 @@ export const ProfileForm = ({ initialName, initialImageSrc, email }: Props) => {
 
     startTransition(async () => {
       try {
-        await updateUserProfile(name.trim(), selectedAvatar);
+        const response = await fetch("/api/profile", {
+          method: "PATCH",
+          headers: { "content-type": "application/json" },
+          body: JSON.stringify({ name: name.trim(), imageSrc: selectedAvatar }),
+        });
+        const data = await response.json();
+
+        if (!response.ok) {
+          throw new Error(typeof data?.error === "string" ? data.error : "Không thể cập nhật hồ sơ");
+        }
+
+        router.refresh();
         toast.success("Thông tin hồ sơ đã được cập nhật thành công!");
-      } catch (err: any) {
-        toast.error(err.message || "Đã xảy ra lỗi khi cập nhật hồ sơ.");
+      } catch (error: unknown) {
+        toast.error(error instanceof Error ? error.message : "Đã xảy ra lỗi khi cập nhật hồ sơ.");
       }
     });
   };

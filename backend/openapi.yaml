@@ -1,0 +1,731 @@
+openapi: 3.1.0
+info:
+  title: Robogo Backend API
+  version: 0.1.0
+  description: |
+    Contract for the HTTP API implemented by `backend/src/server.js`.
+
+    All responses use JSON. Endpoints marked with `BackendApiKey` expect the
+    `x-backend-api-key` header when `BACKEND_API_KEY` is configured on the
+    backend. The header check is disabled in local environments where that
+    variable is not set.
+servers:
+  - url: http://localhost:4000
+    description: Local development
+tags:
+  - name: Health
+  - name: Authentication
+  - name: Users
+  - name: Profile
+  - name: Settings
+  - name: Admin
+  - name: Internal
+
+paths:
+  /health:
+    get:
+      tags: [Health]
+      operationId: getHealth
+      summary: Check whether the backend process is available
+      responses:
+        "200":
+          description: Backend is available.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/HealthResponse"
+              example:
+                ok: true
+                service: duolingo-backend
+                databaseConfigured: true
+
+  /health/db:
+    get:
+      tags: [Health]
+      operationId: getDatabaseHealth
+      summary: Check the PostgreSQL connection
+      responses:
+        "200":
+          description: PostgreSQL accepted a test query.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/OkResponse"
+        "500":
+          $ref: "#/components/responses/InternalServerError"
+
+  /users/count:
+    get:
+      tags: [Users]
+      operationId: getUserCount
+      summary: Count all users
+      security:
+        - BackendApiKey: []
+      responses:
+        "200":
+          description: Current number of users.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/UserCountResponse"
+              example:
+                count: 12
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "500":
+          $ref: "#/components/responses/InternalServerError"
+
+  /profile:
+    parameters:
+      - $ref: "#/components/parameters/UserIdHeader"
+    get:
+      tags: [Profile]
+      operationId: getUserProfile
+      summary: Get the authenticated user's public and learning profile
+      security:
+        - BackendApiKey: []
+      responses:
+        "200":
+          description: Current profile and learning summary.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ProfileResponse"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "404":
+          $ref: "#/components/responses/AccountNotFound"
+        "500":
+          $ref: "#/components/responses/InternalServerError"
+    patch:
+      tags: [Profile]
+      operationId: updateUserProfile
+      summary: Update the authenticated user's display profile
+      security:
+        - BackendApiKey: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdateProfileRequest"
+            example:
+              name: Nguyen Van A
+              imageSrc: /mascot.svg
+      responses:
+        "200":
+          description: Profile updated successfully.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ProfileResponse"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "404":
+          $ref: "#/components/responses/AccountNotFound"
+        "500":
+          $ref: "#/components/responses/InternalServerError"
+
+  /settings/account:
+    parameters:
+      - $ref: "#/components/parameters/UserIdHeader"
+    get:
+      tags: [Settings]
+      operationId: getAccountSettings
+      summary: Get the authenticated user's account settings
+      description: Called by the authenticated frontend gateway on behalf of its current user.
+      security:
+        - BackendApiKey: []
+      responses:
+        "200":
+          description: Current account details.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AccountResponse"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "404":
+          $ref: "#/components/responses/AccountNotFound"
+        "500":
+          $ref: "#/components/responses/InternalServerError"
+    patch:
+      tags: [Settings]
+      operationId: updateAccountSettings
+      summary: Update the authenticated user's account settings
+      description: Clerk account email addresses are read-only and must remain unchanged.
+      security:
+        - BackendApiKey: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdateAccountRequest"
+            example:
+              name: Nguyen Van A
+              email: user@example.com
+      responses:
+        "200":
+          description: Account updated successfully.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AccountResponse"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "404":
+          $ref: "#/components/responses/AccountNotFound"
+        "409":
+          description: Email address belongs to another account.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+              example:
+                error: Email already exists
+        "500":
+          $ref: "#/components/responses/InternalServerError"
+
+  /auth/sign-up:
+    post:
+      tags: [Authentication]
+      operationId: signUpLocalUser
+      summary: Create a local account
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/LocalSignUpRequest"
+            example:
+              name: Nguyen Van A
+              email: user@example.com
+              password: Password!1
+      responses:
+        "200":
+          description: Account created successfully.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/LocalAuthResponse"
+        "400":
+          description: Missing fields or password shorter than eight characters.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "409":
+          description: The normalized email address is already registered.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "500":
+          $ref: "#/components/responses/InternalServerError"
+
+  /auth/sign-in:
+    post:
+      tags: [Authentication]
+      operationId: signInLocalUser
+      summary: Authenticate a local account
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/LocalSignInRequest"
+            example:
+              email: user@example.com
+              password: Password!1
+      responses:
+        "200":
+          description: Credentials are valid.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/LocalAuthResponse"
+        "401":
+          description: Email or password is invalid.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+              example:
+                error: Invalid email or password
+        "500":
+          $ref: "#/components/responses/InternalServerError"
+
+  /admin/users:
+    get:
+      tags: [Admin]
+      operationId: listUsers
+      summary: List users for the admin interface
+      security:
+        - BackendApiKey: []
+      responses:
+        "200":
+          description: Users ordered from newest to oldest.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/UserListResponse"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "500":
+          $ref: "#/components/responses/InternalServerError"
+
+  /admin/users/{id}:
+    delete:
+      tags: [Admin]
+      operationId: deleteUser
+      summary: Delete a user
+      security:
+        - BackendApiKey: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: Numeric database identifier serialized as a string.
+          schema:
+            type: string
+            pattern: "^[0-9]+$"
+          example: "42"
+      responses:
+        "200":
+          description: User deleted successfully.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DeleteUserResponse"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "404":
+          description: No user has the requested identifier.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+              example:
+                error: User not found
+        "500":
+          $ref: "#/components/responses/InternalServerError"
+
+  /internal/users/sync:
+    post:
+      tags: [Internal]
+      operationId: syncClerkUser
+      summary: Insert or update a Clerk user
+      description: Internal endpoint used by the frontend authentication bridge.
+      security:
+        - BackendApiKey: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/SyncUserRequest"
+            example:
+              clerkUserId: user_2abc123
+              name: Nguyen Van A
+              email: user@example.com
+              imageSrc: https://img.clerk.com/example.png
+      responses:
+        "200":
+          description: User synchronized successfully.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SyncUserResponse"
+        "400":
+          description: "`clerkUserId` or `email` is missing."
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "500":
+          $ref: "#/components/responses/InternalServerError"
+
+components:
+  securitySchemes:
+    BackendApiKey:
+      type: apiKey
+      in: header
+      name: x-backend-api-key
+      description: Value of the backend's `BACKEND_API_KEY` environment variable.
+
+  parameters:
+    UserIdHeader:
+      name: x-user-id
+      in: header
+      required: true
+      description: User ID supplied by the trusted frontend gateway after session authentication.
+      schema:
+        type: string
+        minLength: 1
+
+  responses:
+    BadRequest:
+      description: Request data or user identifier is invalid.
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ErrorResponse"
+    AccountNotFound:
+      description: No account matches the authenticated user identifier.
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ErrorResponse"
+          example:
+            error: Account not found
+    Unauthorized:
+      description: API key is missing or invalid.
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ErrorResponse"
+          example:
+            error: Unauthorized
+    InternalServerError:
+      description: The backend could not complete the operation.
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ErrorResponse"
+          example:
+            error: Internal server error
+
+  schemas:
+    OkResponse:
+      type: object
+      additionalProperties: false
+      required: [ok]
+      properties:
+        ok:
+          type: boolean
+          const: true
+
+    ErrorResponse:
+      type: object
+      additionalProperties: false
+      required: [error]
+      properties:
+        error:
+          type: string
+
+    HealthResponse:
+      type: object
+      additionalProperties: false
+      required: [ok, service, databaseConfigured]
+      properties:
+        ok:
+          type: boolean
+          const: true
+        service:
+          type: string
+          const: duolingo-backend
+        databaseConfigured:
+          type: boolean
+
+    UserCountResponse:
+      type: object
+      additionalProperties: false
+      required: [count]
+      properties:
+        count:
+          type: integer
+          minimum: 0
+
+    CourseSummary:
+      type: object
+      additionalProperties: false
+      required: [id, title, imageSrc]
+      properties:
+        id:
+          type: integer
+        title:
+          type: string
+        imageSrc:
+          type: string
+
+    Profile:
+      type: object
+      additionalProperties: false
+      required: [name, email, imageSrc, hearts, points, activeCourse]
+      properties:
+        name:
+          type: string
+        email:
+          type: string
+          format: email
+        imageSrc:
+          type: string
+          format: uri-reference
+        hearts:
+          type: integer
+          minimum: 0
+        points:
+          type: integer
+          minimum: 0
+        activeCourse:
+          oneOf:
+            - $ref: "#/components/schemas/CourseSummary"
+            - type: "null"
+
+    ProfileResponse:
+      type: object
+      additionalProperties: false
+      required: [ok, profile]
+      properties:
+        ok:
+          type: boolean
+          const: true
+        profile:
+          $ref: "#/components/schemas/Profile"
+
+    UpdateProfileRequest:
+      type: object
+      additionalProperties: false
+      required: [name, imageSrc]
+      properties:
+        name:
+          type: string
+          minLength: 1
+          maxLength: 30
+        imageSrc:
+          type: string
+          format: uri-reference
+          minLength: 1
+          maxLength: 2048
+
+    Account:
+      type: object
+      additionalProperties: false
+      required: [name, email, isClerk]
+      properties:
+        name:
+          type: string
+        email:
+          type: string
+          format: email
+        isClerk:
+          type: boolean
+
+    AccountResponse:
+      type: object
+      additionalProperties: false
+      required: [ok, account]
+      properties:
+        ok:
+          type: boolean
+          const: true
+        account:
+          $ref: "#/components/schemas/Account"
+
+    UpdateAccountRequest:
+      type: object
+      additionalProperties: false
+      required: [name, email]
+      properties:
+        name:
+          type: string
+          minLength: 1
+        email:
+          type: string
+          format: email
+
+    LocalSignUpRequest:
+      type: object
+      additionalProperties: false
+      required: [name, email, password]
+      properties:
+        name:
+          type: string
+          minLength: 1
+        email:
+          type: string
+          format: email
+        password:
+          type: string
+          format: password
+          minLength: 8
+
+    LocalSignInRequest:
+      type: object
+      additionalProperties: false
+      required: [email, password]
+      properties:
+        email:
+          type: string
+          format: email
+        password:
+          type: string
+          format: password
+
+    PublicUser:
+      type: object
+      additionalProperties: false
+      required: [id, name, email, image]
+      properties:
+        id:
+          type: string
+        name:
+          type: string
+        email:
+          type: string
+          format: email
+        image:
+          type: string
+
+    LocalAuthResponse:
+      type: object
+      additionalProperties: false
+      required: [ok, user]
+      properties:
+        ok:
+          type: boolean
+          const: true
+        user:
+          $ref: "#/components/schemas/PublicUser"
+
+    AdminUser:
+      type: object
+      additionalProperties: false
+      required:
+        - id
+        - clerkUserId
+        - name
+        - email
+        - imageSrc
+        - createdAt
+        - updatedAt
+        - authProvider
+        - hasPassword
+      properties:
+        id:
+          type: string
+        clerkUserId:
+          type: [string, "null"]
+        name:
+          type: string
+        email:
+          type: string
+          format: email
+        imageSrc:
+          type: string
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+        authProvider:
+          type: string
+          enum: [clerk, local]
+        hasPassword:
+          type: boolean
+
+    UserListResponse:
+      type: object
+      additionalProperties: false
+      required: [ok, users]
+      properties:
+        ok:
+          type: boolean
+          const: true
+        users:
+          type: array
+          items:
+            $ref: "#/components/schemas/AdminUser"
+
+    DeletedUser:
+      type: object
+      additionalProperties: false
+      required: [id, email]
+      properties:
+        id:
+          type: string
+        email:
+          type: string
+          format: email
+
+    DeleteUserResponse:
+      type: object
+      additionalProperties: false
+      required: [ok, user]
+      properties:
+        ok:
+          type: boolean
+          const: true
+        user:
+          $ref: "#/components/schemas/DeletedUser"
+
+    SyncUserRequest:
+      type: object
+      additionalProperties: false
+      required: [clerkUserId, email]
+      properties:
+        clerkUserId:
+          type: string
+          minLength: 1
+        name:
+          type: string
+          default: User
+        email:
+          type: string
+          format: email
+        imageSrc:
+          type: string
+          default: /mascot.svg
+
+    SyncedUser:
+      type: object
+      additionalProperties: false
+      required:
+        - id
+        - clerk_user_id
+        - email
+        - name
+        - image_src
+        - created_at
+        - updated_at
+      properties:
+        id:
+          type: integer
+        clerk_user_id:
+          type: string
+        email:
+          type: string
+          format: email
+        name:
+          type: string
+        image_src:
+          type: string
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
+
+    SyncUserResponse:
+      type: object
+      additionalProperties: false
+      required: [ok, user]
+      properties:
+        ok:
+          type: boolean
+          const: true
+        user:
+          $ref: "#/components/schemas/SyncedUser"

@@ -2,50 +2,25 @@ import { auth as clerkAuth, currentUser } from "@clerk/nextjs/server";
 import { cookies } from "next/headers";
 
 import { LOCAL_SESSION_COOKIE, verifyLocalSessionToken } from "@/lib/local-session";
+import { syncClerkUser } from "@/services/auth-service";
 
 const syncUserToDatabase = async (user: NonNullable<Awaited<ReturnType<typeof currentUser>>>) => {
   const email = user.emailAddresses[0]?.emailAddress;
-  const backendUrls = process.env.BACKEND_URL
-    ? [process.env.BACKEND_URL]
-    : ["http://duolingo-backend:4000", "http://127.0.0.1:4000"];
-
   if (!email) {
     return;
   }
 
   const name = `${user.firstName ?? ""} ${user.lastName ?? ""}`.trim() || user.username || "User";
-  let lastError: unknown;
+  const result = await syncClerkUser({
+    clerkUserId: user.id,
+    name,
+    email,
+    imageSrc: user.imageUrl || "/mascot.svg",
+  });
 
-  for (const backendUrl of backendUrls) {
-    try {
-      const response = await fetch(`${backendUrl.replace(/\/$/, "")}/internal/users/sync`, {
-        method: "POST",
-        headers: {
-          "content-type": "application/json",
-          ...(process.env.BACKEND_API_KEY
-            ? { "x-backend-api-key": process.env.BACKEND_API_KEY }
-            : {}),
-        },
-        body: JSON.stringify({
-          clerkUserId: user.id,
-          name,
-          email,
-          imageSrc: user.imageUrl || "/mascot.svg",
-        }),
-        signal: AbortSignal.timeout(2000),
-      });
-
-      if (response.ok) {
-        return;
-      }
-
-      lastError = new Error(`Backend user sync failed with status ${response.status}`);
-    } catch (error) {
-      lastError = error;
-    }
+  if (!result.ok) {
+    throw new Error(result.data.error);
   }
-
-  throw lastError;
 };
 
 export const auth = async () => {

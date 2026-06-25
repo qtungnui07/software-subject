@@ -17,6 +17,21 @@ The backend reads env from `backend/.env` first, then falls back to `frontend/.e
 - `GET /health`
 - `GET /health/db`
 - `GET /users/count`
+- `GET /profile`
+- `PATCH /profile`
+- `GET /settings/account`
+- `PATCH /settings/account`
+- `POST /auth/sign-up`
+- `POST /auth/sign-in`
+- `GET /admin/users`
+- `DELETE /admin/users/{id}`
 - `POST /internal/users/sync`
 
-`/users/count` and `/internal/users/sync` require `x-backend-api-key` when `BACKEND_API_KEY` is set.
+The complete request/response contract, schemas, examples, and error responses
+are defined in [`openapi.yaml`](./openapi.yaml).
+
+`/users/count`, `/profile`, `/settings/account`, `/admin/*`, and `/internal/users/sync` require the
+`x-backend-api-key` header when `BACKEND_API_KEY` is set.
+
+`/profile` and `/settings/account` also require `x-user-id`. The frontend gateway supplies
+this header only after authenticating the current Clerk or local session.

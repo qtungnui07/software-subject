@@ -1,6 +1,6 @@
 "use client";
 
-import { Suspense, useState, useEffect } from "react";
+import { Suspense, useState, useEffect, useRef } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import Image from "next/image";
 import { CheckCircle2, XCircle, Trophy, RefreshCw, Home, Heart } from "lucide-react";
@@ -9,6 +9,8 @@ import { LessonHeader } from "@/components/lesson-header";
 import { ExitModal } from "@/components/exit-modal";
 import { Button } from "@/components/ui/button";
 import { lessonNodes } from "@/constants/lessons";
+import { StreakNotification } from "@/components/streak/streak-notification";
+import type { StreakNotificationInput } from "@/components/streak/streak-data";
 
 // 5 mock questions related to English Communication
 const MOCK_QUESTIONS = [
@@ -49,6 +51,18 @@ const MOCK_QUESTIONS = [
   },
 ];
 
+const EARNED_XP_PER_LESSON = 15;
+
+type StreakUpdateResult = {
+  status: StreakNotificationInput["status"];
+  currentStreak: number;
+  longestStreak?: number;
+  streakFreezes?: number;
+  missedDays?: number;
+  usedStreakFreezes?: number;
+  earnedXpToday?: number;
+};
+
 const LessonContent = () => {
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -67,8 +81,54 @@ const LessonContent = () => {
   const [isFinished, setIsFinished] = useState(false);
   const [correctAnswersCount, setCorrectAnswersCount] = useState(0);
 
+  // Streak states
+  const [streakResult, setStreakResult] = useState<StreakNotificationInput | null>(null);
+  const [earnedXp, setEarnedXp] = useState(EARNED_XP_PER_LESSON);
+  const hasCalledStreakRef = useRef(false);
+
   const currentQuestion = MOCK_QUESTIONS[currentQuestionIndex];
   const progress = (currentQuestionIndex / MOCK_QUESTIONS.length) * 100;
+
+  // Call streak update API when lesson is finished
+  useEffect(() => {
+    if (!isFinished || hasCalledStreakRef.current) return;
+
+    hasCalledStreakRef.current = true;
+
+    const updateStreak = async () => {
+      try {
+        const response = await fetch("/api/streak/update", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            lessonId: String(lessonId),
+            earnedXp: EARNED_XP_PER_LESSON,
+          }),
+        });
+
+        if (!response.ok) return;
+
+        const data = (await response.json()) as StreakUpdateResult;
+
+        setStreakResult({
+          status: data.status,
+          currentStreak: data.currentStreak,
+          longestStreak: data.longestStreak,
+          streakFreezes: data.streakFreezes,
+          missedDays: data.missedDays,
+          usedStreakFreezes: data.usedStreakFreezes,
+        });
+
+        if (typeof data.earnedXpToday === "number" && data.earnedXpToday > 0) {
+          setEarnedXp(data.earnedXpToday);
+        }
+      } catch (err) {
+        console.warn("Could not update streak:", err);
+      }
+    };
+
+    updateStreak();
+  }, [isFinished, lessonId]);
 
   // Handle checking the selected answer
   const onCheck = () => {
@@ -123,6 +183,9 @@ const LessonContent = () => {
     setHearts(5);
     setIsFinished(false);
     setCorrectAnswersCount(0);
+    setStreakResult(null);
+    setEarnedXp(EARNED_XP_PER_LESSON);
+    hasCalledStreakRef.current = false;
   };
 
   // Redirect to learn page
@@ -196,7 +259,7 @@ const LessonContent = () => {
         <div className="mt-8 grid w-full max-w-[420px] grid-cols-2 gap-4">
           <div className="flex flex-col items-center rounded-2xl border-2 border-orange-200 bg-orange-50/50 p-4 shadow-sm">
             <span className="text-xs font-black uppercase tracking-wide text-orange-500">XP nhận được</span>
-            <span className="mt-1 text-2xl font-black text-orange-600">+15 XP</span>
+            <span className="mt-1 text-2xl font-black text-orange-600">+{earnedXp} XP</span>
           </div>
 
           <div className="flex flex-col items-center rounded-2xl border-2 border-green-200 bg-green-50/50 p-4 shadow-sm">
@@ -210,6 +273,13 @@ const LessonContent = () => {
             Tiếp tục lộ trình
           </Button>
         </div>
+
+        {/* Streak notification after lesson completion */}
+        <StreakNotification
+          result={streakResult}
+          autoHideMs={7000}
+          onDismiss={() => setStreakResult(null)}
+        />
       </div>
     );
   }
