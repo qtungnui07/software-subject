@@ -2,18 +2,39 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import { useState } from "react";
-import { Check, Gift, Lock, Play, Star, Trophy, X } from "lucide-react";
+import { useMemo, useState } from "react";
+import { Check, Gift, Lock, Star, Trophy, X, type LucideIcon } from "lucide-react";
 
 import { cn } from "@/lib/utils";
 
 import { LessonStatus, LessonNode, lessonNodes } from "@/constants/lessons";
+import {
+  getChapterOneNodeStatus,
+  type ChapterOneProgressState,
+} from "@/lib/chapter-one-progress";
+
+type RoadmapLessonStatus = LessonStatus | "available";
+
+type RoadmapLessonNode = Omit<LessonNode, "status"> & {
+  status: RoadmapLessonStatus;
+};
 
 type Props = {
   todayMinutes: number;
+  progressState: ChapterOneProgressState;
+  onClaimChest?: (chestId: string) => void;
 };
 
-const statusContent = {
+const statusContent: Record<RoadmapLessonStatus, {
+  icon: LucideIcon;
+  label: string;
+  action: string;
+  nodeClass: string;
+  innerClass: string;
+  auraClass: string;
+  popoverClass: string;
+  buttonClass: string;
+}> = {
   completed: {
     icon: Check,
     label: "Đã hoàn thành",
@@ -36,6 +57,17 @@ const statusContent = {
     popoverClass: "border-sky-200 dark:border-sky-900/30",
     buttonClass: "bg-[#1486CC] text-white shadow-[0_5px_0_#0B6FAE] dark:bg-[#106BA3] dark:shadow-[0_5px_0_#084c78]",
   },
+  available: {
+    icon: Gift,
+    label: "Rương sẵn sàng",
+    action: "Nhận thưởng",
+    nodeClass:
+      "border-amber-500 bg-amber-400 text-white shadow-[0_10px_0_#d97706,0_24px_38px_rgba(245,158,11,0.24)] dark:shadow-[0_10px_0_#92400e,0_24px_38px_rgba(245,158,11,0.14)]",
+    innerClass: "bg-gradient-to-br from-yellow-100 via-amber-300 to-orange-400 dark:from-amber-400 dark:via-orange-500 dark:to-orange-700",
+    auraClass: "bg-amber-200/80 dark:bg-amber-950/20 animate-pulse",
+    popoverClass: "border-amber-200 dark:border-amber-900/30",
+    buttonClass: "bg-amber-500 text-white shadow-[0_5px_0_#d97706] dark:bg-amber-600 dark:shadow-[0_5px_0_#92400e]",
+  },
   locked: {
     icon: Lock,
     label: "Đã khóa",
@@ -49,8 +81,8 @@ const statusContent = {
   },
   reward: {
     icon: Gift,
-    label: "Rương thưởng",
-    action: "Mở sau khi hoàn thành bài",
+    label: "Rương đã khóa",
+    action: "Hoàn thành Bài 3",
     nodeClass:
       "border-slate-300 bg-slate-200 text-slate-400 shadow-[0_9px_0_#cbd5e1] dark:border-[#202f36] dark:bg-[#1f2d33] dark:text-slate-500 dark:shadow-[0_9px_0_#141f23]",
     innerClass: "bg-gradient-to-br from-white to-slate-200 dark:from-[#202f36] dark:to-[#141f23]",
@@ -60,8 +92,8 @@ const statusContent = {
   },
   checkpoint: {
     icon: Trophy,
-    label: "Kiểm tra chương",
-    action: "Mở sau khi đủ bài",
+    label: "Kiểm tra đã khóa",
+    action: "Hoàn thành Bài 6",
     nodeClass:
       "border-slate-300 bg-slate-200 text-slate-400 shadow-[0_9px_0_#cbd5e1] dark:border-[#202f36] dark:bg-[#1f2d33] dark:text-slate-500 dark:shadow-[0_9px_0_#141f23]",
     innerClass: "bg-gradient-to-br from-white to-slate-200 dark:from-[#202f36] dark:to-[#141f23]",
@@ -87,25 +119,56 @@ const curveBetween = (from: LessonNode, to: LessonNode) => {
   return `M ${from.x} ${from.y} C ${from.x + direction * pull} ${middleY}, ${to.x - direction * pull} ${middleY}, ${to.x} ${to.y}`;
 };
 
-const pathSegments = lessonNodes.slice(0, -1).map((node, index) => ({
-  id: `${node.id}-${lessonNodes[index + 1].id}`,
-  d: curveBetween(node, lessonNodes[index + 1]),
-  active: node.status === "completed" && lessonNodes[index + 1].status === "current",
-}));
+const getRoadmapNodeStatus = (
+  node: LessonNode,
+  progressState: ChapterOneProgressState
+): RoadmapLessonStatus => {
+  const status = getChapterOneNodeStatus(node.nodeId, progressState);
+
+  if (status === "locked") {
+    if (node.type === "chest") return "reward";
+    if (node.type === "checkpoint") return "checkpoint";
+  }
+
+  return status;
+};
+
+const buildRoadmapNodes = (progressState: ChapterOneProgressState): RoadmapLessonNode[] => {
+  return lessonNodes.map((node) => {
+    const status = getRoadmapNodeStatus(node, progressState);
+
+    return {
+      ...node,
+      status,
+      progress: status === "current" ? node.progress ?? 0 : undefined,
+    };
+  });
+};
+
+const isPathSegmentActive = (from: RoadmapLessonNode, to: RoadmapLessonNode) => {
+  if (from.status !== "completed") return false;
+
+  return to.status === "completed" || to.status === "current" || to.status === "available";
+};
 
 const LessonPopover = ({
   node,
   todayMinutes,
   onClose,
+  onClaimChest,
 }: {
-  node: LessonNode;
+  node: RoadmapLessonNode;
   todayMinutes: number;
   onClose: () => void;
+  onClaimChest?: (chestId: string) => void;
 }) => {
   const content = statusContent[node.status];
   const Icon = content.icon;
   const isLocked = node.status === "locked" || node.status === "reward" || node.status === "checkpoint";
+  const isClaimableChest = node.type === "chest" && node.status === "available";
+  const isClaimedChest = node.type === "chest" && node.status === "completed";
   const progress = node.progress ?? 0;
+  const actionLabel = isClaimedChest ? "Đã nhận" : content.action;
 
   return (
     <div
@@ -135,6 +198,7 @@ const LessonPopover = ({
             "flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl",
             node.status === "completed" && "bg-emerald-50 dark:bg-emerald-950/30 text-emerald-500 dark:text-emerald-400",
             node.status === "current" && "bg-sky-50 dark:bg-sky-950/30 text-[#1486CC]",
+            node.status === "available" && "bg-amber-50 dark:bg-amber-950/30 text-amber-500 dark:text-amber-300",
             (node.status === "locked" || node.status === "reward" || node.status === "checkpoint") &&
               "bg-slate-100 dark:bg-slate-800 text-slate-400 dark:text-slate-500"
           )}
@@ -177,23 +241,62 @@ const LessonPopover = ({
         </div>
       ) : null}
 
+      {isClaimableChest ? (
+        <div className="mt-4 rounded-2xl bg-amber-50 dark:bg-amber-950/20 p-3 text-xs font-bold leading-5 text-amber-700 dark:text-amber-300">
+          Rương đã mở. Nhận thưởng để tiếp tục sang Bài 4.
+        </div>
+      ) : null}
+
+      {isClaimedChest ? (
+        <div className="mt-4 rounded-2xl bg-emerald-50 dark:bg-emerald-950/20 p-3 text-xs font-bold leading-5 text-emerald-700 dark:text-emerald-300">
+          Bạn đã nhận rương này. Bài học tiếp theo đã được mở khóa.
+        </div>
+      ) : null}
+
       {isLocked && node.status !== "reward" ? (
         <div className="mt-4 rounded-2xl bg-slate-50 dark:bg-slate-900/40 p-3 text-xs font-bold leading-5 text-slate-500 dark:text-slate-400">
           Hoàn thành các node trước để mở khóa phần này.
         </div>
       ) : null}
 
-      <Link
-        href={isLocked ? "#" : `/lesson/${node.id}`}
-        className={cn(
-          "flex items-center justify-center mt-4 h-10 w-full rounded-2xl text-sm font-black uppercase tracking-wide transition active:translate-y-1 active:shadow-none",
-          content.buttonClass,
-          isLocked && "pointer-events-none opacity-50"
-        )}
-        aria-disabled={isLocked}
-      >
-        {content.action}
-      </Link>
+      {isClaimableChest ? (
+        <button
+          type="button"
+          className={cn(
+            "flex items-center justify-center mt-4 h-10 w-full rounded-2xl text-sm font-black uppercase tracking-wide transition active:translate-y-1 active:shadow-none",
+            content.buttonClass
+          )}
+          onClick={() => {
+            onClaimChest?.(node.nodeId);
+            onClose();
+          }}
+        >
+          {actionLabel}
+        </button>
+      ) : isClaimedChest ? (
+        <button
+          type="button"
+          disabled
+          className={cn(
+            "flex items-center justify-center mt-4 h-10 w-full rounded-2xl text-sm font-black uppercase tracking-wide opacity-70",
+            content.buttonClass
+          )}
+        >
+          {actionLabel}
+        </button>
+      ) : (
+        <Link
+          href={isLocked ? "#" : `/lesson/${node.nodeId}`}
+          className={cn(
+            "flex items-center justify-center mt-4 h-10 w-full rounded-2xl text-sm font-black uppercase tracking-wide transition active:translate-y-1 active:shadow-none",
+            content.buttonClass,
+            isLocked && "pointer-events-none opacity-50"
+          )}
+          aria-disabled={isLocked}
+        >
+          {actionLabel}
+        </Link>
+      )}
     </div>
   );
 };
@@ -204,17 +307,20 @@ const LessonNodeButton = ({
   selected,
   onSelect,
   onClose,
+  onClaimChest,
 }: {
-  node: LessonNode;
+  node: RoadmapLessonNode;
   todayMinutes: number;
   selected: boolean;
   onSelect: () => void;
   onClose: () => void;
+  onClaimChest?: (chestId: string) => void;
 }) => {
   const content = statusContent[node.status];
   const Icon = content.icon;
   const progress = node.progress ?? 0;
   const isCurrent = node.status === "current";
+  const isAvailableChest = node.type === "chest" && node.status === "available";
 
   return (
     <div
@@ -225,9 +331,9 @@ const LessonNodeButton = ({
         transform: "translate(-50%, -50%)",
       }}
     >
-      {isCurrent ? (
-        <div className="absolute -top-12 left-1/2 z-30 -translate-x-1/2 whitespace-nowrap rounded-2xl border-2 border-sky-200 dark:border-[#202f36] bg-white dark:bg-[#141f23] px-4 py-1.5 text-sm font-black uppercase tracking-wide text-[#1486CC] dark:text-[#38bdf8] shadow-sm">
-          Tiếp tục
+      {isCurrent || isAvailableChest ? (
+        <div className={cn("absolute -top-12 left-1/2 z-30 -translate-x-1/2 whitespace-nowrap rounded-2xl border-2 bg-white dark:bg-[#141f23] px-4 py-1.5 text-sm font-black uppercase tracking-wide shadow-sm", isAvailableChest ? "border-amber-200 text-amber-500 dark:border-amber-900/30 dark:text-amber-300" : "border-sky-200 text-[#1486CC] dark:border-[#202f36] dark:text-[#38bdf8]")}>
+          {isAvailableChest ? "Nhận thưởng" : "Tiếp tục"}
           <span className="absolute left-1/2 top-full h-3 w-3 -translate-x-1/2 -translate-y-1/2 rotate-45 border-b-2 border-r-2 border-sky-200 dark:border-[#202f36] bg-white dark:bg-[#141f23]" />
         </div>
       ) : null}
@@ -279,14 +385,24 @@ const LessonNodeButton = ({
       </div>
 
       {selected ? (
-        <LessonPopover node={node} todayMinutes={todayMinutes} onClose={onClose} />
+        <LessonPopover node={node} todayMinutes={todayMinutes} onClose={onClose} onClaimChest={onClaimChest} />
       ) : null}
     </div>
   );
 };
 
-export const LessonPath = ({ todayMinutes }: Props) => {
+export const LessonPath = ({ todayMinutes, progressState, onClaimChest }: Props) => {
   const [selectedId, setSelectedId] = useState<number | null>(null);
+  const roadmapNodes = useMemo(() => buildRoadmapNodes(progressState), [progressState]);
+  const pathSegments = useMemo(
+    () =>
+      roadmapNodes.slice(0, -1).map((node, index) => ({
+        id: `${node.id}-${roadmapNodes[index + 1].id}`,
+        d: curveBetween(node, roadmapNodes[index + 1]),
+        active: isPathSegmentActive(node, roadmapNodes[index + 1]),
+      })),
+    [roadmapNodes]
+  );
 
   return (
     <div
@@ -341,12 +457,9 @@ export const LessonPath = ({ todayMinutes }: Props) => {
           <div className="relative h-24 w-24 rounded-[28px] bg-white/90 dark:bg-slate-800/90 p-2 shadow-[0_16px_34px_rgba(15,23,42,0.13)] ring-2 ring-sky-100 dark:ring-[#202f36]">
             <Image src="/logo.webp" alt="Robogo" fill className="p-2 rounded-[20px]" sizes="96px" />
           </div>
-          <div className="mx-auto mt-2 w-fit rounded-full border-2 border-sky-100 dark:border-[#202f36] bg-white dark:bg-slate-800 px-3 py-1 text-xs font-black text-[#1486CC] dark:text-sky-400 shadow-sm">
-            Bạn đang ở đây
-          </div>
         </div>
 
-        {lessonNodes.map((node) => (
+        {roadmapNodes.map((node) => (
           <LessonNodeButton
             key={node.id}
             node={node}
@@ -354,6 +467,7 @@ export const LessonPath = ({ todayMinutes }: Props) => {
             selected={selectedId === node.id}
             onSelect={() => setSelectedId((current) => (current === node.id ? null : node.id))}
             onClose={() => setSelectedId(null)}
+            onClaimChest={onClaimChest}
           />
         ))}
       </div>

@@ -5,7 +5,7 @@ import { redirect } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { auth } from "@/auth";
 import { ProfileForm } from "./profile-form";
-import { englishProgressCourse } from "@/data/progress-data";
+import { chapterOneProgressCourse } from "@/data/progress-data";
 import { getCourseProgressSummary } from "@/lib/progress-utils";
 import { requireProfile, type Profile } from "@/services/profile-service";
 import { ProfileXpPanel } from "@/components/profile/profile-xp-panel";
@@ -24,7 +24,7 @@ const ProfilePage = async () => {
   } catch (error) {
     console.error("Failed to load user profile:", error);
   }
-  const courseProgress = getCourseProgressSummary(englishProgressCourse);
+  const courseProgress = getCourseProgressSummary(chapterOneProgressCourse);
 
   const displayName = profile?.name || user.name || "User";
   const avatarSrc = profile?.imageSrc || user.image || "/logo.webp";

@@ -3,12 +3,19 @@
 import { Suspense, useState, useEffect, useRef } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import Image from "next/image";
-import { CheckCircle2, XCircle, Trophy, RefreshCw, Home, Heart } from "lucide-react";
+import { CheckCircle2, XCircle, RefreshCw, Home, Heart } from "lucide-react";
 
 import { LessonHeader } from "@/components/lesson-header";
 import { ExitModal } from "@/components/exit-modal";
+import { LessonResultScreen } from "@/components/lesson-result-screen";
 import { Button } from "@/components/ui/button";
 import { lessonNodes } from "@/constants/lessons";
+import {
+  canCompleteChapterOneNode,
+  completeChapterOneCheckpoint,
+  completeChapterOneLesson,
+  getChapterOneProgress,
+} from "@/lib/chapter-one-progress";
 import { StreakNotification } from "@/components/streak/streak-notification";
 import type { StreakNotificationInput } from "@/components/streak/streak-data";
 
@@ -51,6 +58,8 @@ const MOCK_QUESTIONS = [
   },
 ];
 
+const PASS_THRESHOLD = 60;
+
 
 type StreakUpdateResult = {
   status: StreakNotificationInput["status"];
@@ -85,10 +94,26 @@ type LessonXpApiResult = {
 const LessonContent = () => {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const lessonId = parseInt(searchParams.get("id") || "2", 10);
+  const rawLessonId = searchParams.get("id") || "lesson-1";
+  const legacyLessonId = Number.parseInt(rawLessonId, 10);
 
-  // Load lesson node
-  const lessonNode = lessonNodes.find((node) => node.id === lessonId) || lessonNodes[1];
+  // Load a playable chapter-one node. Supports the new stable id (lesson-1)
+  // and the old numeric id (1). Chest nodes are not lessons, so they are
+  // redirected back to the roadmap instead of opening the player.
+  const requestedNode =
+    lessonNodes.find((node) => node.nodeId === rawLessonId) ||
+    lessonNodes.find((node) => node.id === legacyLessonId);
+  const shouldRedirectToLearn = requestedNode?.type === "chest";
+  const lessonNode =
+    requestedNode && requestedNode.type !== "chest"
+      ? requestedNode
+      : lessonNodes.find((node) => node.nodeId === "lesson-1") || lessonNodes[0];
+
+  useEffect(() => {
+    if (shouldRedirectToLearn) {
+      router.replace("/learn");
+    }
+  }, [router, shouldRedirectToLearn]);
 
   // Game/Quiz States
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
@@ -105,18 +130,56 @@ const LessonContent = () => {
   const [isClaimingXp, setIsClaimingXp] = useState(false);
   const [xpError, setXpError] = useState<string | null>(null);
   const [streakResult, setStreakResult] = useState<StreakNotificationInput | null>(null);
+  const [completionBlockedMessage, setCompletionBlockedMessage] = useState<string | null>(null);
   const hasHandledCompletionRef = useRef(false);
 
   const currentQuestion = MOCK_QUESTIONS[currentQuestionIndex];
   const progress = (currentQuestionIndex / MOCK_QUESTIONS.length) * 100;
-  const accuracy = Math.round((correctAnswersCount / MOCK_QUESTIONS.length) * 100);
-  const xpLessonId = `lesson-${lessonNode.id ?? lessonId}`;
+  const totalQuestions = MOCK_QUESTIONS.length;
+  const accuracy = Math.round((correctAnswersCount / totalQuestions) * 100);
+  const wrongAnswersCount = totalQuestions - correctAnswersCount;
+  const passed = accuracy >= PASS_THRESHOLD;
+  const isCheckpoint = lessonNode.type === "checkpoint";
+  const xpLessonId = lessonNode.nodeId;
 
-  // Call XP + streak APIs once when the result screen is shown.
+  // Apply pass/fail rules once when the result screen is shown.
+  // Progress is localStorage-first, while XP/streak APIs are best-effort extras.
   useEffect(() => {
     if (!isFinished || hasHandledCompletionRef.current) return;
 
     hasHandledCompletionRef.current = true;
+
+    if (!passed) {
+      setXpResult(null);
+      setXpError(null);
+      setIsClaimingXp(false);
+      return;
+    }
+
+    const chapterOneProgress = getChapterOneProgress();
+    const canApplyCompletion = canCompleteChapterOneNode(xpLessonId, chapterOneProgress);
+
+    if (!canApplyCompletion) {
+      setCompletionBlockedMessage(
+        "Node này chưa mở trên lộ trình, nên kết quả chỉ được xem là lượt luyện tập. Tiến độ, XP và streak không thay đổi."
+      );
+      setXpResult(null);
+      setXpError(null);
+      setIsClaimingXp(false);
+      return;
+    }
+
+    setCompletionBlockedMessage(null);
+
+    try {
+      if (isCheckpoint) {
+        completeChapterOneCheckpoint(xpLessonId);
+      } else {
+        completeChapterOneLesson(xpLessonId);
+      }
+    } catch (err) {
+      console.warn("Could not update Chapter 1 progress:", err);
+    }
 
     const completeLesson = async () => {
       let xpForStreak = 0;
@@ -143,7 +206,7 @@ const LessonContent = () => {
         xpForStreak = xpData.earnedXp;
       } catch (err) {
         console.warn("Could not complete lesson XP:", err);
-        setXpError("Không thể cập nhật XP lúc này. Bài học vẫn được hiển thị kết quả bình thường.");
+        setXpError("Không thể cập nhật XP lúc này. Tiến độ bài học vẫn đã được lưu.");
       } finally {
         setIsClaimingXp(false);
       }
@@ -176,7 +239,7 @@ const LessonContent = () => {
     };
 
     completeLesson();
-  }, [accuracy, isFinished, xpLessonId]);
+  }, [accuracy, isCheckpoint, isFinished, passed, xpLessonId]);
 
   // Handle checking the selected answer
   const onCheck = () => {
@@ -235,6 +298,7 @@ const LessonContent = () => {
     setIsClaimingXp(false);
     setXpError(null);
     setStreakResult(null);
+    setCompletionBlockedMessage(null);
     hasHandledCompletionRef.current = false;
   };
 
@@ -243,8 +307,19 @@ const LessonContent = () => {
     router.push("/learn");
   };
 
+  if (shouldRedirectToLearn) {
+    return (
+      <div className="flex min-h-screen items-center justify-center bg-white text-slate-500">
+        <div className="flex flex-col items-center gap-3 text-center">
+          <div className="size-10 animate-spin rounded-full border-4 border-slate-200 border-t-sky-500" />
+          <p className="text-sm font-bold">Rương thưởng không mở Lesson Player. Đang quay lại lộ trình...</p>
+        </div>
+      </div>
+    );
+  }
+
   // Game over state
-  if (hearts === 0) {
+  if (hearts === 0 && !isFinished && !isAnswered) {
     return (
       <div className="flex min-h-screen flex-col items-center justify-center bg-white px-4 text-center">
         <div className="relative mx-auto mb-6 flex size-32 items-center justify-center">
@@ -280,89 +355,44 @@ const LessonContent = () => {
     );
   }
 
-  // Lesson completed state
+  // Lesson result state
   if (isFinished) {
-    const isWaitingForXp = isClaimingXp || (!xpResult && !xpError);
-    const earnedXpToDisplay = xpResult?.earnedXp ?? 0;
+    const isCompletionBlocked = Boolean(completionBlockedMessage);
+    const isWaitingForXp = passed && !isCompletionBlocked && (isClaimingXp || (!xpResult && !xpError));
+    const earnedXpToDisplay = passed && !isCompletionBlocked ? xpResult?.earnedXp ?? lessonNode.xp : 0;
     const totalXpToDisplay = xpResult ? xpResult.totalXp.toLocaleString("vi-VN") : "--";
     const levelToDisplay = xpResult ? xpResult.level : "--";
-    const xpStatusMessage = xpError ?? xpResult?.message;
+    const xpStatusMessage = completionBlockedMessage ?? xpError ?? xpResult?.message;
 
     return (
-      <div className="flex min-h-screen flex-col items-center justify-center bg-white px-4 text-center">
-        <div className="relative mx-auto mb-6 flex size-36 items-center justify-center">
-          <Image
-            src="/mascot.svg"
-            alt="Mascot"
-            width={128}
-            height={128}
-            className="object-contain"
-          />
-          <div className="absolute -bottom-2 -right-2 flex size-12 items-center justify-center rounded-full bg-yellow-400 text-white shadow-lg ring-4 ring-white">
-            <Trophy className="size-6 stroke-[2.5]" />
-          </div>
-        </div>
+      <>
+        <LessonResultScreen
+          lessonTitle={lessonNode.title}
+          isCheckpoint={isCheckpoint}
+          passed={passed}
+          correctAnswers={correctAnswersCount}
+          wrongAnswers={wrongAnswersCount}
+          totalQuestions={totalQuestions}
+          accuracy={accuracy}
+          passThreshold={PASS_THRESHOLD}
+          xpEarned={earnedXpToDisplay}
+          isWaitingForXp={isWaitingForXp}
+          xpStatusMessage={xpStatusMessage}
+          completionBlocked={isCompletionBlocked}
+          totalXp={totalXpToDisplay}
+          level={levelToDisplay}
+          alreadyClaimed={Boolean(xpResult?.alreadyClaimed)}
+          onContinue={redirectToLearn}
+          onRestart={onRestart}
+          onBackToLearn={redirectToLearn}
+        />
 
-        <h1 className="text-3xl font-black text-slate-800 leading-tight">
-          Hoàn thành bài học!
-        </h1>
-        <p className="mt-2 text-base font-bold text-slate-500">
-          Bạn đã xuất sắc vượt qua các thử thách của bài học này.
-        </p>
-
-        <div className="mt-8 grid w-full max-w-[520px] grid-cols-2 gap-4">
-          <div className="flex flex-col items-center rounded-2xl border-2 border-orange-200 bg-orange-50/50 p-4 shadow-sm">
-            <span className="text-xs font-black uppercase tracking-wide text-orange-500">XP nhận được</span>
-            <span className="mt-1 text-2xl font-black text-orange-600">
-              {isWaitingForXp ? "Đang tính..." : `+${earnedXpToDisplay} XP`}
-            </span>
-          </div>
-
-          <div className="flex flex-col items-center rounded-2xl border-2 border-green-200 bg-green-50/50 p-4 shadow-sm">
-            <span className="text-xs font-black uppercase tracking-wide text-green-500">Độ chính xác</span>
-            <span className="mt-1 text-2xl font-black text-green-600">{accuracy}%</span>
-          </div>
-
-          <div className="flex flex-col items-center rounded-2xl border-2 border-sky-200 bg-sky-50/50 p-4 shadow-sm">
-            <span className="text-xs font-black uppercase tracking-wide text-sky-500">Tổng XP</span>
-            <span className="mt-1 text-2xl font-black text-sky-600">{totalXpToDisplay}</span>
-          </div>
-
-          <div className="flex flex-col items-center rounded-2xl border-2 border-violet-200 bg-violet-50/50 p-4 shadow-sm">
-            <span className="text-xs font-black uppercase tracking-wide text-violet-500">Level hiện tại</span>
-            <span className="mt-1 text-2xl font-black text-violet-600">Level {levelToDisplay}</span>
-          </div>
-        </div>
-
-        <div className="mt-4 min-h-6 px-4 text-sm font-bold text-slate-500">
-          {isWaitingForXp ? "Đang cập nhật XP..." : xpStatusMessage}
-        </div>
-
-        {xpResult?.alreadyClaimed ? (
-          <p className="mt-2 max-w-[420px] rounded-2xl border-2 border-slate-200 bg-slate-50 px-4 py-3 text-sm font-bold text-slate-500">
-            Bài học này đã nhận XP trước đó, nên hệ thống không cộng XP lần hai.
-          </p>
-        ) : null}
-
-        {xpResult && !xpResult.isPassed ? (
-          <p className="mt-2 max-w-[420px] rounded-2xl border-2 border-rose-200 bg-rose-50 px-4 py-3 text-sm font-bold text-rose-600">
-            Độ chính xác dưới 60%, bài học chưa được tính hoàn thành và chưa nhận XP.
-          </p>
-        ) : null}
-
-        <div className="mt-8 w-full max-w-[280px]">
-          <Button variant="primary" onClick={redirectToLearn} className="h-12 w-full rounded-2xl">
-            Tiếp tục lộ trình
-          </Button>
-        </div>
-
-        {/* Streak notification after lesson completion */}
         <StreakNotification
           result={streakResult}
           autoHideMs={7000}
           onDismiss={() => setStreakResult(null)}
         />
-      </div>
+      </>
     );
   }
 
