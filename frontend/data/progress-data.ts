@@ -1,3 +1,5 @@
+import { chapterOneDemoScope, chapterOneNodes } from "@/constants/chapter-one";
+
 export type LessonStatus = "completed" | "current" | "available" | "locked";
 
 export type LessonType = "lesson" | "review" | "story" | "unit-review" | "boss";
@@ -381,3 +383,42 @@ export const englishProgressCourse: ProgressCourse = {
 };
 
 export const progressUnits = englishProgressCourse.units;
+
+
+export const chapterOneProgressCourse: ProgressCourse = {
+  id: chapterOneDemoScope.courseId,
+  title: "English",
+  nativeTitle: chapterOneDemoScope.courseTitle,
+  level: chapterOneDemoScope.chapterTitle,
+  description:
+    "Phạm vi demo hiện tại chỉ gồm Tiếng Anh / Chương 1 / Cửa 1.",
+  imageSrc: "/globe.svg",
+  units: [
+    {
+      id: 1,
+      title: `${chapterOneDemoScope.unitTitle}: ${chapterOneDemoScope.chapterTitle}`,
+      description:
+        "Hoàn thành 6 bài học và 1 bài kiểm tra cuối chương. Rương thưởng không tính vào tiến độ chính.",
+      iconSrc: "/learn.svg",
+      lessons: chapterOneNodes
+        .filter((node) => node.countsTowardProgress)
+        .map((node) => ({
+          id: node.legacyId,
+          title: node.title,
+          description: node.description,
+          type: node.type === "checkpoint" ? "boss" : "lesson",
+          status: node.initialStatus === "current" ? "current" : "locked",
+          href: node.href ?? `/lesson?id=${node.id}`,
+          objectives: [
+            "Hoàn thành bài học trong luồng Chương 1.",
+            "Đạt đủ điểm để mở khóa node tiếp theo.",
+            "Giữ tiến độ demo ổn định từ đầu đến cuối chương.",
+          ],
+          estimatedMinutes: node.type === "checkpoint" ? 12 : 7,
+          xpReward: node.xp,
+        })),
+    },
+  ],
+};
+
+export const chapterOneProgressUnits = chapterOneProgressCourse.units;
