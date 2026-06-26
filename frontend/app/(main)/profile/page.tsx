@@ -8,6 +8,7 @@ import { ProfileForm } from "./profile-form";
 import { englishProgressCourse } from "@/data/progress-data";
 import { getCourseProgressSummary } from "@/lib/progress-utils";
 import { requireProfile, type Profile } from "@/services/profile-service";
+import { ProfileXpPanel } from "@/components/profile/profile-xp-panel";
 
 const ProfilePage = async () => {
   const session = await auth();
@@ -169,6 +170,8 @@ const ProfilePage = async () => {
         </div>
 
         <aside className="space-y-6">
+          <ProfileXpPanel />
+
           <article className="rounded-[28px] border-2 border-slate-200 bg-white p-5 shadow-sm sm:p-6">
             <div className="flex items-center justify-between gap-4">
               <div>
