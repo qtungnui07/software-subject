@@ -53,7 +53,31 @@ interface Competitor {
   points: number;
   isCurrentUser: boolean;
   statusEmoji: string | null;
+  avatarUrl?: string;
+  level?: number;
+  weeklyXp?: number;
+  totalXp?: number;
+  rank?: number;
 }
+
+type XpLeaderboardApiUser = {
+  rank: number;
+  userId: string;
+  name: string;
+  avatarUrl: string;
+  level: number;
+  weeklyXp: number;
+  totalXp: number;
+  isCurrentUser: boolean;
+};
+
+type XpLeaderboardApiResponse = {
+  success: boolean;
+  users: XpLeaderboardApiUser[];
+  currentDay: string;
+  currentWeekStart: string;
+  isDemoUser?: boolean;
+};
 
 interface LeaderboardClientProps {
   userId: string;
@@ -84,6 +108,8 @@ export const LeaderboardClient: React.FC<LeaderboardClientProps> = ({
   const [userStatusEmoji, setUserStatusEmoji] = useState<string | null>(initialStatusEmoji);
   const [userPoints, setUserPoints] = useState<number>(initialPoints);
   const [leaderboard, setLeaderboard] = useState<Competitor[]>([]);
+  const [isLoadingLeaderboard, setIsLoadingLeaderboard] = useState<boolean>(true);
+  const [leaderboardError, setLeaderboardError] = useState<string | null>(null);
   const [countdownText, setCountdownText] = useState<string>("");
   const [isEmojiAnimating, setIsEmojiAnimating] = useState<boolean>(false);
   const [showLeagueInfo, setShowLeagueInfo] = useState<boolean>(false);
@@ -233,11 +259,77 @@ export const LeaderboardClient: React.FC<LeaderboardClientProps> = ({
     return sorted;
   };
 
-  // Sync state when active league changes or points change
+  // Sync leaderboard from XP API. If the API fails, keep the old local fallback.
   useEffect(() => {
-    const list = loadLeaderboardData(activeLeagueView, userPoints);
-    setLeaderboard(list);
-  }, [activeLeagueView, userPoints, userStatusEmoji]);
+    let isMounted = true;
+
+    const toCompetitor = (user: XpLeaderboardApiUser): Competitor => {
+      const displayName = user.isCurrentUser
+        ? initialUserName || user.name || "Bạn"
+        : user.name;
+      const avatarLetter = displayName.trim().charAt(0).toUpperCase() || "U";
+
+      return {
+        id: user.userId,
+        name: displayName,
+        avatarColor: user.isCurrentUser ? "bg-sky-500" : AVATAR_COLORS[user.rank % AVATAR_COLORS.length],
+        avatarLetter,
+        points: user.weeklyXp,
+        weeklyXp: user.weeklyXp,
+        totalXp: user.totalXp,
+        level: user.level,
+        rank: user.rank,
+        avatarUrl: user.isCurrentUser ? initialUserImageSrc || user.avatarUrl : user.avatarUrl,
+        isCurrentUser: user.isCurrentUser,
+        statusEmoji: user.isCurrentUser ? userStatusEmoji : null,
+      };
+    };
+
+    const loadXpLeaderboard = async () => {
+      setIsLoadingLeaderboard(true);
+      setLeaderboardError(null);
+
+      try {
+        const response = await fetch("/api/xp/leaderboard", {
+          method: "GET",
+          cache: "no-store",
+        });
+
+        if (!response.ok) {
+          throw new Error("Failed to load XP leaderboard");
+        }
+
+        const data = (await response.json()) as XpLeaderboardApiResponse;
+        const nextLeaderboard = data.users.map(toCompetitor);
+
+        if (!isMounted) return;
+
+        setLeaderboard(nextLeaderboard);
+        const currentUserRow = nextLeaderboard.find((user) => user.isCurrentUser);
+
+        if (currentUserRow) {
+          setUserPoints(currentUserRow.weeklyXp ?? currentUserRow.points);
+        }
+      } catch (error) {
+        console.error("Failed to load XP leaderboard:", error);
+
+        if (!isMounted) return;
+
+        setLeaderboardError("Chưa thể tải bảng xếp hạng XP mới nhất. Đang dùng dữ liệu dự phòng.");
+        setLeaderboard(loadLeaderboardData(activeLeagueView, userPoints));
+      } finally {
+        if (isMounted) {
+          setIsLoadingLeaderboard(false);
+        }
+      }
+    };
+
+    loadXpLeaderboard();
+
+    return () => {
+      isMounted = false;
+    };
+  }, [activeLeagueView, initialUserImageSrc, initialUserName, userStatusEmoji]);
 
   // Sync point updates from DB (e.g. if the user gains points during their session)
   useEffect(() => {
@@ -474,7 +566,7 @@ export const LeaderboardClient: React.FC<LeaderboardClientProps> = ({
                     {activeLeagueView > 1 && (
                       <li><strong className="text-rose-700">Top 5 dưới cùng (Thứ 26-30)</strong> sẽ bị rớt xuống giải đấu thấp hơn.</li>
                     )}
-                    <li>Kiếm Điểm Kinh Nghiệm (XP / KN) từ các bài học để leo hạng!</li>
+                    <li>Kiếm XP tuần này từ các bài học để leo hạng!</li>
                   </ul>
                 </div>
               )}
@@ -483,6 +575,18 @@ export const LeaderboardClient: React.FC<LeaderboardClientProps> = ({
             {/* LEADERBOARD LIST */}
             <div className="divide-y divide-slate-100 px-2 py-2">
               
+              {isLoadingLeaderboard && (
+                <div className="m-4 rounded-2xl border-2 border-sky-100 bg-sky-50 p-4 text-center text-xs font-black uppercase tracking-wider text-sky-600">
+                  Đang tải bảng xếp hạng XP...
+                </div>
+              )}
+
+              {leaderboardError && (
+                <div className="m-4 rounded-2xl border-2 border-amber-100 bg-amber-50 p-4 text-center text-xs font-bold text-amber-700">
+                  {leaderboardError}
+                </div>
+              )}
+
               {/* If user is previewing a league higher than their current one, show lock overlay warning at the top */}
               {activeLeagueView > userLeague && (
                 <div className="m-4 bg-slate-50 border-2 border-dashed border-slate-200 rounded-2xl p-5 text-center">
@@ -567,7 +671,7 @@ export const LeaderboardClient: React.FC<LeaderboardClientProps> = ({
                           {isUser ? (
                             <div className="h-12 w-12 rounded-full overflow-hidden border-2 border-sky-300 bg-sky-100 relative shadow-inner">
                               <Image
-                                src={competitor.name === "Bạn" ? "/mascot.svg" : initialUserImageSrc || "/mascot.svg"}
+                                src={competitor.avatarUrl || initialUserImageSrc || "/mascot.svg"}
                                 alt={competitor.name}
                                 fill
                                 sizes="48px"
@@ -608,16 +712,22 @@ export const LeaderboardClient: React.FC<LeaderboardClientProps> = ({
                           )}>
                             {competitor.name} {isUser && <span className="text-xs font-black text-sky-500 uppercase ml-1">(Bạn)</span>}
                           </span>
+                          <span className="mt-0.5 block truncate text-[11px] font-black uppercase tracking-wide text-slate-400">
+                            Level {competitor.level ?? 1} · Tổng XP {competitor.totalXp ?? competitor.points}
+                          </span>
                         </div>
                       </div>
 
-                      {/* Points / XP */}
+                      {/* Weekly XP */}
                       <div className="text-right shrink-0">
                         <span className={cn(
-                          "text-base font-black tracking-tight",
+                          "block text-base font-black tracking-tight",
                           isUser ? "text-sky-600" : "text-slate-500"
                         )}>
-                          {competitor.points} <span className="text-xs font-bold uppercase">KN</span>
+                          {competitor.weeklyXp ?? competitor.points} <span className="text-xs font-bold uppercase">XP</span>
+                        </span>
+                        <span className="text-[10px] font-black uppercase tracking-wide text-slate-400">
+                          Tuần này
                         </span>
                       </div>
                     </div>

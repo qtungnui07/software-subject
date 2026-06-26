@@ -51,7 +51,6 @@ const MOCK_QUESTIONS = [
   },
 ];
 
-const EARNED_XP_PER_LESSON = 15;
 
 type StreakUpdateResult = {
   status: StreakNotificationInput["status"];
@@ -61,6 +60,26 @@ type StreakUpdateResult = {
   missedDays?: number;
   usedStreakFreezes?: number;
   earnedXpToday?: number;
+};
+
+type LessonXpApiResult = {
+  success: boolean;
+  lessonId: string;
+  earnedXp: number;
+  baseXp: number;
+  accuracyBonus: number;
+  accuracy: number;
+  totalXp: number;
+  dailyXp: number;
+  weeklyXp: number;
+  level: number;
+  alreadyClaimed: boolean;
+  isPassed: boolean;
+  rewardType: string;
+  message: string;
+  currentDay: string;
+  currentWeekStart: string;
+  isDemoUser?: boolean;
 };
 
 const LessonContent = () => {
@@ -81,34 +100,67 @@ const LessonContent = () => {
   const [isFinished, setIsFinished] = useState(false);
   const [correctAnswersCount, setCorrectAnswersCount] = useState(0);
 
-  // Streak states
+  // XP + Streak states
+  const [xpResult, setXpResult] = useState<LessonXpApiResult | null>(null);
+  const [isClaimingXp, setIsClaimingXp] = useState(false);
+  const [xpError, setXpError] = useState<string | null>(null);
   const [streakResult, setStreakResult] = useState<StreakNotificationInput | null>(null);
-  const [earnedXp, setEarnedXp] = useState(EARNED_XP_PER_LESSON);
-  const hasCalledStreakRef = useRef(false);
+  const hasHandledCompletionRef = useRef(false);
 
   const currentQuestion = MOCK_QUESTIONS[currentQuestionIndex];
   const progress = (currentQuestionIndex / MOCK_QUESTIONS.length) * 100;
+  const accuracy = Math.round((correctAnswersCount / MOCK_QUESTIONS.length) * 100);
+  const xpLessonId = `lesson-${lessonNode.id ?? lessonId}`;
 
-  // Call streak update API when lesson is finished
+  // Call XP + streak APIs once when the result screen is shown.
   useEffect(() => {
-    if (!isFinished || hasCalledStreakRef.current) return;
+    if (!isFinished || hasHandledCompletionRef.current) return;
 
-    hasCalledStreakRef.current = true;
+    hasHandledCompletionRef.current = true;
 
-    const updateStreak = async () => {
+    const completeLesson = async () => {
+      let xpForStreak = 0;
+
       try {
-        const response = await fetch("/api/streak/update", {
+        setIsClaimingXp(true);
+        setXpError(null);
+
+        const xpResponse = await fetch("/api/xp/complete-lesson", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
-            lessonId: String(lessonId),
-            earnedXp: EARNED_XP_PER_LESSON,
+            lessonId: xpLessonId,
+            accuracy,
           }),
         });
 
-        if (!response.ok) return;
+        if (!xpResponse.ok) {
+          throw new Error("XP API request failed");
+        }
 
-        const data = (await response.json()) as StreakUpdateResult;
+        const xpData = (await xpResponse.json()) as LessonXpApiResult;
+        setXpResult(xpData);
+        xpForStreak = xpData.earnedXp;
+      } catch (err) {
+        console.warn("Could not complete lesson XP:", err);
+        setXpError("Không thể cập nhật XP lúc này. Bài học vẫn được hiển thị kết quả bình thường.");
+      } finally {
+        setIsClaimingXp(false);
+      }
+
+      try {
+        const streakResponse = await fetch("/api/streak/update", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            lessonId: xpLessonId,
+            earnedXp: xpForStreak,
+          }),
+        });
+
+        if (!streakResponse.ok) return;
+
+        const data = (await streakResponse.json()) as StreakUpdateResult;
 
         setStreakResult({
           status: data.status,
@@ -118,17 +170,13 @@ const LessonContent = () => {
           missedDays: data.missedDays,
           usedStreakFreezes: data.usedStreakFreezes,
         });
-
-        if (typeof data.earnedXpToday === "number" && data.earnedXpToday > 0) {
-          setEarnedXp(data.earnedXpToday);
-        }
       } catch (err) {
         console.warn("Could not update streak:", err);
       }
     };
 
-    updateStreak();
-  }, [isFinished, lessonId]);
+    completeLesson();
+  }, [accuracy, isFinished, xpLessonId]);
 
   // Handle checking the selected answer
   const onCheck = () => {
@@ -183,9 +231,11 @@ const LessonContent = () => {
     setHearts(5);
     setIsFinished(false);
     setCorrectAnswersCount(0);
+    setXpResult(null);
+    setIsClaimingXp(false);
+    setXpError(null);
     setStreakResult(null);
-    setEarnedXp(EARNED_XP_PER_LESSON);
-    hasCalledStreakRef.current = false;
+    hasHandledCompletionRef.current = false;
   };
 
   // Redirect to learn page
@@ -232,7 +282,11 @@ const LessonContent = () => {
 
   // Lesson completed state
   if (isFinished) {
-    const accuracy = Math.round((correctAnswersCount / MOCK_QUESTIONS.length) * 100);
+    const isWaitingForXp = isClaimingXp || (!xpResult && !xpError);
+    const earnedXpToDisplay = xpResult?.earnedXp ?? 0;
+    const totalXpToDisplay = xpResult ? xpResult.totalXp.toLocaleString("vi-VN") : "--";
+    const levelToDisplay = xpResult ? xpResult.level : "--";
+    const xpStatusMessage = xpError ?? xpResult?.message;
 
     return (
       <div className="flex min-h-screen flex-col items-center justify-center bg-white px-4 text-center">
@@ -256,17 +310,45 @@ const LessonContent = () => {
           Bạn đã xuất sắc vượt qua các thử thách của bài học này.
         </p>
 
-        <div className="mt-8 grid w-full max-w-[420px] grid-cols-2 gap-4">
+        <div className="mt-8 grid w-full max-w-[520px] grid-cols-2 gap-4">
           <div className="flex flex-col items-center rounded-2xl border-2 border-orange-200 bg-orange-50/50 p-4 shadow-sm">
             <span className="text-xs font-black uppercase tracking-wide text-orange-500">XP nhận được</span>
-            <span className="mt-1 text-2xl font-black text-orange-600">+{earnedXp} XP</span>
+            <span className="mt-1 text-2xl font-black text-orange-600">
+              {isWaitingForXp ? "Đang tính..." : `+${earnedXpToDisplay} XP`}
+            </span>
           </div>
 
           <div className="flex flex-col items-center rounded-2xl border-2 border-green-200 bg-green-50/50 p-4 shadow-sm">
             <span className="text-xs font-black uppercase tracking-wide text-green-500">Độ chính xác</span>
             <span className="mt-1 text-2xl font-black text-green-600">{accuracy}%</span>
           </div>
+
+          <div className="flex flex-col items-center rounded-2xl border-2 border-sky-200 bg-sky-50/50 p-4 shadow-sm">
+            <span className="text-xs font-black uppercase tracking-wide text-sky-500">Tổng XP</span>
+            <span className="mt-1 text-2xl font-black text-sky-600">{totalXpToDisplay}</span>
+          </div>
+
+          <div className="flex flex-col items-center rounded-2xl border-2 border-violet-200 bg-violet-50/50 p-4 shadow-sm">
+            <span className="text-xs font-black uppercase tracking-wide text-violet-500">Level hiện tại</span>
+            <span className="mt-1 text-2xl font-black text-violet-600">Level {levelToDisplay}</span>
+          </div>
         </div>
+
+        <div className="mt-4 min-h-6 px-4 text-sm font-bold text-slate-500">
+          {isWaitingForXp ? "Đang cập nhật XP..." : xpStatusMessage}
+        </div>
+
+        {xpResult?.alreadyClaimed ? (
+          <p className="mt-2 max-w-[420px] rounded-2xl border-2 border-slate-200 bg-slate-50 px-4 py-3 text-sm font-bold text-slate-500">
+            Bài học này đã nhận XP trước đó, nên hệ thống không cộng XP lần hai.
+          </p>
+        ) : null}
+
+        {xpResult && !xpResult.isPassed ? (
+          <p className="mt-2 max-w-[420px] rounded-2xl border-2 border-rose-200 bg-rose-50 px-4 py-3 text-sm font-bold text-rose-600">
+            Độ chính xác dưới 60%, bài học chưa được tính hoàn thành và chưa nhận XP.
+          </p>
+        ) : null}
 
         <div className="mt-8 w-full max-w-[280px]">
           <Button variant="primary" onClick={redirectToLearn} className="h-12 w-full rounded-2xl">
