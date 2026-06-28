@@ -93,6 +93,24 @@ const requireApiKey = (req) => {
 
 const normalizeEmail = (email) => String(email || "").trim().toLowerCase();
 
+const requireUserId = (req) => {
+  const userId = String(req.headers["x-user-id"] || "").trim();
+
+  if (!userId) {
+    const error = new Error("Unauthorized");
+    error.status = 401;
+    throw error;
+  }
+
+  if (!userId.startsWith("user_") && !/^\d+$/.test(userId)) {
+    const error = new Error("Invalid user id");
+    error.status = 400;
+    throw error;
+  }
+
+  return userId;
+};
+
 const hashPassword = (password) => {
   const salt = crypto.randomBytes(16).toString("hex");
   const hash = crypto.scryptSync(password, salt, 64).toString("hex");
@@ -255,6 +273,172 @@ const deleteUser = async (id) => {
   return { id: String(user.id), email: user.email };
 };
 
+const findAccount = async (userId, database = sql) => {
+  requireDatabase();
+
+  const [user] = userId.startsWith("user_")
+    ? await database`
+        select id, clerk_user_id, name, email, image_src
+        from users
+        where clerk_user_id = ${userId}
+        limit 1
+      `
+    : await database`
+        select id, clerk_user_id, name, email, image_src
+        from users
+        where id = ${Number(userId)}
+        limit 1
+      `;
+
+  if (!user) {
+    const error = new Error("Account not found");
+    error.status = 404;
+    throw error;
+  }
+
+  return user;
+};
+
+const accountResponse = (user) => ({
+  name: user.name,
+  email: user.email,
+  isClerk: Boolean(user.clerk_user_id),
+});
+
+const getAccount = async (userId) => accountResponse(await findAccount(userId));
+
+const updateAccount = async (userId, payload) => {
+  requireDatabase();
+
+  const name = String(payload.name || "").trim();
+  const email = normalizeEmail(payload.email);
+
+  if (!name || !email) {
+    const error = new Error("name and email are required");
+    error.status = 400;
+    throw error;
+  }
+
+  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+    const error = new Error("Invalid email address");
+    error.status = 400;
+    throw error;
+  }
+
+  try {
+    return await sql.begin(async (transaction) => {
+      const existing = await findAccount(userId, transaction);
+
+      if (existing.clerk_user_id && email !== existing.email) {
+        const error = new Error("Email for Clerk accounts cannot be changed here");
+        error.status = 400;
+        throw error;
+      }
+
+      const [updated] = existing.clerk_user_id
+        ? await transaction`
+            update users
+            set name = ${name}, updated_at = now()
+            where clerk_user_id = ${userId}
+            returning id, clerk_user_id, name, email
+          `
+        : await transaction`
+            update users
+            set name = ${name}, email = ${email}, updated_at = now()
+            where id = ${Number(userId)}
+            returning id, clerk_user_id, name, email
+          `;
+
+      await transaction`
+        insert into user_progress (user_id, user_name)
+        values (${userId}, ${name})
+        on conflict (user_id) do update set user_name = excluded.user_name
+      `;
+
+      return accountResponse(updated);
+    });
+  } catch (error) {
+    if (error.code === "23505") {
+      const conflict = new Error("Email already exists");
+      conflict.status = 409;
+      throw conflict;
+    }
+
+    throw error;
+  }
+};
+
+const getProfile = async (userId) => {
+  requireDatabase();
+
+  const account = await findAccount(userId);
+  const [progress] = await sql`
+    select
+      user_progress.user_name,
+      user_progress.user_image_src,
+      user_progress.hearts,
+      user_progress.points,
+      courses.id as course_id,
+      courses.title as course_title,
+      courses."imageSrc" as course_image_src
+    from user_progress
+    left join courses on courses.id = user_progress.active_course_id
+    where user_progress.user_id = ${userId}
+    limit 1
+  `;
+
+  return {
+    name: progress?.user_name || account.name,
+    email: account.email,
+    imageSrc: progress?.user_image_src || account.image_src || "/mascot.svg",
+    hearts: progress?.hearts ?? 5,
+    points: progress?.points ?? 0,
+    activeCourse: progress?.course_id
+      ? {
+          id: progress.course_id,
+          title: progress.course_title,
+          imageSrc: progress.course_image_src,
+        }
+      : null,
+  };
+};
+
+const updateProfile = async (userId, payload) => {
+  requireDatabase();
+
+  const name = String(payload.name || "").trim();
+  const imageSrc = String(payload.imageSrc || "").trim();
+
+  if (!name || !imageSrc) {
+    const error = new Error("name and imageSrc are required");
+    error.status = 400;
+    throw error;
+  }
+
+  if (name.length > 30) {
+    const error = new Error("Name must not exceed 30 characters");
+    error.status = 400;
+    throw error;
+  }
+
+  if (imageSrc.length > 2048 || (!imageSrc.startsWith("/") && !/^https?:\/\//i.test(imageSrc))) {
+    const error = new Error("Invalid image source");
+    error.status = 400;
+    throw error;
+  }
+
+  await findAccount(userId);
+  await sql`
+    insert into user_progress (user_id, user_name, user_image_src)
+    values (${userId}, ${name}, ${imageSrc})
+    on conflict (user_id) do update set
+      user_name = excluded.user_name,
+      user_image_src = excluded.user_image_src
+  `;
+
+  return getProfile(userId);
+};
+
 const server = http.createServer(async (req, res) => {
   try {
     const url = new URL(req.url || "/", `http://${req.headers.host || "localhost"}`);
@@ -283,6 +467,42 @@ const server = http.createServer(async (req, res) => {
       const [row] = await sql`select count(*)::int as count from users`;
       logRequest(req, 200, `count=${row.count}`);
       sendJson(res, 200, row);
+      return;
+    }
+
+    if (req.method === "GET" && url.pathname === "/settings/account") {
+      requireApiKey(req);
+      const userId = requireUserId(req);
+      const account = await getAccount(userId);
+      logRequest(req, 200, `user_id=${userId}`);
+      sendJson(res, 200, { ok: true, account });
+      return;
+    }
+
+    if (req.method === "PATCH" && url.pathname === "/settings/account") {
+      requireApiKey(req);
+      const userId = requireUserId(req);
+      const account = await updateAccount(userId, await readJson(req));
+      logRequest(req, 200, `user_id=${userId}`);
+      sendJson(res, 200, { ok: true, account });
+      return;
+    }
+
+    if (req.method === "GET" && url.pathname === "/profile") {
+      requireApiKey(req);
+      const userId = requireUserId(req);
+      const profile = await getProfile(userId);
+      logRequest(req, 200, `user_id=${userId}`);
+      sendJson(res, 200, { ok: true, profile });
+      return;
+    }
+
+    if (req.method === "PATCH" && url.pathname === "/profile") {
+      requireApiKey(req);
+      const userId = requireUserId(req);
+      const profile = await updateProfile(userId, await readJson(req));
+      logRequest(req, 200, `user_id=${userId}`);
+      sendJson(res, 200, { ok: true, profile });
       return;
     }
 

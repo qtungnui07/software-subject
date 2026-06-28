@@ -5,6 +5,7 @@ import { getStudyTier } from "@/lib/study-tier";
 import { cn } from "@/lib/utils";
 
 import { MobileSidebar } from "./mobile-sidebar";
+import { StreakWidget } from "./streak/streak-widget";
 
 type Props = {
   isLoggedIn?: boolean;
@@ -61,6 +62,10 @@ export const MobileHeader = ({ isLoggedIn = false, hearts = 5, points = 0 }: Pro
             <span>{todayMinutes}m</span>
           </div>
 
+          {isLoggedIn && (
+            <StreakWidget className="h-9 text-xs" />
+          )}
+
           <div className="flex h-9 items-center gap-x-1 rounded-2xl border-2 border-rose-100 bg-rose-50 px-1.5 text-xs font-black text-rose-500 shadow-sm min-[380px]:px-2">
             <Image src="/heart.svg" height={18} width={18} alt="Tim" />
             <span>{hearts}</span>
@@ -70,3 +75,4 @@ export const MobileHeader = ({ isLoggedIn = false, hearts = 5, points = 0 }: Pro
     </nav>
   );
 };
+
