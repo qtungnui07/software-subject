@@ -5,9 +5,12 @@
 @custom-variant dark (&:is(.dark *));
 
 html,
-body,
 :root {
   @apply h-full;
+}
+
+body {
+  @apply min-h-full;
 }
 
 @theme inline {
@@ -44,7 +47,7 @@ body,
   --color-popover-foreground: var(--popover-foreground);
   --color-popover: var(--popover);
   --color-card-foreground: var(--card-foreground);
-  --color-card: var(--card);
+  --color-card: var(--color-card);
   --radius-sm: calc(var(--radius) * 0.6);
   --radius-md: calc(var(--radius) * 0.8);
   --radius-lg: var(--radius);
@@ -57,7 +60,7 @@ body,
 :root {
   --font-sans: "Nunito", "Avenir Next", "Segoe UI", Arial, sans-serif;
   --font-geist-mono: "SFMono-Regular", Consolas, "Liberation Mono", monospace;
-  --background: oklch(1 0 0);
+  --background: #f6fbff;
   --foreground: oklch(0.145 0 0);
   --card: oklch(1 0 0);
   --card-foreground: oklch(0.145 0 0);
@@ -92,7 +95,7 @@ body,
 }
 
 .dark {
-  --background: oklch(0.145 0 0);
+  --background: #131f24;
   --foreground: oklch(0.985 0 0);
   --card: oklch(0.205 0 0);
   --card-foreground: oklch(0.985 0 0);

@@ -6,6 +6,7 @@ import { useState } from "react";
 import { useClerk } from "@clerk/nextjs";
 import { usePathname } from "next/navigation";
 import { toast } from "sonner";
+import { CircleUser } from "lucide-react";
 
 import { SidebarItem } from "./sidebar-item";
 import { Button } from "@/components/ui/button";
@@ -25,11 +26,6 @@ const routes = [
     iconSrc: "/learn.svg",
   },
   {
-    label: "Khóa học",
-    href: "/courses",
-    iconSrc: "/globe.svg",
-  },
-  {
     label: "Bảng xếp hạng",
     href: "/leaderboard",
     iconSrc: "/leaderboard.svg",
@@ -40,16 +36,12 @@ const routes = [
     iconSrc: "/quests.svg",
   },
   {
-    label: "Cửa hàng",
-    href: "/shop",
-    iconSrc: "/shop.svg",
-  },
-  {
     label: "Hồ sơ",
     href: "/profile",
-    iconSrc: "/heart.svg",
+    icon: CircleUser,
   },
 ];
+
 
 const currentMinutes = 43;
 const goalMinutes = 60;
@@ -195,8 +187,8 @@ export const Sidebar = ({ className, isLoggedIn = false }: Props) => {
           <Button
             variant={pathname.startsWith("/settings") ? "sidebar-outline" : "sidebar"}
             className={cn(
-              "h-[58px] w-full justify-start rounded-[18px] px-4 text-[15px] hover:bg-[#f4faff] active:bg-[#e8f5ff] transition",
-              isMoreOpen && "bg-[#f4faff]",
+              "h-[58px] w-full justify-start rounded-[18px] px-4 text-[15px] hover:bg-[#f4faff] dark:hover:bg-[#1f2d33] active:bg-[#e8f5ff] dark:active:bg-[#1c3547] transition",
+              isMoreOpen && "bg-[#f4faff] dark:bg-[#1f2d33] text-slate-700 dark:text-slate-200",
             )}
             onClick={() => {
               if (window.innerWidth < 1024) {
