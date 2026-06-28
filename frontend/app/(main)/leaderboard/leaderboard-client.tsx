@@ -135,67 +135,11 @@ export const LeaderboardClient: React.FC<LeaderboardClientProps> = ({
   const loadLeaderboardData = (leagueId: number, currentPoints: number) => {
     if (typeof window === "undefined") return [];
 
-    const storageKey = `leaderboard_${userId}_${weekKey}_league_${leagueId}`;
-    const cachedData = localStorage.getItem(storageKey);
-
-    if (cachedData) {
-      try {
-        const parsed: Competitor[] = JSON.parse(cachedData);
-        // Find current user and update their points and status emoji from database/state
-        const updated = parsed.map((c) => {
-          if (c.isCurrentUser) {
-            return {
-              ...c,
-              name: initialUserName || "Bạn",
-              points: currentPoints,
-              statusEmoji: userStatusEmoji,
-            };
-          }
-          return c;
-        });
-
-        // Simulating live competitor updates (adds small points if some time passed)
-        const lastUpdateKey = `${storageKey}_last_update`;
-        const lastUpdate = localStorage.getItem(lastUpdateKey);
-        const now = Date.now();
-        
-        // If more than 10 minutes passed, add some points to competitors
-        if (lastUpdate && now - parseInt(lastUpdate) > 600000) {
-          const tenMinutesIntervals = Math.min(Math.floor((now - parseInt(lastUpdate)) / 600000), 24); // max 24 hours of updates
-          
-          const updatedWithSim = updated.map((c) => {
-            if (c.isCurrentUser) return c;
-            // 20% chance of gaining points each 10 mins
-            let pointsGained = 0;
-            for (let i = 0; i < tenMinutesIntervals; i++) {
-              if (Math.random() < 0.2) {
-                // League scaling for simulated points
-                const baseXP = leagueId * 5;
-                pointsGained += Math.floor(Math.random() * baseXP) + 5;
-              }
-            }
-            return { ...c, points: c.points + pointsGained };
-          });
-
-          localStorage.setItem(storageKey, JSON.stringify(updatedWithSim));
-          localStorage.setItem(lastUpdateKey, now.toString());
-          return updatedWithSim.sort((a, b) => b.points - a.points);
-        }
-
-        return updated.sort((a, b) => b.points - a.points);
-      } catch (e) {
-        console.error("Error parsing cached leaderboard:", e);
-      }
+    if (currentPoints === 0) {
+      return [];
     }
 
-    // Generate fresh competitors
-    const generated: Competitor[] = [];
-
-    // Base XP scales up with league level
-    const leagueBaseXP = (leagueId - 1) * 300;
-    
-    // Add current user
-    generated.push({
+    return [{
       id: "current_user",
       name: initialUserName || "Bạn",
       avatarColor: "bg-sky-500",
@@ -203,60 +147,7 @@ export const LeaderboardClient: React.FC<LeaderboardClientProps> = ({
       points: currentPoints,
       isCurrentUser: true,
       statusEmoji: userStatusEmoji,
-    });
-
-    // Generate 29 random competitors
-    const usedNames = new Set<string>();
-    for (let i = 0; i < 29; i++) {
-      let name = MOCK_NAMES[Math.floor(Math.random() * MOCK_NAMES.length)];
-      // Ensure unique names in this cohort
-      let counter = 1;
-      while (usedNames.has(name)) {
-        name = MOCK_NAMES[Math.floor(Math.random() * MOCK_NAMES.length)] + (counter > 1 ? ` ${counter}` : "");
-        counter++;
-      }
-      usedNames.add(name);
-
-      const color = AVATAR_COLORS[Math.floor(Math.random() * AVATAR_COLORS.length)];
-      const letter = name.trim().charAt(0).toUpperCase();
-
-      // Random points around the league level. Top users have more points.
-      // Make it slightly competitive!
-      let competitorPoints = 0;
-      if (i < 3) {
-        // Top 3 seeds
-        competitorPoints = leagueBaseXP + Math.floor(Math.random() * 300) + 150;
-      } else if (i < 15) {
-        // Promoted seeds
-        competitorPoints = leagueBaseXP + Math.floor(Math.random() * 200) + 50;
-      } else if (i < 25) {
-        // Safe zone seeds
-        competitorPoints = leagueBaseXP + Math.floor(Math.random() * 100) + 10;
-      } else {
-        // Demotion zone seeds
-        competitorPoints = Math.max(0, leagueBaseXP + Math.floor(Math.random() * 50) - 20);
-      }
-
-      // Add a status emoji randomly to 15% of mock users
-      const mockEmoji = Math.random() < 0.15 
-        ? STATUS_EMOJIS[Math.floor(Math.random() * STATUS_EMOJIS.length)]
-        : null;
-
-      generated.push({
-        id: `mock_${i}_${Date.now()}`,
-        name,
-        avatarColor: color,
-        avatarLetter: letter,
-        points: competitorPoints,
-        isCurrentUser: false,
-        statusEmoji: mockEmoji,
-      });
-    }
-
-    const sorted = generated.sort((a, b) => b.points - a.points);
-    localStorage.setItem(storageKey, JSON.stringify(sorted));
-    localStorage.setItem(`${storageKey}_last_update`, Date.now().toString());
-    return sorted;
+    }];
   };
 
   // Sync leaderboard from XP API. If the API fails, keep the old local fallback.
@@ -548,7 +439,7 @@ export const LeaderboardClient: React.FC<LeaderboardClientProps> = ({
                       ? "text-emerald-600 bg-emerald-50 border-emerald-100" 
                       : "text-slate-500 bg-slate-50 border-slate-100"
                   )}>
-                    Thứ hạng: {userRankInList}/30
+                    Thứ hạng: {userRankInList}/{leaderboard.length}
                   </span>
                 )}
               </div>
