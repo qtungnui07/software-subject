@@ -668,21 +668,9 @@ const getXpLeaderboardInMemory = async ({
     isCurrentUser: true,
   };
 
-  const demoRows: Omit<XpLeaderboardUser, "rank">[] = DEMO_LEADERBOARD_USERS
-    .filter((user) => user.userId !== currentUserId)
-    .map((user) => ({
-      userId: user.userId,
-      name: user.name,
-      avatarUrl: user.avatarUrl,
-      level: calculateLevelFromXp(user.totalXp),
-      weeklyXp: user.weeklyXp,
-      totalXp: user.totalXp,
-      isCurrentUser: false,
-    }));
-
   return {
     success: true,
-    users: rankLeaderboardUsers([currentUserRow, ...demoRows]).slice(0, 30),
+    users: rankLeaderboardUsers([currentUserRow]),
     currentDay: todayKey,
     currentWeekStart: weekStartKey,
   };

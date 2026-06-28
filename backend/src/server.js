@@ -2,7 +2,8 @@ const http = require("http");
 const crypto = require("crypto");
 const fs = require("fs");
 const path = require("path");
-const postgres = require("postgres");
+const postgresModule = require("postgres");
+const postgres = postgresModule.default || postgresModule;
 
 const loadEnvFile = (filePath) => {
   if (!fs.existsSync(filePath)) {
