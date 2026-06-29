@@ -41,7 +41,7 @@ export async function PATCH(req: Request) {
     setLocalSessionCookie(nextResponse, {
       id: session.user.id,
       name: result.data.profile.name,
-      email: session.user.email || result.data.profile.email,
+      email: result.data.profile.email || session.user.email || "",
       image: result.data.profile.imageSrc,
     });
   }

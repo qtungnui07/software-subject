@@ -41,7 +41,7 @@ export async function PATCH(req: Request) {
       id: session.user.id,
       name: result.data.account.name,
       email: result.data.account.email,
-      image: session.user.image || undefined,
+      image: result.data.account.imageSrc,
     });
   }
 

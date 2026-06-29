@@ -212,18 +212,59 @@ const syncUser = async (payload) => {
     throw error;
   }
 
-  const [user] = await sql`
-    insert into users (clerk_user_id, name, email, image_src, updated_at)
-    values (${clerkUserId}, ${name}, ${email}, ${imageSrc}, now())
-    on conflict (clerk_user_id) do update set
-      name = excluded.name,
-      email = excluded.email,
-      image_src = excluded.image_src,
-      updated_at = now()
-    returning id, clerk_user_id, email, name, image_src, created_at, updated_at
-  `;
+  return sql.begin(async (transaction) => {
+    const [existingByClerkId] = await transaction`
+      select id
+      from users
+      where clerk_user_id = ${clerkUserId}
+      limit 1
+    `;
 
-  return user;
+    if (existingByClerkId) {
+      const [user] = await transaction`
+        update users
+        set
+          name = ${name},
+          email = ${email},
+          image_src = ${imageSrc},
+          updated_at = now()
+        where clerk_user_id = ${clerkUserId}
+        returning id, clerk_user_id, email, name, image_src, created_at, updated_at
+      `;
+
+      return user;
+    }
+
+    const [existingByEmail] = await transaction`
+      select id
+      from users
+      where email = ${email}
+      limit 1
+    `;
+
+    if (existingByEmail) {
+      const [user] = await transaction`
+        update users
+        set
+          clerk_user_id = ${clerkUserId},
+          name = ${name},
+          image_src = ${imageSrc},
+          updated_at = now()
+        where email = ${email}
+        returning id, clerk_user_id, email, name, image_src, created_at, updated_at
+      `;
+
+      return user;
+    }
+
+    const [user] = await transaction`
+      insert into users (clerk_user_id, name, email, image_src, updated_at)
+      values (${clerkUserId}, ${name}, ${email}, ${imageSrc}, now())
+      returning id, clerk_user_id, email, name, image_src, created_at, updated_at
+    `;
+
+    return user;
+  });
 };
 
 const listUsers = async () => {
@@ -303,6 +344,7 @@ const findAccount = async (userId, database = sql) => {
 const accountResponse = (user) => ({
   name: user.name,
   email: user.email,
+  imageSrc: user.image_src || "/mascot.svg",
   isClerk: Boolean(user.clerk_user_id),
 });
 
@@ -341,13 +383,13 @@ const updateAccount = async (userId, payload) => {
             update users
             set name = ${name}, updated_at = now()
             where clerk_user_id = ${userId}
-            returning id, clerk_user_id, name, email
+            returning id, clerk_user_id, name, email, image_src
           `
         : await transaction`
             update users
             set name = ${name}, email = ${email}, updated_at = now()
             where id = ${Number(userId)}
-            returning id, clerk_user_id, name, email
+            returning id, clerk_user_id, name, email, image_src
           `;
 
       await transaction`
@@ -428,14 +470,31 @@ const updateProfile = async (userId, payload) => {
     throw error;
   }
 
-  await findAccount(userId);
-  await sql`
-    insert into user_progress (user_id, user_name, user_image_src)
-    values (${userId}, ${name}, ${imageSrc})
-    on conflict (user_id) do update set
-      user_name = excluded.user_name,
-      user_image_src = excluded.user_image_src
-  `;
+  await sql.begin(async (transaction) => {
+    const existing = await findAccount(userId, transaction);
+
+    if (existing.clerk_user_id) {
+      await transaction`
+        update users
+        set name = ${name}, image_src = ${imageSrc}, updated_at = now()
+        where clerk_user_id = ${userId}
+      `;
+    } else {
+      await transaction`
+        update users
+        set name = ${name}, image_src = ${imageSrc}, updated_at = now()
+        where id = ${Number(userId)}
+      `;
+    }
+
+    await transaction`
+      insert into user_progress (user_id, user_name, user_image_src)
+      values (${userId}, ${name}, ${imageSrc})
+      on conflict (user_id) do update set
+        user_name = excluded.user_name,
+        user_image_src = excluded.user_image_src
+    `;
+  });
 
   return getProfile(userId);
 };
