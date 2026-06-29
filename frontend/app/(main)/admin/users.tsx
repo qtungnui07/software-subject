@@ -107,17 +107,17 @@ export const AdminUsers = () => {
 
   return (
     <main className="mx-auto w-full max-w-7xl space-y-6 px-4 pb-10 sm:px-6 lg:px-8">
-      <section className="rounded-[28px] border-2 border-sky-100 bg-white p-5 shadow-sm sm:p-6">
+      <section className="rounded-[28px] border-2 border-sky-100 dark:border-[#202f36] bg-white dark:bg-[#131f24] p-5 shadow-sm sm:p-6">
         <div className="flex flex-col gap-5 lg:flex-row lg:items-center lg:justify-between">
           <div>
-            <div className="inline-flex items-center gap-2 rounded-full border-2 border-sky-100 bg-sky-50 px-4 py-2 text-xs font-black uppercase tracking-[0.18em] text-sky-600">
+            <div className="inline-flex items-center gap-2 rounded-full border-2 border-sky-100 dark:border-sky-950/40 bg-sky-50 dark:bg-sky-950/20 px-4 py-2 text-xs font-black uppercase tracking-[0.18em] text-sky-600 dark:text-sky-400">
               <Users className="size-4" />
               Quản trị
             </div>
-            <h1 className="mt-4 text-3xl font-black tracking-tight text-slate-800 sm:text-4xl">
+            <h1 className="mt-4 text-3xl font-black tracking-tight text-slate-800 dark:text-white sm:text-4xl">
               Quản lý tài khoản
             </h1>
-            <p className="mt-3 max-w-2xl text-sm font-bold leading-6 text-slate-500">
+            <p className="mt-3 max-w-2xl text-sm font-bold leading-6 text-slate-500 dark:text-slate-400">
               Xem tài khoản email/password trong database và tài khoản được đồng bộ từ Clerk OAuth.
             </p>
           </div>
@@ -125,7 +125,7 @@ export const AdminUsers = () => {
           <Button
             type="button"
             variant="primary-outline"
-            className="h-12 rounded-2xl border-2 border-sky-100 px-4"
+            className="h-12 rounded-2xl border-2 border-sky-100 dark:border-slate-800 px-4"
             onClick={loadUsers}
             disabled={isLoading || isPending}
           >
@@ -135,30 +135,30 @@ export const AdminUsers = () => {
         </div>
 
         <div className="mt-6 grid gap-3 sm:grid-cols-3">
-          <div className="rounded-2xl border-2 border-slate-100 bg-slate-50 p-4">
-            <p className="text-xs font-black uppercase tracking-wide text-slate-400">Tổng tài khoản</p>
-            <p className="mt-2 text-3xl font-black text-slate-800">{users.length}</p>
+          <div className="rounded-2xl border-2 border-slate-100 dark:border-[#202f36] bg-slate-50 dark:bg-slate-900/30 p-4">
+            <p className="text-xs font-black uppercase tracking-wide text-slate-400 dark:text-slate-500">Tổng tài khoản</p>
+            <p className="mt-2 text-3xl font-black text-slate-800 dark:text-white">{users.length}</p>
           </div>
-          <div className="rounded-2xl border-2 border-emerald-100 bg-emerald-50 p-4">
-            <p className="text-xs font-black uppercase tracking-wide text-emerald-600">Database local</p>
-            <p className="mt-2 text-3xl font-black text-emerald-700">{providerCounts.local}</p>
+          <div className="rounded-2xl border-2 border-emerald-100 dark:border-emerald-950/40 bg-emerald-50 dark:bg-emerald-950/20 p-4">
+            <p className="text-xs font-black uppercase tracking-wide text-emerald-600 dark:text-emerald-400">Database local</p>
+            <p className="mt-2 text-3xl font-black text-emerald-700 dark:text-emerald-300">{providerCounts.local}</p>
           </div>
-          <div className="rounded-2xl border-2 border-violet-100 bg-violet-50 p-4">
-            <p className="text-xs font-black uppercase tracking-wide text-violet-600">Clerk OAuth</p>
-            <p className="mt-2 text-3xl font-black text-violet-700">{providerCounts.clerk}</p>
+          <div className="rounded-2xl border-2 border-violet-100 dark:border-violet-950/40 bg-violet-50 dark:bg-violet-950/20 p-4">
+            <p className="text-xs font-black uppercase tracking-wide text-violet-600 dark:text-violet-400">Clerk OAuth</p>
+            <p className="mt-2 text-3xl font-black text-violet-700 dark:text-violet-300">{providerCounts.clerk}</p>
           </div>
         </div>
       </section>
 
-      <section className="rounded-[28px] border-2 border-slate-200 bg-white shadow-sm">
-        <div className="border-b-2 border-slate-100 p-4 sm:p-5">
+      <section className="rounded-[28px] border-2 border-slate-200 dark:border-[#202f36] bg-white dark:bg-[#131f24] shadow-sm">
+        <div className="border-b-2 border-slate-100 dark:border-slate-800 p-4 sm:p-5">
           <div className="relative">
-            <Search className="pointer-events-none absolute left-4 top-1/2 size-5 -translate-y-1/2 text-slate-400" />
+            <Search className="pointer-events-none absolute left-4 top-1/2 size-5 -translate-y-1/2 text-slate-400 dark:text-slate-500" />
             <input
               value={query}
               onChange={(event) => setQuery(event.target.value)}
               placeholder="Tìm theo tên, email, ID..."
-              className="h-12 w-full rounded-2xl border-2 border-slate-200 bg-slate-50 pl-12 pr-4 text-sm font-bold text-slate-700 outline-none transition focus:border-sky-300 focus:bg-white"
+              className="h-12 w-full rounded-2xl border-2 border-slate-200 bg-slate-50 pl-12 pr-4 text-sm font-bold text-slate-700 outline-none transition focus:border-sky-300 focus:bg-white dark:border-slate-800 dark:bg-slate-900/50 dark:text-slate-200 dark:hover:border-slate-700 dark:focus:border-sky-500 dark:focus:bg-slate-950"
             />
           </div>
         </div>
@@ -171,7 +171,7 @@ export const AdminUsers = () => {
           <div className="overflow-x-auto">
             <table className="w-full min-w-[920px] border-collapse text-left">
               <thead>
-                <tr className="border-b-2 border-slate-100 text-xs font-black uppercase tracking-wide text-slate-400">
+                <tr className="border-b-2 border-slate-100 dark:border-slate-800 text-xs font-black uppercase tracking-wide text-slate-400 dark:text-slate-500">
                   <th className="px-5 py-4">Tài khoản</th>
                   <th className="px-5 py-4">Kiểu đăng nhập</th>
                   <th className="px-5 py-4">User ID</th>
@@ -181,10 +181,10 @@ export const AdminUsers = () => {
               </thead>
               <tbody>
                 {filteredUsers.map((user) => (
-                  <tr key={user.id} className="border-b border-slate-100 last:border-b-0">
+                  <tr key={user.id} className="border-b border-slate-100 dark:border-slate-800 last:border-b-0">
                     <td className="px-5 py-4">
                       <div className="flex items-center gap-3">
-                        <div className="relative size-12 overflow-hidden rounded-2xl border-2 border-slate-100 bg-slate-50">
+                        <div className="relative size-12 overflow-hidden rounded-2xl border-2 border-slate-100 dark:border-slate-800 bg-slate-50 dark:bg-slate-900/50">
                           <Image
                             src={user.imageSrc}
                             alt=""
@@ -194,8 +194,8 @@ export const AdminUsers = () => {
                           />
                         </div>
                         <div className="min-w-0">
-                          <p className="truncate text-sm font-black text-slate-800">{user.name}</p>
-                          <p className="mt-1 break-all text-xs font-bold text-slate-400">{user.email}</p>
+                          <p className="truncate text-sm font-black text-slate-800 dark:text-slate-200">{user.name}</p>
+                          <p className="mt-1 break-all text-xs font-bold text-slate-400 dark:text-slate-500">{user.email}</p>
                         </div>
                       </div>
                     </td>
@@ -203,22 +203,22 @@ export const AdminUsers = () => {
                       <span
                         className={
                           user.authProvider === "local"
-                            ? "rounded-full border-2 border-emerald-100 bg-emerald-50 px-3 py-1 text-xs font-black uppercase text-emerald-600"
-                            : "rounded-full border-2 border-violet-100 bg-violet-50 px-3 py-1 text-xs font-black uppercase text-violet-600"
+                            ? "rounded-full border-2 border-emerald-100 dark:border-emerald-950/40 bg-emerald-50 dark:bg-emerald-950/20 px-3 py-1 text-xs font-black uppercase text-emerald-600 dark:text-emerald-400"
+                            : "rounded-full border-2 border-violet-100 dark:border-violet-950/40 bg-violet-50 dark:bg-violet-950/20 px-3 py-1 text-xs font-black uppercase text-violet-600 dark:text-violet-400"
                         }
                       >
                         {user.authProvider === "local" ? "Database" : "Clerk"}
                       </span>
                     </td>
                     <td className="px-5 py-4">
-                      <p className="text-xs font-bold text-slate-500">#{user.id}</p>
+                      <p className="text-xs font-bold text-slate-500 dark:text-slate-400">#{user.id}</p>
                       {user.clerkUserId && (
-                        <p className="mt-1 max-w-[220px] truncate text-xs font-bold text-slate-400">
+                        <p className="mt-1 max-w-[220px] truncate text-xs font-bold text-slate-400 dark:text-slate-500">
                           {user.clerkUserId}
                         </p>
                       )}
                     </td>
-                    <td className="px-5 py-4 text-xs font-bold text-slate-500">
+                    <td className="px-5 py-4 text-xs font-bold text-slate-500 dark:text-slate-400">
                       {formatDate(user.createdAt)}
                     </td>
                     <td className="px-5 py-4 text-right">
@@ -226,7 +226,7 @@ export const AdminUsers = () => {
                         type="button"
                         variant="danger-outline"
                         size="sm"
-                        className="rounded-xl border-2 border-rose-100"
+                        className="rounded-xl border-2 border-rose-100 dark:border-rose-950/40"
                         onClick={() => deleteUser(user)}
                         disabled={isPending}
                       >
@@ -239,7 +239,7 @@ export const AdminUsers = () => {
 
                 {filteredUsers.length === 0 && (
                   <tr>
-                    <td colSpan={5} className="px-5 py-8 text-center text-sm font-bold text-slate-400">
+                    <td colSpan={5} className="px-5 py-8 text-center text-sm font-bold text-slate-400 dark:text-slate-500">
                       Không có tài khoản phù hợp.
                     </td>
                   </tr>

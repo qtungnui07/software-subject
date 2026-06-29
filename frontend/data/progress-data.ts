@@ -39,7 +39,7 @@ export const englishProgressCourse: ProgressCourse = {
   level: "Giao tiếp cơ bản",
   description:
     "Lộ trình tiếng Anh cơ bản theo hướng ngắn, rõ, có tiến độ và phần thưởng để người học quay lại mỗi ngày.",
-  imageSrc: "/globe.svg",
+  imageSrc: "/gb.svg",
   units: [
     {
       id: 1,

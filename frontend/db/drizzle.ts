@@ -23,12 +23,12 @@ if (databaseUrl) {
         activeCourse: {
             id: 1,
             title: "Tiếng Anh",
-            imageSrc: "/globe.svg"
+            imageSrc: "/gb.svg"
         }
     };
 
     const mockCourses = [
-        { id: 1, title: "Tiếng Anh", imageSrc: "/globe.svg" },
+        { id: 1, title: "Tiếng Anh", imageSrc: "/gb.svg" },
         { id: 2, title: "Tiếng Nhật", imageSrc: "/jp.svg" },
         { id: 3, title: "Tiếng Pháp", imageSrc: "/fr.svg" },
         { id: 4, title: "Tiếng Tây Ban Nha", imageSrc: "/es.svg" },

@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { ClerkProvider } from "@clerk/nextjs";
 import { ToasterLoader } from "@/components/toaster-loader";
+import { ThemeListener } from "@/components/theme-listener";
 import "./globals.css";
 
 export const metadata: Metadata = {
@@ -36,6 +37,7 @@ export default function RootLayout({
         </head>
         <body className="min-h-full flex flex-col">
           <ToasterLoader />
+          <ThemeListener />
           {children}
         </body>
       </html>

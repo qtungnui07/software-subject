@@ -92,20 +92,33 @@ export default function SettingsAccountPage() {
   };
 
   const handleThemeChange = (mode: "system" | "dark" | "light") => {
-    setThemeMode(mode);
+    const applyTheme = () => {
+      setThemeMode(mode);
 
-    let resolvedTheme: "dark" | "light" = "light";
-    if (mode === "system") {
-      localStorage.setItem("robogo-theme", "system");
-      const prefersDark = window.matchMedia("(prefers-color-scheme: dark)").matches;
-      resolvedTheme = prefersDark ? "dark" : "light";
-    } else {
-      localStorage.setItem("robogo-theme", mode);
-      resolvedTheme = mode;
+      let resolvedTheme: "dark" | "light" = "light";
+      if (mode === "system") {
+        localStorage.setItem("robogo-theme", "system");
+        const prefersDark = window.matchMedia("(prefers-color-scheme: dark)").matches;
+        resolvedTheme = prefersDark ? "dark" : "light";
+      } else {
+        localStorage.setItem("robogo-theme", mode);
+        resolvedTheme = mode;
+      }
+
+      document.documentElement.classList.toggle("dark", resolvedTheme === "dark");
+      document.documentElement.dataset.theme = resolvedTheme;
+    };
+
+    // @ts-ignore
+    if (!document.startViewTransition) {
+      applyTheme();
+      return;
     }
 
-    document.documentElement.classList.toggle("dark", resolvedTheme === "dark");
-    document.documentElement.dataset.theme = resolvedTheme;
+    // @ts-ignore
+    document.startViewTransition(() => {
+      applyTheme();
+    });
   };
 
   const handleSaveAccount = async (e: React.FormEvent) => {

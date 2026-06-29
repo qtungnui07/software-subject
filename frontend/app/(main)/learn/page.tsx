@@ -38,7 +38,7 @@ const LearnPage = async () => {
     redirect("/courses");
   }
 
-  const activeCourse = userProgressData.activeCourse || { title: "Tiếng Anh", imageSrc: "/globe.svg" };
+  const activeCourse = userProgressData.activeCourse || { title: "Tiếng Anh", imageSrc: "/gb.svg" };
   const courseProgress = getCourseProgressSummary(englishProgressCourse);
 
   return (

@@ -133,7 +133,7 @@ const LessonContent = () => {
   // Game over state
   if (hearts === 0) {
     return (
-      <div className="flex min-h-screen flex-col items-center justify-center bg-white px-4 text-center">
+      <div className="flex min-h-screen flex-col items-center justify-center bg-white dark:bg-[#0f171a] px-4 text-center">
         <div className="relative mx-auto mb-6 flex size-32 items-center justify-center">
           <Image
             src="/mascot.svg"
@@ -142,13 +142,13 @@ const LessonContent = () => {
             height={120}
             className="object-contain grayscale opacity-80"
           />
-          <div className="absolute -bottom-1 -right-1 flex size-10 items-center justify-center rounded-full bg-rose-500 text-white shadow-md ring-4 ring-white animate-bounce">
+          <div className="absolute -bottom-1 -right-1 flex size-10 items-center justify-center rounded-full bg-rose-500 text-white shadow-md ring-4 ring-white dark:ring-[#0f171a] animate-bounce">
             <Heart className="size-5 fill-current stroke-[2.5]" />
           </div>
         </div>
 
-        <h1 className="text-3xl font-black text-slate-800">Bạn đã hết tim mất rồi!</h1>
-        <p className="mt-3 max-w-[400px] text-base font-bold leading-relaxed text-slate-500">
+        <h1 className="text-3xl font-black text-slate-800 dark:text-slate-100">Bạn đã hết tim mất rồi!</h1>
+        <p className="mt-3 max-w-[400px] text-base font-bold leading-relaxed text-slate-500 dark:text-slate-400">
           Đừng nản lòng nhé! Luyện tập nhiều hơn sẽ giúp bạn ghi nhớ lâu hơn. Hãy thử lại nào!
         </p>
 
@@ -158,7 +158,7 @@ const LessonContent = () => {
             Thử lại bài học
           </Button>
 
-          <Button variant="outline" onClick={redirectToLearn} className="h-12 w-full rounded-2xl border-2 border-slate-200">
+          <Button variant="outline" onClick={redirectToLearn} className="h-12 w-full rounded-2xl border-2 border-slate-200 dark:border-slate-800">
             <Home className="mr-2 size-4 stroke-[3]" />
             Quay lại lộ trình
           </Button>
@@ -172,7 +172,7 @@ const LessonContent = () => {
     const accuracy = Math.round((correctAnswersCount / MOCK_QUESTIONS.length) * 100);
 
     return (
-      <div className="flex min-h-screen flex-col items-center justify-center bg-white px-4 text-center">
+      <div className="flex min-h-screen flex-col items-center justify-center bg-white dark:bg-[#0f171a] px-4 text-center">
         <div className="relative mx-auto mb-6 flex size-36 items-center justify-center">
           <Image
             src="/mascot.svg"
@@ -181,27 +181,27 @@ const LessonContent = () => {
             height={128}
             className="object-contain"
           />
-          <div className="absolute -bottom-2 -right-2 flex size-12 items-center justify-center rounded-full bg-yellow-400 text-white shadow-lg ring-4 ring-white">
+          <div className="absolute -bottom-2 -right-2 flex size-12 items-center justify-center rounded-full bg-yellow-400 text-white shadow-lg ring-4 ring-white dark:ring-[#0f171a]">
             <Trophy className="size-6 stroke-[2.5]" />
           </div>
         </div>
 
-        <h1 className="text-3xl font-black text-slate-800 leading-tight">
+        <h1 className="text-3xl font-black text-slate-800 dark:text-slate-100 leading-tight">
           Hoàn thành bài học!
         </h1>
-        <p className="mt-2 text-base font-bold text-slate-500">
+        <p className="mt-2 text-base font-bold text-slate-500 dark:text-slate-400">
           Bạn đã xuất sắc vượt qua các thử thách của bài học này.
         </p>
 
         <div className="mt-8 grid w-full max-w-[420px] grid-cols-2 gap-4">
-          <div className="flex flex-col items-center rounded-2xl border-2 border-orange-200 bg-orange-50/50 p-4 shadow-sm">
-            <span className="text-xs font-black uppercase tracking-wide text-orange-500">XP nhận được</span>
-            <span className="mt-1 text-2xl font-black text-orange-600">+15 XP</span>
+          <div className="flex flex-col items-center rounded-2xl border-2 border-orange-200 dark:border-orange-950/40 bg-orange-50/50 dark:bg-orange-950/10 p-4 shadow-sm">
+            <span className="text-xs font-black uppercase tracking-wide text-orange-500 dark:text-orange-400">XP nhận được</span>
+            <span className="mt-1 text-2xl font-black text-orange-600 dark:text-orange-300">+15 XP</span>
           </div>
 
-          <div className="flex flex-col items-center rounded-2xl border-2 border-green-200 bg-green-50/50 p-4 shadow-sm">
-            <span className="text-xs font-black uppercase tracking-wide text-green-500">Độ chính xác</span>
-            <span className="mt-1 text-2xl font-black text-green-600">{accuracy}%</span>
+          <div className="flex flex-col items-center rounded-2xl border-2 border-green-200 dark:border-green-950/40 bg-green-50/50 dark:bg-green-950/10 p-4 shadow-sm">
+            <span className="text-xs font-black uppercase tracking-wide text-green-500 dark:text-green-400">Độ chính xác</span>
+            <span className="mt-1 text-2xl font-black text-green-600 dark:text-green-300">{accuracy}%</span>
           </div>
         </div>
 
@@ -215,7 +215,7 @@ const LessonContent = () => {
   }
 
   return (
-    <div className="flex min-h-screen flex-col bg-white">
+    <div className="flex min-h-screen flex-col bg-white dark:bg-[#0f171a]">
       {/* Header bài học */}
       <LessonHeader
         title={lessonNode.title}
@@ -237,9 +237,9 @@ const LessonContent = () => {
                 className="object-contain"
               />
             </div>
-            <div className="relative rounded-2xl border-2 border-slate-200 px-4 py-3 shadow-sm md:px-5 md:py-4">
-              <span className="absolute left-0 top-6 -translate-x-[9px] rotate-45 border-b-2 border-l-2 border-slate-200 bg-white p-1" />
-              <p className="text-base font-black text-slate-700 leading-normal md:text-lg">
+            <div className="relative rounded-2xl border-2 border-slate-200 dark:border-[#202f36] bg-white dark:bg-[#182226] px-4 py-3 shadow-sm md:px-5 md:py-4">
+              <span className="absolute left-0 top-6 -translate-x-[9px] rotate-45 border-b-2 border-l-2 border-slate-200 dark:border-b-[#202f36] dark:border-l-[#202f36] bg-white dark:bg-[#182226] p-1" />
+              <p className="text-base font-black text-slate-700 dark:text-slate-200 leading-normal md:text-lg">
                 {currentQuestion.question}
               </p>
             </div>
@@ -257,18 +257,18 @@ const LessonContent = () => {
                   type="button"
                   disabled={isAnswered}
                   onClick={() => setSelectedOption(index)}
-                  className={`flex items-center gap-3 w-full rounded-2xl border-2 p-4 text-left font-bold transition hover:bg-slate-50 active:scale-[0.99] disabled:hover:bg-white
-                    ${isSelected ? "border-sky-500 bg-sky-50 text-sky-600 shadow-[0_4px_0_#0ea5e9]" : "border-slate-200 text-slate-600 shadow-[0_4px_0_#e2e8f0]"}
-                    ${isAnswered && isOptionCorrect ? "!border-green-500 !bg-green-50 !text-green-600 !shadow-[0_4px_0_#22c55e]" : ""}
-                    ${isAnswered && isSelected && !isCorrect ? "!border-rose-500 !bg-rose-50 !text-rose-600 !shadow-[0_4px_0_#f43f5e]" : ""}
+                  className={`flex items-center gap-3 w-full rounded-2xl border-2 p-4 text-left font-bold transition hover:bg-slate-50 dark:hover:bg-slate-800/40 active:scale-[0.99] disabled:hover:bg-white dark:disabled:hover:bg-[#182226]
+                    ${isSelected ? "border-sky-500 bg-sky-50 text-sky-600 dark:bg-sky-950/20 dark:text-sky-400 shadow-[0_4px_0_#0ea5e9]" : "border-slate-200 dark:border-[#202f36] text-slate-600 dark:text-slate-350 dark:bg-[#182226] shadow-[0_4px_0_#e2e8f0] dark:shadow-[0_4px_0_#202f36]"}
+                    ${isAnswered && isOptionCorrect ? "!border-green-500 !bg-green-50 !text-green-600 dark:!bg-green-950/20 dark:!text-green-400 !shadow-[0_4px_0_#22c55e]" : ""}
+                    ${isAnswered && isSelected && !isCorrect ? "!border-rose-500 !bg-rose-50 !text-rose-600 dark:!bg-rose-950/20 dark:!text-rose-400 !shadow-[0_4px_0_#f43f5e]" : ""}
                   `}
                 >
                   {/* Số thứ tự */}
                   <span
                     className={`flex size-6 shrink-0 items-center justify-center rounded-lg border text-xs font-extrabold leading-none
-                      ${isSelected ? "border-sky-400 bg-sky-200 text-sky-700" : "border-slate-350 bg-slate-100 text-slate-500"}
-                      ${isAnswered && isOptionCorrect ? "!border-green-400 !bg-green-200 !text-green-700" : ""}
-                      ${isAnswered && isSelected && !isCorrect ? "!border-rose-400 !bg-rose-200 !text-rose-700" : ""}
+                      ${isSelected ? "border-sky-400 bg-sky-200 text-sky-700 dark:border-sky-600 dark:bg-sky-950/60 dark:text-sky-400" : "border-slate-350 bg-slate-100 text-slate-500 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-400"}
+                      ${isAnswered && isOptionCorrect ? "!border-green-400 !bg-green-200 !text-green-700 dark:!border-green-600 dark:!bg-green-950/60 dark:!text-green-400" : ""}
+                      ${isAnswered && isSelected && !isCorrect ? "!border-rose-400 !bg-rose-200 !text-rose-700 dark:!border-rose-600 dark:!bg-rose-950/60 dark:!text-rose-400" : ""}
                     `}
                   >
                     {index + 1}
@@ -284,7 +284,7 @@ const LessonContent = () => {
       {/* Footer tương tác khi bấm Kiểm tra / Tiếp tục */}
       <footer
         className={`border-t-2 py-4 px-4 md:py-6 md:px-6
-          ${isAnswered ? (isCorrect ? "border-green-200 bg-green-50" : "border-rose-200 bg-rose-50") : "border-slate-200 bg-white"}
+          ${isAnswered ? (isCorrect ? "border-green-200 bg-green-50 dark:border-green-900/60 dark:bg-green-950/20" : "border-rose-200 bg-rose-50 dark:border-rose-900/60 dark:bg-rose-950/20") : "border-slate-200 bg-white dark:border-slate-800 dark:bg-[#182226]"}
         `}
       >
         <div className="mx-auto flex max-w-[840px] flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
@@ -292,25 +292,25 @@ const LessonContent = () => {
             {isAnswered ? (
               isCorrect ? (
                 <>
-                  <CheckCircle2 className="size-8 text-green-500 stroke-[2.5]" />
+                  <CheckCircle2 className="size-8 text-green-500 dark:text-green-400 stroke-[2.5]" />
                   <div>
-                    <h4 className="text-base font-black text-green-700">Chính xác!</h4>
-                    <p className="text-xs font-bold text-green-600">Tuyệt vời, tiếp tục phát huy nhé.</p>
+                    <h4 className="text-base font-black text-green-700 dark:text-green-400">Chính xác!</h4>
+                    <p className="text-xs font-bold text-green-600 dark:text-green-400/80">Tuyệt vời, tiếp tục phát huy nhé.</p>
                   </div>
                 </>
               ) : (
                 <>
-                  <XCircle className="size-8 text-rose-500 stroke-[2.5]" />
+                  <XCircle className="size-8 text-rose-500 dark:text-rose-400 stroke-[2.5]" />
                   <div>
-                    <h4 className="text-base font-black text-rose-700">Chưa đúng rồi...</h4>
-                    <p className="text-xs font-bold text-rose-600">
+                    <h4 className="text-base font-black text-rose-700 dark:text-rose-400">Chưa đúng rồi...</h4>
+                    <p className="text-xs font-bold text-rose-600 dark:text-rose-400/80">
                       Đáp án đúng là: <span className="font-extrabold">{currentQuestion.options[currentQuestion.correctIndex]}</span>
                     </p>
                   </div>
                 </>
               )
             ) : (
-              <p className="text-sm font-bold text-slate-400 hidden sm:block">
+              <p className="text-sm font-bold text-slate-400 dark:text-slate-550 hidden sm:block">
                 Chọn một đáp án đúng rồi bấm Kiểm tra nhé!
               </p>
             )}
@@ -353,9 +353,9 @@ export default function LessonPage() {
   return (
     <Suspense
       fallback={
-        <div className="flex min-h-screen items-center justify-center bg-white text-slate-500">
+        <div className="flex min-h-screen items-center justify-center bg-white dark:bg-[#0f171a] text-slate-500 dark:text-slate-400">
           <div className="flex flex-col items-center gap-3">
-            <div className="size-10 animate-spin rounded-full border-4 border-slate-200 border-t-sky-500" />
+            <div className="size-10 animate-spin rounded-full border-4 border-slate-200 dark:border-slate-800 border-t-sky-500" />
             <p className="text-sm font-bold">Đang tải bài học...</p>
           </div>
         </div>

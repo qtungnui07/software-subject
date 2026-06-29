@@ -28,14 +28,6 @@ export const StreakWidget = ({ className }: Props) => {
                 <span className="font-extrabold">
                     {isLoading ? "..." : data.currentStreak}
                 </span>
-                <span className="hidden text-xs font-bold text-orange-500/80 xl:inline">
-                    {isLoading ? "ngày" : compactDayLabel.replace(`${data.currentStreak} `, "")}
-                </span>
-                {isFallback ? (
-                    <span className="hidden rounded-full bg-white/70 dark:bg-orange-950/40 px-1.5 py-0.5 text-[10px] font-black uppercase text-orange-400 dark:text-orange-300 2xl:inline">
-                        Demo
-                    </span>
-                ) : null}
             </Button>
         </Link>
     );
