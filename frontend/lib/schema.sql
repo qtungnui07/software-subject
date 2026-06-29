@@ -31,3 +31,54 @@ CREATE TABLE IF NOT EXISTS daily_streak_logs (
 
 CREATE UNIQUE INDEX IF NOT EXISTS daily_streak_logs_user_date_idx
 ON daily_streak_logs (user_id, study_date);
+
+CREATE TABLE IF NOT EXISTS user_xp_summary (
+  user_id             TEXT PRIMARY KEY,
+  total_xp            INTEGER NOT NULL DEFAULT 0,
+  daily_xp            INTEGER NOT NULL DEFAULT 0,
+  weekly_xp           INTEGER NOT NULL DEFAULT 0,
+  current_day         DATE,
+  current_week_start  DATE,
+  created_at          TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  updated_at          TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+CREATE TABLE IF NOT EXISTS xp_events (
+  id              SERIAL PRIMARY KEY,
+  user_id         TEXT NOT NULL,
+  lesson_id       TEXT NOT NULL,
+  earned_xp       INTEGER NOT NULL DEFAULT 0,
+  base_xp         INTEGER NOT NULL DEFAULT 0,
+  accuracy_bonus  INTEGER NOT NULL DEFAULT 0,
+  accuracy        INTEGER NOT NULL DEFAULT 0,
+  reward_type     TEXT NOT NULL,
+  event_date      DATE NOT NULL,
+  week_start      DATE NOT NULL,
+  created_at      TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+CREATE INDEX IF NOT EXISTS xp_events_user_created_at_idx
+ON xp_events (user_id, created_at);
+
+CREATE INDEX IF NOT EXISTS xp_events_user_lesson_idx
+ON xp_events (user_id, lesson_id);
+
+CREATE INDEX IF NOT EXISTS xp_events_week_start_idx
+ON xp_events (week_start);
+
+CREATE TABLE IF NOT EXISTS lesson_xp_claims (
+  id                  SERIAL PRIMARY KEY,
+  user_id             TEXT NOT NULL,
+  lesson_id           TEXT NOT NULL,
+  earned_xp           INTEGER NOT NULL DEFAULT 0,
+  accuracy            INTEGER NOT NULL DEFAULT 0,
+  first_completed_at  TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  updated_at          TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+CREATE UNIQUE INDEX IF NOT EXISTS lesson_xp_claims_user_lesson_idx
+ON lesson_xp_claims (user_id, lesson_id);
+
+CREATE INDEX IF NOT EXISTS lesson_xp_claims_user_idx
+ON lesson_xp_claims (user_id);
+

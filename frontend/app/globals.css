@@ -5,12 +5,9 @@
 @custom-variant dark (&:where(.dark, .dark *));
 
 html,
+body,
 :root {
-  @apply h-full;
-}
-
-body {
-  @apply min-h-full;
+  @apply min-h-screen;
 }
 
 @theme inline {

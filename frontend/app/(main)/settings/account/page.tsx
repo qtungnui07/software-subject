@@ -3,7 +3,32 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { toast } from "sonner";
-import { getUserAccountDetails, updateUserAccountSettings } from "@/actions/user-progress";
+
+type Account = {
+  name: string;
+  email: string;
+  isClerk: boolean;
+};
+
+type AccountResponse = {
+  ok: true;
+  account: Account;
+};
+
+type ThemeMode = "system" | "dark" | "light";
+
+const getErrorMessage = (error: unknown) =>
+  error instanceof Error ? error.message : "Đã xảy ra lỗi";
+
+const readAccountResponse = async (response: Response) => {
+  const data = (await response.json()) as AccountResponse | { error?: string };
+
+  if (!response.ok || !("account" in data)) {
+    throw new Error("error" in data && data.error ? data.error : "Không thể xử lý tài khoản");
+  }
+
+  return data.account;
+};
 
 const Switch = ({
   checked,
@@ -38,7 +63,7 @@ export default function SettingsAccountPage() {
   const [soundEffects, setSoundEffects] = useState(true);
   const [motivation, setMotivation] = useState(true);
   const [listening, setListening] = useState(true);
-  const [themeMode, setThemeMode] = useState<"system" | "dark" | "light">("system");
+  const [themeMode, setThemeMode] = useState<ThemeMode>("system");
 
   // Account State
   const [userName, setUserName] = useState("");
@@ -51,28 +76,24 @@ export default function SettingsAccountPage() {
   useEffect(() => {
     // Theme & Preferences
     const savedTheme = localStorage.getItem("robogo-theme") as "dark" | "light" | null;
-    if (savedTheme === "dark") {
-      setThemeMode("dark");
-    } else if (savedTheme === "light") {
-      setThemeMode("light");
-    } else {
-      setThemeMode("system");
-    }
-
     const savedSound = localStorage.getItem("setting-sound") !== "false";
     const savedMotivation = localStorage.getItem("setting-motivation") !== "false";
     const savedListening = localStorage.getItem("setting-listening") !== "false";
 
-    setSoundEffects(savedSound);
-    setMotivation(savedMotivation);
-    setListening(savedListening);
+    const animationFrame = requestAnimationFrame(() => {
+      setThemeMode(savedTheme === "dark" || savedTheme === "light" ? savedTheme : "system");
+      setSoundEffects(savedSound);
+      setMotivation(savedMotivation);
+      setListening(savedListening);
+    });
 
     // Fetch account details
-    getUserAccountDetails()
-      .then((data) => {
-        setUserName(data.name);
-        setUserEmail(data.email);
-        setIsClerk(data.isClerk);
+    fetch("/api/settings/account", { cache: "no-store" })
+      .then(readAccountResponse)
+      .then((account) => {
+        setUserName(account.name);
+        setUserEmail(account.email);
+        setIsClerk(account.isClerk);
         setIsLoading(false);
       })
       .catch((err) => {
@@ -80,6 +101,8 @@ export default function SettingsAccountPage() {
         toast.error("Không thể tải thông tin tài khoản");
         setIsLoading(false);
       });
+
+    return () => cancelAnimationFrame(animationFrame);
   }, []);
 
   const handleToggle = (
@@ -91,34 +114,21 @@ export default function SettingsAccountPage() {
     localStorage.setItem(key, String(value));
   };
 
-  const handleThemeChange = (mode: "system" | "dark" | "light") => {
-    const applyTheme = () => {
-      setThemeMode(mode);
+  const handleThemeChange = (mode: ThemeMode) => {
+    setThemeMode(mode);
 
-      let resolvedTheme: "dark" | "light" = "light";
-      if (mode === "system") {
-        localStorage.setItem("robogo-theme", "system");
-        const prefersDark = window.matchMedia("(prefers-color-scheme: dark)").matches;
-        resolvedTheme = prefersDark ? "dark" : "light";
-      } else {
-        localStorage.setItem("robogo-theme", mode);
-        resolvedTheme = mode;
-      }
-
-      document.documentElement.classList.toggle("dark", resolvedTheme === "dark");
-      document.documentElement.dataset.theme = resolvedTheme;
-    };
-
-    // @ts-ignore
-    if (!document.startViewTransition) {
-      applyTheme();
-      return;
+    let resolvedTheme: "dark" | "light" = "light";
+    if (mode === "system") {
+      localStorage.setItem("robogo-theme", "system");
+      const prefersDark = window.matchMedia("(prefers-color-scheme: dark)").matches;
+      resolvedTheme = prefersDark ? "dark" : "light";
+    } else {
+      localStorage.setItem("robogo-theme", mode);
+      resolvedTheme = mode;
     }
 
-    // @ts-ignore
-    document.startViewTransition(() => {
-      applyTheme();
-    });
+    document.documentElement.classList.toggle("dark", resolvedTheme === "dark");
+    document.documentElement.dataset.theme = resolvedTheme;
   };
 
   const handleSaveAccount = async (e: React.FormEvent) => {
@@ -133,10 +143,20 @@ export default function SettingsAccountPage() {
     }
     setIsSaving(true);
     try {
-      await updateUserAccountSettings(userName.trim(), userEmail.trim());
+      const response = await fetch("/api/settings/account", {
+        method: "PATCH",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({
+          name: userName.trim(),
+          email: userEmail.trim(),
+        }),
+      });
+      const account = await readAccountResponse(response);
+      setUserName(account.name);
+      setUserEmail(account.email);
       toast.success("Cập nhật tài khoản thành công!");
-    } catch (err: any) {
-      toast.error(err.message || "Đã xảy ra lỗi");
+    } catch (error: unknown) {
+      toast.error(getErrorMessage(error));
     } finally {
       setIsSaving(false);
     }
@@ -316,7 +336,7 @@ export default function SettingsAccountPage() {
                   <div className="relative max-w-md">
                     <select
                       value={themeMode}
-                      onChange={(e) => handleThemeChange(e.target.value as any)}
+                      onChange={(e) => handleThemeChange(e.target.value as ThemeMode)}
                       className="w-full cursor-pointer appearance-none rounded-2xl border-2 border-slate-200 bg-white px-4 py-3.5 text-sm font-black text-slate-800 shadow-sm outline-none transition focus:border-[#1486CC] dark:border-[#202f36] dark:bg-[#141f23] dark:text-white"
                     >
                       <option value="system">Mặc định theo hệ thống</option>

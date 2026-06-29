@@ -1,5 +1,9 @@
-import { config } from "dotenv";
-config({ path: ".env.local" });
+try {
+    const { config } = require("dotenv");
+    config({ path: ".env.local" });
+} catch (e) {
+    // Bun loads .env.local automatically
+}
 
 import postgres from "postgres";
 import { drizzle } from "drizzle-orm/postgres-js";
