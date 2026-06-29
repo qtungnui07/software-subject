@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 
 import { DEFAULT_STREAK_DATA, type CurrentStreakData } from "./streak-data";
 
@@ -8,6 +8,7 @@ type UseStreakState = {
     data: CurrentStreakData;
     isLoading: boolean;
     isFallback: boolean;
+    refetch: () => void;
 };
 
 const normalizeStreakData = (data: Partial<CurrentStreakData>): CurrentStreakData => ({
@@ -21,15 +22,23 @@ const normalizeStreakData = (data: Partial<CurrentStreakData>): CurrentStreakDat
 });
 
 export const useStreak = (): UseStreakState => {
-    const [state, setState] = useState<UseStreakState>({
+    const [state, setState] = useState<Omit<UseStreakState, "refetch">>({
         data: DEFAULT_STREAK_DATA,
         isLoading: true,
         isFallback: false,
     });
 
-    useEffect(() => {
-        let isMounted = true;
+    const [tick, setTick] = useState(0);
+    const isMountedRef = useRef(true);
 
+    useEffect(() => {
+        isMountedRef.current = true;
+        return () => {
+            isMountedRef.current = false;
+        };
+    }, []);
+
+    useEffect(() => {
         const loadStreak = async () => {
             try {
                 const response = await fetch("/api/streak/current", {
@@ -42,7 +51,7 @@ export const useStreak = (): UseStreakState => {
 
                 const data = (await response.json()) as Partial<CurrentStreakData>;
 
-                if (!isMounted) {
+                if (!isMountedRef.current) {
                     return;
                 }
 
@@ -54,7 +63,7 @@ export const useStreak = (): UseStreakState => {
             } catch (error) {
                 console.warn("Using fallback streak data", error);
 
-                if (!isMounted) {
+                if (!isMountedRef.current) {
                     return;
                 }
 
@@ -67,11 +76,12 @@ export const useStreak = (): UseStreakState => {
         };
 
         loadStreak();
+    }, [tick]);
 
-        return () => {
-            isMounted = false;
-        };
+    const refetch = useCallback(() => {
+        setState((prev) => ({ ...prev, isLoading: true }));
+        setTick((t) => t + 1);
     }, []);
 
-    return state;
+    return { ...state, refetch };
 };

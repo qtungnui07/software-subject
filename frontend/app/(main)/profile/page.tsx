@@ -4,10 +4,11 @@ import { redirect } from "next/navigation";
 
 import { Button } from "@/components/ui/button";
 import { auth } from "@/auth";
-import { getUserProgress } from "@/db/queries";
 import { ProfileForm } from "./profile-form";
-import { englishProgressCourse } from "@/data/progress-data";
+import { chapterOneProgressCourse } from "@/data/progress-data";
 import { getCourseProgressSummary } from "@/lib/progress-utils";
+import { requireProfile, type Profile } from "@/services/profile-service";
+import { ProfileXpPanel } from "@/components/profile/profile-xp-panel";
 
 const ProfilePage = async () => {
   const session = await auth();
@@ -17,29 +18,29 @@ const ProfilePage = async () => {
   }
 
   const user = session.user;
-  let progress: Awaited<ReturnType<typeof getUserProgress>> = null;
+  let profile: Profile | null = null;
   try {
-    progress = await getUserProgress();
+    profile = await requireProfile(user.id);
   } catch (error) {
-    console.error("Failed to load user progress:", error);
+    console.error("Failed to load user profile:", error);
   }
-  const courseProgress = getCourseProgressSummary(englishProgressCourse);
+  const courseProgress = getCourseProgressSummary(chapterOneProgressCourse);
 
-  const displayName = progress?.userName || user.name || "User";
-  const avatarSrc = progress?.userImageSrc || user.image || "/logo.webp";
-  const email = user.email || "";
+  const displayName = profile?.name || user.name || "User";
+  const avatarSrc = profile?.imageSrc || user.image || "/logo.webp";
+  const email = profile?.email || user.email || "";
 
   const quickStats = [
     {
       label: "Hearts",
-      value: `${progress?.hearts ?? 5} ❤️`,
+      value: `${profile?.hearts ?? 5} ❤️`,
       description: "Mạng còn lại",
       icon: "❤️",
       tone: "border-rose-100 bg-rose-50 text-rose-600",
     },
     {
       label: "Points",
-      value: `${progress?.points ?? 0} XP`,
+      value: `${profile?.points ?? 0} XP`,
       description: "Điểm kinh nghiệm",
       icon: "⚡",
       tone: "border-sky-100 bg-sky-50 text-sky-600",
@@ -53,7 +54,7 @@ const ProfilePage = async () => {
     },
     {
       label: "Khóa học",
-      value: progress?.activeCourse?.title || "Chưa chọn",
+      value: profile?.activeCourse?.title || "Chưa chọn",
       description: "Đang theo học",
       icon: "🌍",
       tone: "border-emerald-100 bg-emerald-50 text-emerald-600",
@@ -119,7 +120,7 @@ const ProfilePage = async () => {
           </article>
 
           {/* Current Course */}
-          {progress?.activeCourse && (
+          {profile?.activeCourse && (
             <article className="rounded-[28px] border-2 border-sky-100 bg-white p-5 shadow-sm sm:p-6">
               <div className="flex flex-col gap-5 sm:flex-row sm:items-start sm:justify-between">
                 <div>
@@ -127,7 +128,7 @@ const ProfilePage = async () => {
                     Khóa học hiện tại
                   </p>
                   <h2 className="mt-3 text-2xl font-black text-slate-800">
-                    {progress.activeCourse.title}
+                    {profile.activeCourse.title}
                   </h2>
                 </div>
 
@@ -169,6 +170,8 @@ const ProfilePage = async () => {
         </div>
 
         <aside className="space-y-6">
+          <ProfileXpPanel />
+
           <article className="rounded-[28px] border-2 border-slate-200 bg-white p-5 shadow-sm sm:p-6">
             <div className="flex items-center justify-between gap-4">
               <div>

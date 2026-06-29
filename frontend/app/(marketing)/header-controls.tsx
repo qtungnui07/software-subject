@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import type { ElementType, MouseEvent as ReactMouseEvent } from "react";
 import Link from "next/link";
+
 import {
   BarChart3,
   BookOpen,
@@ -352,3 +353,4 @@ export const ThemeToggle = () => {
     </button>
   );
 };
+

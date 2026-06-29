@@ -5,12 +5,9 @@
 @custom-variant dark (&:is(.dark *));
 
 html,
+body,
 :root {
-  @apply h-full;
-}
-
-body {
-  @apply min-h-full;
+  @apply min-h-screen;
 }
 
 @theme inline {
@@ -47,7 +44,7 @@ body {
   --color-popover-foreground: var(--popover-foreground);
   --color-popover: var(--popover);
   --color-card-foreground: var(--card-foreground);
-  --color-card: var(--color-card);
+  --color-card: var(--card);
   --radius-sm: calc(var(--radius) * 0.6);
   --radius-md: calc(var(--radius) * 0.8);
   --radius-lg: var(--radius);

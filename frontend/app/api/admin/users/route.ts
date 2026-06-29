@@ -1,14 +1,7 @@
 import { NextResponse } from "next/server";
 
 import { auth } from "@/auth";
-
-const getBackendUrl = () => process.env.BACKEND_URL || "http://duolingo-backend:4000";
-
-const backendHeaders = () => ({
-  ...(process.env.BACKEND_API_KEY
-    ? { "x-backend-api-key": process.env.BACKEND_API_KEY }
-    : {}),
-});
+import { deleteUser, listUsers } from "@/services/admin-service";
 
 export async function GET() {
   const session = await auth();
@@ -17,14 +10,9 @@ export async function GET() {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  const response = await fetch(`${getBackendUrl()}/admin/users`, {
-    headers: backendHeaders(),
-    cache: "no-store",
-  });
+  const result = await listUsers();
 
-  const data = await response.json();
-
-  return NextResponse.json(data, { status: response.status });
+  return NextResponse.json(result.data, { status: result.status });
 }
 
 export async function DELETE(req: Request) {
@@ -44,12 +32,7 @@ export async function DELETE(req: Request) {
     return NextResponse.json({ error: "You cannot delete the active account" }, { status: 400 });
   }
 
-  const response = await fetch(`${getBackendUrl()}/admin/users/${id}`, {
-    method: "DELETE",
-    headers: backendHeaders(),
-  });
+  const result = await deleteUser(String(id));
 
-  const data = await response.json();
-
-  return NextResponse.json(data, { status: response.status });
+  return NextResponse.json(result.data, { status: result.status });
 }
