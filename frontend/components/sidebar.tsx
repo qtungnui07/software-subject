@@ -25,11 +25,6 @@ const routes = [
     iconSrc: "/learn.svg",
   },
   {
-    label: "Khóa học",
-    href: "/courses",
-    iconSrc: "/globe.svg",
-  },
-  {
     label: "Bảng xếp hạng",
     href: "/leaderboard",
     iconSrc: "/leaderboard.svg",
