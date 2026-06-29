@@ -31,25 +31,24 @@ export const UserProgress = ({
         </span>
       </Link>
 
-      <StreakWidget className="h-14 rounded-[18px] dark:border-orange-950/40 dark:bg-orange-950/20 dark:text-orange-400 dark:hover:bg-orange-950/30" />
+      <StreakWidget className="h-14 rounded-[18px]" />
 
-      <Link
-        href="/shop"
-        className="flex h-14 items-center gap-x-2 rounded-[18px] border-2 border-orange-100 bg-orange-50 px-3 text-sm font-black text-orange-600 shadow-sm transition hover:bg-orange-100 dark:border-orange-950/40 dark:bg-orange-950/20 dark:text-orange-400 dark:hover:bg-orange-950/30"
+      <div
+        className="flex h-14 items-center gap-x-2 rounded-[18px] border-2 border-orange-100 bg-orange-50 px-3 text-sm font-black text-orange-600 shadow-sm dark:border-orange-950/40 dark:bg-orange-950/20 dark:text-orange-400"
         aria-label="Kinh nghiệm hiện tại"
       >
         <Image src="/points.svg" height={26} width={26} alt="XP" />
         <span>{points}</span>
-      </Link>
+      </div>
 
-      <Link
-        href="/shop"
-        className="flex h-14 items-center gap-x-2 rounded-[18px] border-2 border-rose-100 bg-rose-50 px-3 text-sm font-black text-rose-500 shadow-sm transition hover:bg-rose-100 dark:border-rose-950/40 dark:bg-rose-950/20 dark:text-rose-400 dark:hover:bg-rose-950/30"
+      <div
+        className="flex h-14 items-center gap-x-2 rounded-[18px] border-2 border-rose-100 bg-rose-50 px-3 text-sm font-black text-rose-500 shadow-sm dark:border-rose-950/40 dark:bg-rose-950/20 dark:text-rose-400"
         aria-label="Số tim còn lại"
       >
         <Image src="/heart.svg" height={25} width={25} alt="Tim" />
         <span>{hearts}</span>
-      </Link>
+      </div>
+
     </div>
   );
 };
