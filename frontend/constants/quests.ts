@@ -146,13 +146,13 @@ export const questSnapshotPresets = {
 
 export type QuestSnapshotPresetName = keyof typeof questSnapshotPresets;
 
-export const defaultQuestSnapshotPreset: QuestSnapshotPresetName = "almostPerfect";
+export const defaultQuestSnapshotPreset: QuestSnapshotPresetName = "empty";
 
 export const defaultWeekActivity = [
-  { day: "T2", completed: true },
-  { day: "T3", completed: true },
+  { day: "T2", completed: false },
+  { day: "T3", completed: false },
   { day: "T4", completed: false },
-  { day: "T5", completed: true },
+  { day: "T5", completed: false },
   { day: "T6", completed: false },
   { day: "T7", completed: false },
   { day: "CN", completed: false },

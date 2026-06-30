@@ -11,6 +11,9 @@ import { QuestsClient } from "./quests-client";
 
 export const dynamic = "force-dynamic";
 
+const SHOW_QUEST_DEBUG =
+  process.env.NEXT_PUBLIC_SHOW_QUEST_DEBUG === "true";
+
 type QuestsPageProps = {
   searchParams?: Promise<{
     state?: string | string[];
@@ -44,15 +47,18 @@ const getPresetName = (preset?: string | string[]): QuestSnapshotPresetName => {
 
 const QuestsPage = async ({ searchParams }: QuestsPageProps) => {
   const params = searchParams ? await searchParams : undefined;
-  const presetName = getPresetName(params?.preset);
-  const hasPresetOverride = Boolean(getSingleParam(params?.preset));
+  const presetName = SHOW_QUEST_DEBUG
+    ? getPresetName(params?.preset)
+    : defaultQuestSnapshotPreset;
+  const hasPresetOverride =
+    SHOW_QUEST_DEBUG && Boolean(getSingleParam(params?.preset));
   const questsData = hasPresetOverride
     ? await getQuestsPageData(presetName)
     : await getIntegratedQuestsPageData(presetName);
 
   return (
     <QuestsClient
-      demoState={getDemoState(params?.state)}
+      demoState={SHOW_QUEST_DEBUG ? getDemoState(params?.state) : "normal"}
       initialData={questsData}
       presetName={presetName}
     />

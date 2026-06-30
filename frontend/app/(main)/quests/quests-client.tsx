@@ -64,7 +64,7 @@ type QuestsClientProps = {
 type ToastState = {
   title: string;
   description: string;
-  tone: "success" | "info";
+  tone: "success" | "info" | "error";
 };
 
 type StatusView = {
@@ -118,7 +118,8 @@ const robotMoodView: Record<RobotMood, { emoji: string; title: string; descripti
   },
 };
 
-const SHOW_QUEST_DEMO_CONTROLS = process.env.NODE_ENV !== "production";
+const SHOW_QUEST_DEMO_CONTROLS =
+  process.env.NEXT_PUBLIC_SHOW_QUEST_DEBUG === "true";
 
 const metricLabelMap: Record<QuestMetric, string> = {
   lesson_completed: "bài học",
@@ -1008,7 +1009,11 @@ const Toast = ({ toast }: { toast: ToastState }) => {
     <div
       className={cn(
         "quest-toast-pop fixed bottom-5 right-5 z-50 max-w-sm rounded-3xl border-2 bg-white p-4 shadow-[0_18px_40px_rgba(15,23,42,0.18)] dark:bg-[#141f23]",
-        toast.tone === "success" ? "border-emerald-200 dark:border-emerald-900/60" : "border-[#d8ecfb] dark:border-[#20313a]",
+        toast.tone === "success"
+          ? "border-emerald-200 dark:border-emerald-900/60"
+          : toast.tone === "error"
+            ? "border-rose-200 dark:border-rose-900/60"
+            : "border-[#d8ecfb] dark:border-[#20313a]",
       )}
     >
       <p className="text-sm font-black text-slate-900 dark:text-white">{toast.title}</p>
@@ -1120,16 +1125,25 @@ export const QuestsClient = ({ initialData, demoState = "normal", presetName = "
     window.setTimeout(() => setToast(null), 2400);
   };
 
-  const handleClaimQuest = (quest: ResolvedQuest) => {
-    if (!quest.canClaim) return;
+  const handleClaimQuest = async (quest: ResolvedQuest) => {
+  if (!quest.canClaim) return;
 
-    void claimQuestReward(quest.id);
+  try {
+    const result = await claimQuestReward(quest.id);
+
     showToast({
       title: "Đã nhận thưởng",
-      description: `${quest.reward.label} từ nhiệm vụ “${quest.title}” đã được lưu cho hôm nay.`,
+      description: `Bạn nhận được ${result?.reward?.xp ?? quest.reward.label}.`,
       tone: "success",
     });
-  };
+  } catch {
+    showToast({
+      title: "Chưa thể nhận thưởng",
+      description: "Phần thưởng nhiệm vụ chưa được nối với XP thật.",
+      tone: "error",
+    });
+  }
+};
 
   const handleResetDemo = () => {
     clearQuestStorage();
