@@ -287,11 +287,10 @@ export const getIntegratedQuestsPageData = async (
     currentStreak,
     claimedQuestIds: [],
   };
-  const shouldUseQuestServiceState = questTodayState?.source === "db";
-  const snapshot = shouldUseQuestServiceState
+  const snapshot = (questTodayState && questTodayState.source === "db")
     ? questTodayState.snapshot
     : fallbackDataTruthSnapshot;
-  const weekActivity = shouldUseQuestServiceState
+  const weekActivity = (questTodayState && questTodayState.source === "db")
     ? questTodayState.weekActivity
     : buildWeekActivityFromLogs(recentActivity, todayKey);
 

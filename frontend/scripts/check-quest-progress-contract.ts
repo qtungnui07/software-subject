@@ -6,11 +6,11 @@ import {
   shouldRecordQuestProgress,
 } from "@/services/quest-progress-policy";
 
-const assert = (condition: unknown, message: string): asserts condition => {
+function assert(condition: unknown, message: string): asserts condition {
   if (!condition) {
     throw new Error(message);
   }
-};
+}
 
 const checkPolicy = () => {
   assert(

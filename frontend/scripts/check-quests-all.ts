@@ -36,7 +36,7 @@ const runScript = (
       shell: true,
       stdio: "inherit",
       windowsHide: true,
-    });
+    } as any);
   } catch (error) {
     console.error(`\n[quests-check] ${label} failed.`);
 
