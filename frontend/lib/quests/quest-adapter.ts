@@ -16,7 +16,7 @@ import type {
   WeekActivityDay,
 } from "@/types/quest";
 
-import { claimQuestInStorage, getClaimedQuestIds } from "./quest-storage";
+import { getClaimedQuestIds } from "./quest-storage";
 import {
   buildQuestSummary,
   resolveBonusQuests,
@@ -126,5 +126,18 @@ export const getQuestsPageData = async (
 };
 
 export const claimQuestReward = async (questId: string) => {
-  return claimQuestInStorage(questId);
+  const response = await fetch("/api/quests/claim", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({ questId }),
+  });
+
+  if (!response.ok) {
+    const payload = await response.json().catch(() => null);
+    throw new Error(payload?.error || "Không thể nhận thưởng nhiệm vụ.");
+  }
+
+  return response.json();
 };

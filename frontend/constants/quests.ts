@@ -7,6 +7,8 @@ import type {
 export const DAILY_QUEST_TOTAL = 3;
 export const QUEST_TIMEZONE = "Asia/Ho_Chi_Minh" as const;
 export const QUEST_RESET_TIME_LABEL = "00:00" as const;
+export const DAILY_QUEST_REWARD_XP = 10;
+export const DAILY_PERFECT_CHEST_REWARD_XP = 30;
 
 export const dailyQuestDefinitions = [
   {
@@ -19,7 +21,7 @@ export const dailyQuestDefinitions = [
     reward: {
       type: "xp",
       label: "+10 XP",
-      xpAmount: 10,
+      xpAmount: DAILY_QUEST_REWARD_XP,
     },
     icon: "book-open",
     order: 1,
@@ -33,8 +35,8 @@ export const dailyQuestDefinitions = [
     target: 80,
     reward: {
       type: "xp",
-      label: "+15 XP",
-      xpAmount: 15,
+      label: "+10 XP",
+      xpAmount: DAILY_QUEST_REWARD_XP,
     },
     icon: "target",
     order: 2,
@@ -47,9 +49,9 @@ export const dailyQuestDefinitions = [
     metric: "minutes_learned",
     target: 10,
     reward: {
-      type: "chest",
-      label: "Rương nhỏ",
-      chestTier: "small",
+      type: "xp",
+      label: "+10 XP",
+      xpAmount: DAILY_QUEST_REWARD_XP,
     },
     icon: "clock",
     order: 3,
@@ -66,8 +68,8 @@ export const bonusQuestDefinitions = [
     target: DAILY_QUEST_TOTAL,
     reward: {
       type: "chest",
-      label: "+25 XP hoặc Rương bạc",
-      xpAmount: 25,
+      label: "+30 XP hoặc Rương bạc",
+      xpAmount: DAILY_PERFECT_CHEST_REWARD_XP,
       chestTier: "silver",
     },
     icon: "sparkles",
@@ -146,13 +148,13 @@ export const questSnapshotPresets = {
 
 export type QuestSnapshotPresetName = keyof typeof questSnapshotPresets;
 
-export const defaultQuestSnapshotPreset: QuestSnapshotPresetName = "almostPerfect";
+export const defaultQuestSnapshotPreset: QuestSnapshotPresetName = "empty";
 
 export const defaultWeekActivity = [
-  { day: "T2", completed: true },
-  { day: "T3", completed: true },
+  { day: "T2", completed: false },
+  { day: "T3", completed: false },
   { day: "T4", completed: false },
-  { day: "T5", completed: true },
+  { day: "T5", completed: false },
   { day: "T6", completed: false },
   { day: "T7", completed: false },
   { day: "CN", completed: false },

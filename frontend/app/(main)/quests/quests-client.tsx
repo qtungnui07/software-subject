@@ -64,7 +64,7 @@ type QuestsClientProps = {
 type ToastState = {
   title: string;
   description: string;
-  tone: "success" | "info";
+  tone: "success" | "info" | "error";
 };
 
 type StatusView = {
@@ -74,7 +74,7 @@ type StatusView = {
 
 const statusViewMap: Record<QuestStatus, StatusView> = {
   active: {
-    label: "Đang làm",
+    label: "Chưa xong",
     className: "border-sky-200 bg-sky-50 text-[#1486CC] dark:border-sky-900/60 dark:bg-sky-950/40 dark:text-sky-300",
   },
   completed: {
@@ -118,7 +118,8 @@ const robotMoodView: Record<RobotMood, { emoji: string; title: string; descripti
   },
 };
 
-const SHOW_QUEST_DEMO_CONTROLS = process.env.NODE_ENV !== "production";
+const SHOW_QUEST_DEMO_CONTROLS =
+  process.env.NEXT_PUBLIC_SHOW_QUEST_DEBUG === "true";
 
 const metricLabelMap: Record<QuestMetric, string> = {
   lesson_completed: "bài học",
@@ -154,29 +155,51 @@ const getQuestActionLabel = (quest: ResolvedQuest) => {
   if (quest.status === "locked") return "Chưa mở";
   if (quest.status === "completed") return "Nhận thưởng";
 
-  return "Tiếp tục học";
+  return "Bắt đầu học";
 };
 
 const getQuestStateText = (quest: ResolvedQuest) => {
   if (quest.status === "claimed") return "Phần thưởng đã được ghi nhận cho hôm nay.";
-  if (quest.status === "completed") return "Nhiệm vụ đã xong, sẵn sàng nhận thưởng.";
+  if (quest.status === "completed") return "Đã xong, bạn có thể nhận thưởng.";
   if (quest.status === "locked") return "Hoàn thành điều kiện trước để mở.";
 
-  return `Còn ${Math.max(quest.target - quest.progress, 0)} ${metricLabelMap[quest.metric]} để hoàn thành.`;
+  const remaining = Math.max(quest.target - quest.progress, 0);
+
+  if (quest.metric === "accuracy_reached") {
+    return `Cần đạt ${quest.target}% chính xác trong một bài học.`;
+  }
+
+  if (quest.metric === "minutes_learned") {
+    return `Cần học thêm ${remaining} phút để hoàn thành.`;
+  }
+
+  if (quest.metric === "lesson_completed") {
+    return `Cần hoàn thành ${remaining} bài học.`;
+  }
+
+  if (quest.metric === "xp_earned") {
+    return `Cần kiếm thêm ${remaining} XP.`;
+  }
+
+  if (quest.metric === "streak_kept") {
+    return `Cần giữ thêm ${remaining} ngày chuỗi học.`;
+  }
+
+  return `Còn ${remaining} ${metricLabelMap[quest.metric]} để hoàn thành.`;
 };
 
 const getHeroActionText = (completed: number, total: number) => {
-  if (completed <= 0) return "Bắt đầu nhiệm vụ đầu tiên";
-  if (completed >= total) return "Xem phần thưởng hôm nay";
+  if (completed <= 0) return "Bắt đầu học";
+  if (completed >= total) return "Xem rương thưởng";
 
-  return "Hoàn thành nhiệm vụ cuối";
+  return "Học tiếp";
 };
 
 const CardShell = ({ children, className }: { children: ReactNode; className?: string }) => {
   return (
     <section
       className={cn(
-        "rounded-[30px] border-2 border-[#d8ecfb] bg-white p-5 shadow-[0_18px_42px_rgba(20,134,204,0.08)] transition-all duration-300 dark:border-[#20313a] dark:bg-[#182226] dark:shadow-none sm:p-6",
+        "rounded-[24px] border-2 border-[#d8ecfb] bg-white/95 p-3.5 shadow-[0_16px_36px_rgba(20,134,204,0.08)] transition-all duration-300 dark:border-[#28414d] dark:bg-[#182226]/95 dark:shadow-none sm:rounded-[28px] sm:p-5",
         className,
       )}
     >
@@ -210,12 +233,12 @@ const SectionHeader = ({
   rightSlot?: ReactNode;
 }) => {
   return (
-    <div className="mb-5 flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
+    <div className="mb-4 flex flex-col gap-3 sm:mb-5 sm:flex-row sm:items-end sm:justify-between">
       <div>
         <p className="text-xs font-black uppercase tracking-[0.22em] text-[#1486CC] dark:text-sky-300">
           {eyebrow}
         </p>
-        <h2 className="mt-1 text-2xl font-black tracking-tight text-slate-900 dark:text-slate-50">
+        <h2 className="mt-1 text-xl font-black tracking-tight text-slate-900 dark:text-slate-50 sm:text-2xl">
           {title}
         </h2>
         {description ? (
@@ -231,9 +254,9 @@ const SectionHeader = ({
 
 const ProgressBar = ({ value, className }: { value: number; className?: string }) => {
   return (
-    <div className={cn("h-3 overflow-hidden rounded-full bg-slate-100 dark:bg-[#10191d]", className)}>
+    <div className={cn("h-3 overflow-hidden rounded-full bg-[#edf7ff] ring-1 ring-sky-100/70 dark:bg-[#0d171b] dark:ring-[#2a4654]", className)}>
       <div
-        className="quest-progress-fill h-full origin-left rounded-full bg-gradient-to-r from-[#1486CC] via-[#31B6FF] to-[#62d7ff] shadow-[0_4px_14px_rgba(20,134,204,0.32)] transition-all duration-700"
+        className="quest-progress-fill h-full origin-left rounded-full bg-gradient-to-r from-[#1486CC] via-[#31B6FF] to-emerald-300 shadow-[0_4px_14px_rgba(20,134,204,0.28)] transition-all duration-700"
         style={{ width: `${value}%` }}
       />
     </div>
@@ -299,6 +322,17 @@ const QuestPolishStyles = () => {
           animation: quest-toast-pop 220ms ease-out both;
         }
 
+
+        .quest-mobile-readable {
+          text-wrap: balance;
+        }
+
+        @media (max-width: 640px) {
+          .quest-card-enter {
+            scroll-margin-top: 16px;
+          }
+        }
+
         @media (prefers-reduced-motion: reduce) {
           .quest-progress-fill,
           .quest-card-enter,
@@ -328,7 +362,7 @@ const StatusBadge = ({ status }: { status: QuestStatus }) => {
   return (
     <span
       className={cn(
-        "inline-flex items-center gap-1.5 rounded-full border px-3 py-1 text-xs font-black uppercase tracking-wide",
+        "inline-flex max-w-full shrink-0 items-center justify-center gap-1.5 whitespace-nowrap rounded-full border px-3 py-1 text-[11px] font-black uppercase tracking-wide",
         view.className,
       )}
     >
@@ -391,7 +425,7 @@ const RewardTypeIcon = ({
 const QuestAction = ({ quest, onClaim }: { quest: ResolvedQuest; onClaim?: (quest: ResolvedQuest) => void }) => {
   if (quest.status === "active") {
     return (
-      <Button asChild type="button" variant="primary-outline" className="h-11 rounded-2xl px-5 font-black">
+      <Button asChild type="button" variant="primary-outline" className="h-10 w-full justify-center rounded-2xl px-5 font-black sm:h-11 sm:w-auto">
         <Link href="/learn">
           {getQuestActionLabel(quest)}
           <ArrowRight className="ml-2 size-4" strokeWidth={3} />
@@ -405,7 +439,7 @@ const QuestAction = ({ quest, onClaim }: { quest: ResolvedQuest; onClaim?: (ques
       <Button
         type="button"
         variant="secondary"
-        className="h-11 rounded-2xl border-emerald-600 bg-emerald-500 px-5 font-black text-white hover:bg-emerald-500/90"
+        className="h-10 w-full justify-center rounded-2xl border-emerald-600 bg-emerald-500 px-5 font-black text-white shadow-[0_12px_24px_rgba(16,185,129,0.18)] hover:bg-emerald-500/90 sm:h-11 sm:w-auto"
         onClick={() => onClaim?.(quest)}
       >
         {getQuestActionLabel(quest)}
@@ -414,7 +448,7 @@ const QuestAction = ({ quest, onClaim }: { quest: ResolvedQuest; onClaim?: (ques
   }
 
   return (
-    <Button type="button" variant="primary-outline" className="h-11 rounded-2xl px-5 font-black" disabled>
+    <Button type="button" variant="primary-outline" className="h-10 w-full justify-center rounded-2xl px-5 font-black sm:h-11 sm:w-auto" disabled>
       {getQuestActionLabel(quest)}
     </Button>
   );
@@ -438,14 +472,14 @@ const QuestCard = ({
   return (
     <article
       className={cn(
-        "quest-card-enter group relative overflow-hidden rounded-[26px] border-2 bg-white p-4 transition-all duration-300 dark:bg-[#141f23] sm:p-5",
+        "quest-card-enter group relative overflow-hidden rounded-[22px] border-2 bg-white p-3.5 ring-1 ring-white/80 transition-all duration-300 dark:bg-[#141f23] dark:ring-white/5 sm:rounded-[24px] sm:p-5",
         isCompleted
           ? "border-emerald-200 shadow-[0_12px_28px_rgba(16,185,129,0.1)] dark:border-emerald-900/60"
           : "border-slate-200 shadow-[0_10px_22px_rgba(15,23,42,0.04)] dark:border-[#243841]",
         quest.status === "completed" ? "quest-completed-glow" : null,
         isActive ? "hover:-translate-y-0.5 hover:border-[#9fd8fb] hover:shadow-[0_16px_30px_rgba(20,134,204,0.12)]" : null,
         isClaimed ? "bg-slate-50/80 opacity-90 dark:bg-[#111a1e]" : null,
-        compact ? "space-y-4" : "space-y-5",
+        compact ? "space-y-3.5 sm:space-y-4" : "space-y-3.5 sm:space-y-4",
       )}
       style={{ animationDelay: `${delayIndex * 70}ms` }}
     >
@@ -456,22 +490,22 @@ const QuestCard = ({
         )}
       />
 
-      <div className="flex gap-4">
+      <div className="flex gap-3 sm:gap-4">
         <div
           className={cn(
-            "flex size-14 shrink-0 items-center justify-center rounded-2xl border-2 transition-colors",
+            "flex size-12 shrink-0 items-center justify-center rounded-[18px] border-2 transition-colors sm:size-14 sm:rounded-[20px]",
             isCompleted
               ? "border-emerald-200 bg-emerald-50 text-emerald-500 dark:border-emerald-900/60 dark:bg-emerald-950/30 dark:text-emerald-300"
               : "border-[#d8ecfb] bg-[#e8f5ff] text-[#1486CC] dark:border-[#234455] dark:bg-[#1c3547] dark:text-sky-300",
           )}
         >
-          <QuestIcon icon={quest.icon} className="size-7" strokeWidth={2.6} />
+          <QuestIcon icon={quest.icon} className="size-5.5 sm:size-7" strokeWidth={2.6} />
         </div>
 
         <div className="min-w-0 flex-1">
-          <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
+          <div className="flex flex-col gap-2.5 sm:flex-row sm:items-start sm:justify-between">
             <div>
-              <h3 className="text-lg font-black leading-tight text-slate-900 dark:text-slate-50">
+              <h3 className="quest-mobile-readable text-[15px] font-black leading-tight text-slate-900 dark:text-slate-50 sm:text-lg">
                 {quest.title}
               </h3>
               <p className="mt-1 text-sm font-semibold leading-5 text-slate-500 dark:text-slate-400">
@@ -481,7 +515,7 @@ const QuestCard = ({
             <StatusBadge status={quest.status} />
           </div>
 
-          <p className="mt-3 text-xs font-bold uppercase tracking-[0.12em] text-slate-400 dark:text-slate-500">
+          <p className="mt-3 rounded-2xl bg-slate-50 px-3 py-2 text-[11px] font-bold uppercase tracking-[0.11em] text-slate-400 dark:bg-[#0d171b]/80 dark:text-slate-400">
             {getQuestStateText(quest)}
           </p>
 
@@ -502,7 +536,7 @@ const QuestCard = ({
       </div>
 
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-        <div className="inline-flex items-center gap-2 rounded-2xl border-2 border-[#d8ecfb] bg-[#f6fbff] px-3 py-2 text-sm font-black text-[#1486CC] dark:border-[#20313a] dark:bg-[#10191d] dark:text-sky-300">
+        <div className="inline-flex items-center justify-center gap-2 rounded-2xl border-2 border-[#d8ecfb] bg-[#f6fbff] px-3 py-2 text-sm font-black text-[#1486CC] shadow-[0_8px_18px_rgba(20,134,204,0.08)] dark:border-[#2a4654] dark:bg-[#0d171b] dark:text-sky-300">
           <RewardTypeIcon type={quest.reward.type} className="size-4" strokeWidth={3} />
           {quest.reward.label}
         </div>
@@ -515,7 +549,7 @@ const QuestCard = ({
 
 const HeroStat = ({ label, value, icon }: { label: string; value: string; icon: ReactNode }) => {
   return (
-    <div className="rounded-2xl border-2 border-white/80 bg-white/75 px-4 py-3 shadow-[0_10px_24px_rgba(20,134,204,0.08)] backdrop-blur dark:border-[#20313a] dark:bg-[#141f23]/80 dark:shadow-none">
+    <div className="rounded-[18px] border-2 border-white/80 bg-white/80 px-3.5 py-3 shadow-[0_8px_20px_rgba(20,134,204,0.07)] backdrop-blur dark:border-[#2a4654] dark:bg-[#141f23]/80 dark:shadow-none sm:rounded-[20px] sm:px-4">
       <div className="flex items-center gap-2 text-[#1486CC] dark:text-sky-300">{icon}</div>
       <p className="mt-2 text-[11px] font-black uppercase tracking-[0.18em] text-slate-400">
         {label}
@@ -565,37 +599,35 @@ const QuestsHero = ({
   const gameMessage = getGameLoopMessage(data);
 
   return (
-    <section className="relative overflow-hidden rounded-[34px] border-2 border-[#cde8fb] bg-gradient-to-br from-[#e4f5ff] via-white to-[#f7fcff] p-5 shadow-[0_22px_54px_rgba(20,134,204,0.13)] dark:border-[#234455] dark:from-[#102838] dark:via-[#182226] dark:to-[#10191d] dark:shadow-none sm:p-7">
+    <section className="relative overflow-hidden rounded-[28px] border-2 border-[#cde8fb] bg-gradient-to-br from-[#e4f5ff] via-white to-[#f7fcff] p-3.5 shadow-[0_20px_48px_rgba(20,134,204,0.12)] dark:border-[#2a5365] dark:from-[#102838] dark:via-[#182226] dark:to-[#10191d] dark:shadow-none sm:rounded-[32px] sm:p-6">
       <div className="pointer-events-none absolute -right-20 -top-24 size-72 rounded-full bg-[#31B6FF]/20 blur-3xl" />
       <div className="pointer-events-none absolute -bottom-24 left-12 size-64 rounded-full bg-emerald-300/20 blur-3xl" />
 
-      <div className="relative grid gap-6 lg:grid-cols-[minmax(0,1fr)_320px] lg:items-center">
+      <div className="relative grid gap-4 lg:grid-cols-[minmax(0,1fr)_270px] lg:items-center">
         <div className="max-w-3xl">
           <SurfacePill className="border-[#bfe3fb] bg-white/70 text-[#1486CC] dark:border-[#234455] dark:bg-[#10191d]/70 dark:text-sky-300">
             <ShieldCheck className="size-4" strokeWidth={3} />
             Trung tâm nhiệm vụ
           </SurfacePill>
 
-          <h1 className="mt-4 text-3xl font-black tracking-tight text-slate-950 dark:text-white sm:text-5xl">
+          <h1 className="quest-mobile-readable mt-3 text-[28px] font-black tracking-tight text-slate-950 dark:text-white sm:text-4xl">
             Nhiệm vụ hôm nay
           </h1>
-          <p className="mt-4 max-w-2xl text-base font-bold leading-7 text-slate-600 dark:text-slate-300 sm:text-lg">
+          <p className="quest-mobile-readable mt-3 max-w-2xl text-sm font-bold leading-6 text-slate-600 dark:text-slate-300 sm:text-base">
             {remaining > 0
-              ? `Còn ${remaining} nhiệm vụ nữa để mở Ngày hoàn hảo và rương thưởng đặc biệt.`
-              : "Bạn đã mở Ngày hoàn hảo. Giữ nhịp này để xây streak dài hơn."}
+              ? `Hoàn thành ${data.summary.dailyTotal} nhiệm vụ để mở Ngày hoàn hảo và rương thưởng hôm nay.`
+              : "Bạn đã mở Ngày hoàn hảo. Quay lại ngày mai để tiếp tục giữ nhịp học."}
           </p>
           <div className="mt-2 flex flex-wrap gap-2">
             <p className="inline-flex rounded-full bg-white/70 px-3 py-1.5 text-sm font-black text-[#1486CC] shadow-[0_8px_20px_rgba(20,134,204,0.08)] dark:bg-[#10191d]/70 dark:text-sky-300">
               {gameMessage}
             </p>
-            <p className="inline-flex rounded-full bg-white/70 px-3 py-1.5 text-xs font-black uppercase tracking-[0.12em] text-slate-500 shadow-[0_8px_20px_rgba(20,134,204,0.06)] dark:bg-[#10191d]/70 dark:text-slate-300">
-              {data.syncStatus.label}
-            </p>
+
           </div>
 
-          <div className="mt-6 flex flex-col gap-4 rounded-[26px] border-2 border-white/80 bg-white/65 p-4 backdrop-blur dark:border-[#20313a] dark:bg-[#10191d]/50 sm:flex-row sm:items-center sm:justify-between">
+          <div className="mt-4 flex flex-col gap-3 rounded-[22px] border-2 border-white/80 bg-white/70 p-3.5 backdrop-blur dark:border-[#2a4654] dark:bg-[#10191d]/60 sm:mt-5 sm:flex-row sm:items-center sm:justify-between sm:rounded-[24px] sm:p-4">
             <div>
-              <p className="text-xs font-black uppercase tracking-[0.2em] text-slate-400">Daily progress</p>
+              <p className="text-xs font-black uppercase tracking-[0.2em] text-slate-400">Tiến độ hôm nay</p>
               <div className="mt-2 flex items-center gap-3">
                 <DailyCompletionDots completed={data.summary.dailyCompleted} total={data.summary.dailyTotal} />
                 <span className="text-sm font-black text-slate-700 dark:text-slate-200">
@@ -603,7 +635,7 @@ const QuestsHero = ({
                 </span>
               </div>
             </div>
-            <Button asChild type="button" variant="primary-outline" className="h-12 rounded-2xl px-5 font-black">
+            <Button asChild type="button" variant="primary-outline" className="h-11 rounded-2xl px-5 font-black sm:h-12">
               <Link href="/learn">
                 {getHeroActionText(data.summary.dailyCompleted, data.summary.dailyTotal)}
                 <ArrowRight className="ml-2 size-4" strokeWidth={3} />
@@ -611,10 +643,10 @@ const QuestsHero = ({
             </Button>
           </div>
 
-          <div className="mt-5 grid gap-3 sm:grid-cols-3">
+          <div className="mt-3 grid gap-2.5 sm:mt-4 sm:grid-cols-3 sm:gap-3">
             <HeroStat label="Tiến độ" value={`${data.summary.dailyCompleted}/${data.summary.dailyTotal}`} icon={<Target className="size-4" strokeWidth={3} />} />
             <HeroStat label="XP hôm nay" value={`${data.summary.todayXp} XP`} icon={<Zap className="size-4" strokeWidth={3} />} />
-            <HeroStat label="Reset" value={data.resetTimeLabel} icon={<Clock className="size-4" strokeWidth={3} />} />
+            <HeroStat label="Làm mới lúc" value={data.resetTimeLabel} icon={<Clock className="size-4" strokeWidth={3} />} />
           </div>
           {SHOW_QUEST_DEMO_CONTROLS ? (
 
@@ -623,16 +655,16 @@ const QuestsHero = ({
             <div className="mt-3 flex flex-wrap items-center gap-2">
               <button type="button" className="inline-flex items-center gap-1.5 rounded-full border border-slate-200 bg-white/80 px-3 py-1.5 text-slate-500 transition-colors hover:text-[#1486CC] dark:border-[#20313a] dark:bg-[#10191d]/70" onClick={onResetDemo}>
                 <RotateCcw className="size-3.5" strokeWidth={3} />
-                Reset demo
+                Xóa trạng thái thử
               </button>
               <Link className="rounded-full border border-slate-200 bg-white/80 px-3 py-1.5 text-slate-500 transition-colors hover:text-[#1486CC] dark:border-[#20313a] dark:bg-[#10191d]/70" href="/quests?state=loading">
-                Loading
+                Đang tải
               </Link>
               <Link className="rounded-full border border-slate-200 bg-white/80 px-3 py-1.5 text-slate-500 transition-colors hover:text-[#1486CC] dark:border-[#20313a] dark:bg-[#10191d]/70" href="/quests?state=empty">
-                Empty
+                Trống
               </Link>
               <Link className="rounded-full border border-slate-200 bg-white/80 px-3 py-1.5 text-slate-500 transition-colors hover:text-[#1486CC] dark:border-[#20313a] dark:bg-[#10191d]/70" href="/quests?state=error">
-                Error
+                Lỗi
               </Link>
               <span className="hidden text-slate-300 sm:inline">|</span>
               {(["empty", "oneQuestDone", "almostPerfect", "perfectDay"] as const).map((preset) => (
@@ -652,11 +684,11 @@ const QuestsHero = ({
           ) : null}
         </div>
 
-        <div className={cn("rounded-[30px] border-2 p-5 text-center shadow-[0_18px_38px_rgba(20,134,204,0.12)] transition-transform duration-300 hover:-translate-y-1 dark:shadow-none", mood.tone)}>
-          <div className="quest-robot-idle mx-auto flex size-24 items-center justify-center rounded-[28px] bg-white text-6xl shadow-[0_14px_30px_rgba(20,134,204,0.12)] dark:bg-[#10191d]">
+        <div className={cn("rounded-[28px] border-2 p-4 text-center shadow-[0_16px_34px_rgba(20,134,204,0.11)] transition-transform duration-300 hover:-translate-y-1 dark:shadow-none", mood.tone)}>
+          <div className="quest-robot-idle mx-auto flex size-20 items-center justify-center rounded-[24px] bg-white text-5xl shadow-[0_12px_26px_rgba(20,134,204,0.12)] dark:bg-[#10191d] sm:size-22">
             {mood.emoji}
           </div>
-          <h2 className="mt-4 text-xl font-black text-slate-900 dark:text-white">
+          <h2 className="mt-3 text-lg font-black text-slate-900 dark:text-white">
             {mood.title}
           </h2>
           <p className="mt-2 text-sm font-semibold leading-6 text-slate-500 dark:text-slate-400">
@@ -705,13 +737,13 @@ const PerfectDayCard = ({ quest, data }: { quest?: ResolvedQuest; data: QuestsPa
 
       <div className="relative space-y-5">
         <div className="flex flex-col gap-5 lg:flex-row lg:items-start lg:justify-between">
-          <div className="flex gap-4">
+          <div className="flex gap-3 sm:gap-4">
             <div className="flex size-16 shrink-0 items-center justify-center rounded-[22px] border-2 border-indigo-100 bg-white text-indigo-500 shadow-[0_12px_24px_rgba(99,102,241,0.12)] dark:border-indigo-900/60 dark:bg-[#10191d] dark:text-indigo-300">
               <Sparkles className="size-8" strokeWidth={2.6} />
             </div>
             <div>
               <p className="text-xs font-black uppercase tracking-[0.22em] text-indigo-500 dark:text-indigo-300">
-                Perfect Day Bonus
+                Thưởng Ngày hoàn hảo
               </p>
               <h2 className="mt-1 text-2xl font-black text-slate-900 dark:text-white">
                 {view.title}
@@ -762,7 +794,7 @@ const PerfectDayCard = ({ quest, data }: { quest?: ResolvedQuest; data: QuestsPa
           </div>
 
           <div className={cn("rounded-[24px] border-2 border-amber-100 bg-amber-50/70 p-4 text-amber-600 transition-all duration-300 dark:border-amber-900/60 dark:bg-amber-950/20 dark:text-amber-300", chestView.status === "available" ? "quest-chest-ready shadow-[0_12px_30px_rgba(245,158,11,0.18)]" : null)}>
-            <p className="text-xs font-black uppercase tracking-[0.18em]">Chest status</p>
+            <p className="text-xs font-black uppercase tracking-[0.18em]">Trạng thái rương</p>
             <p className="mt-2 text-lg font-black text-slate-900 dark:text-white">{getChestStatusLabel(chestView.status)}</p>
             <p className="mt-1 text-sm font-semibold leading-5 text-amber-700/80 dark:text-amber-200/80">{getChestProgressText(data)}</p>
           </div>
@@ -774,7 +806,7 @@ const PerfectDayCard = ({ quest, data }: { quest?: ResolvedQuest; data: QuestsPa
 
 const QuestSidebar = ({ data, className }: { data: QuestsPageData; className?: string }) => {
   return (
-    <aside className={cn("space-y-5", className)}>
+    <aside className={cn("space-y-3.5 sm:space-y-4", className)}>
       <SummaryCard data={data} />
       <RewardChestCard data={data} />
       <WeekActivityCard data={data} />
@@ -797,37 +829,31 @@ const SummaryCard = ({ data }: { data: QuestsPageData }) => {
   const loopMessage = getGameLoopMessage(data);
 
   return (
-    <CardShell className="p-5">
+    <CardShell className="p-4">
       <div className="flex items-center gap-3">
         <div className="flex size-12 items-center justify-center rounded-2xl bg-[#e8f5ff] text-[#1486CC] dark:bg-[#1c3547] dark:text-sky-300">
           <Flame className="size-6" strokeWidth={2.8} />
         </div>
         <div>
-          <h2 className="text-lg font-black text-slate-900 dark:text-white">Game status</h2>
-          <p className="text-sm font-semibold text-slate-500 dark:text-slate-400">Vòng lặp hôm nay</p>
+          <h2 className="text-lg font-black text-slate-900 dark:text-white">Tiến độ hôm nay</h2>
+          <p className="text-sm font-semibold text-slate-500 dark:text-slate-400">Hoàn thành từng nhiệm vụ để mở rương hôm nay</p>
         </div>
       </div>
 
-      <div className="mt-5 rounded-[24px] border-2 border-[#d8ecfb] bg-[#f6fbff] p-4 dark:border-[#20313a] dark:bg-[#10191d]">
+      <div className="mt-4 rounded-[24px] border-2 border-[#d8ecfb] bg-[#f6fbff] p-4 shadow-inner shadow-sky-100/60 dark:border-[#20313a] dark:bg-[#10191d] dark:shadow-none">
         <div className="flex items-center justify-between text-sm font-black text-slate-700 dark:text-slate-200">
-          <span>Daily loop</span>
+          <span>Nhiệm vụ hôm nay</span>
           <span>{data.summary.dailyCompleted}/{data.summary.dailyTotal}</span>
         </div>
         <ProgressBar value={Math.round((data.summary.dailyCompleted / data.summary.dailyTotal) * 100)} className="mt-3 h-3" />
         <p className="mt-3 text-sm font-semibold leading-5 text-slate-500 dark:text-slate-400">{loopMessage}</p>
       </div>
 
-      <div className="mt-4 grid grid-cols-2 gap-3">
-        <MiniStat label="XP" value={`${data.summary.todayXp}`} />
-        <MiniStat label="Streak" value={`${data.summary.currentStreak} ngày`} />
-        <MiniStat label="Daily" value={`${data.summary.dailyCompleted}/${data.summary.dailyTotal}`} />
-        <MiniStat label="Chest" value={getChestStatusLabel(chestView.status)} />
-      </div>
-
-      <div className="mt-3 rounded-2xl border-2 border-slate-100 bg-slate-50 p-3 dark:border-[#20313a] dark:bg-[#10191d]">
-        <p className="text-[11px] font-black uppercase tracking-[0.18em] text-slate-400">Sync</p>
-        <p className="mt-1 text-sm font-black text-slate-900 dark:text-slate-50">{data.syncStatus.label}</p>
-        <p className="mt-1 text-xs font-semibold leading-5 text-slate-500 dark:text-slate-400">{data.syncStatus.message}</p>
+      <div className="mt-4 grid grid-cols-2 gap-2.5">
+        <MiniStat label="XP hôm nay" value={`${data.summary.todayXp}`} />
+        <MiniStat label="Chuỗi" value={`${data.summary.currentStreak} ngày`} />
+        <MiniStat label="Nhiệm vụ" value={`${data.summary.dailyCompleted}/${data.summary.dailyTotal}`} />
+        <MiniStat label="Rương" value={getChestStatusLabel(chestView.status)} />
       </div>
     </CardShell>
   );
@@ -835,7 +861,7 @@ const SummaryCard = ({ data }: { data: QuestsPageData }) => {
 
 const MiniStat = ({ label, value }: { label: string; value: string }) => {
   return (
-    <div className="rounded-2xl border-2 border-slate-100 bg-slate-50 p-3 dark:border-[#20313a] dark:bg-[#10191d]">
+    <div className="rounded-2xl border-2 border-slate-100 bg-slate-50/90 p-3 transition-colors hover:border-[#d8ecfb] hover:bg-white dark:border-[#2a4654] dark:bg-[#0d171b] dark:hover:bg-[#141f23]">
       <p className="text-[11px] font-black uppercase tracking-[0.18em] text-slate-400">{label}</p>
       <p className="mt-1 text-base font-black text-slate-900 dark:text-slate-50">{value}</p>
     </div>
@@ -853,7 +879,7 @@ const RewardChestCard = ({ data }: { data: QuestsPageData }) => {
         : "border-[#d8ecfb] bg-[#e8f5ff] text-[#1486CC] dark:border-[#234455] dark:bg-[#1c3547] dark:text-sky-300";
 
   return (
-    <CardShell className={cn("p-5", chestView.status === "available" ? "border-amber-200 shadow-[0_18px_44px_rgba(245,158,11,0.14)] dark:border-amber-900/60" : null)}>
+    <CardShell className={cn("p-4", chestView.status === "available" ? "border-amber-200 shadow-[0_18px_44px_rgba(245,158,11,0.14)] dark:border-amber-900/60" : null)}>
       <div className="flex items-start gap-4">
         <div className={cn("flex size-14 shrink-0 items-center justify-center rounded-2xl border-2 transition-transform duration-300", toneClass, chestView.status === "available" ? "quest-chest-ready" : null)}>
           <Gift className="size-7" strokeWidth={2.8} />
@@ -869,9 +895,9 @@ const RewardChestCard = ({ data }: { data: QuestsPageData }) => {
         </div>
       </div>
 
-      <div className="mt-4 grid grid-cols-2 gap-3">
-        <MiniStat label="Tier" value={getChestTierLabel(chestView.tier)} />
-        <MiniStat label="Status" value={statusLabel} />
+      <div className="mt-4 grid grid-cols-2 gap-2.5">
+        <MiniStat label="Bậc rương" value={getChestTierLabel(chestView.tier)} />
+        <MiniStat label="Trạng thái" value={statusLabel} />
       </div>
     </CardShell>
   );
@@ -879,7 +905,7 @@ const RewardChestCard = ({ data }: { data: QuestsPageData }) => {
 
 const WeekActivityCard = ({ data }: { data: QuestsPageData }) => {
   return (
-    <CardShell className="p-5">
+    <CardShell className="p-4">
       <div className="mb-4 flex items-center gap-3">
         <div className="flex size-11 items-center justify-center rounded-2xl bg-[#e8f5ff] text-[#1486CC] dark:bg-[#1c3547] dark:text-sky-300">
           <CalendarDays className="size-5" strokeWidth={2.8} />
@@ -890,16 +916,16 @@ const WeekActivityCard = ({ data }: { data: QuestsPageData }) => {
         </div>
       </div>
 
-      <div className="grid grid-cols-7 gap-2">
+      <div className="grid grid-cols-7 gap-1.5 sm:gap-2">
         {data.summary.weekActivity.map((day) => (
           <div key={day.day} className="text-center">
             <p className="text-[11px] font-black uppercase text-slate-400">{day.day}</p>
             <div
               className={cn(
-                "mt-2 flex aspect-square items-center justify-center rounded-2xl border-2 text-sm font-black",
+                "mt-2 flex aspect-square items-center justify-center rounded-xl border-2 text-sm font-black transition-transform hover:scale-105 sm:rounded-2xl",
                 day.completed
                   ? "border-emerald-200 bg-emerald-50 text-emerald-500 dark:border-emerald-900/60 dark:bg-emerald-950/30 dark:text-emerald-300"
-                  : "border-slate-200 bg-slate-50 text-slate-300 dark:border-[#20313a] dark:bg-[#10191d] dark:text-slate-600",
+                  : "border-slate-200 bg-slate-50 text-slate-300 dark:border-[#2a4654] dark:bg-[#0d171b] dark:text-slate-500",
               )}
             >
               {day.completed ? <Check className="size-4" strokeWidth={3} /> : "-"}
@@ -913,7 +939,7 @@ const WeekActivityCard = ({ data }: { data: QuestsPageData }) => {
 
 const TipCard = () => {
   return (
-    <CardShell className="p-5">
+    <CardShell className="p-4">
       <div className="flex items-start gap-4">
         <div className="flex size-12 shrink-0 items-center justify-center rounded-2xl bg-emerald-50 text-emerald-500 dark:bg-emerald-950/30 dark:text-emerald-300">
           <Lightbulb className="size-6" strokeWidth={2.8} />
@@ -943,7 +969,7 @@ const LongTermQuestCard = ({ quest }: { quest: ResolvedQuest }) => {
       <div className="relative space-y-5">
         <div className="flex items-start gap-4">
           <div className={cn("flex size-14 shrink-0 items-center justify-center rounded-2xl border-2", iconTone)}>
-            <QuestIcon icon={quest.icon} className="size-7" strokeWidth={2.6} />
+            <QuestIcon icon={quest.icon} className="size-5.5 sm:size-7" strokeWidth={2.6} />
           </div>
           <div className="min-w-0 flex-1">
             <p className="text-xs font-black uppercase tracking-[0.18em] text-slate-400">{view.eyebrow}</p>
@@ -981,11 +1007,11 @@ const LongTermQuestCard = ({ quest }: { quest: ResolvedQuest }) => {
 
         <div className="grid gap-3 sm:grid-cols-2">
           <div className="rounded-2xl border-2 border-white/80 bg-white/70 p-3 dark:border-[#20313a] dark:bg-[#10191d]/60">
-            <p className="text-[11px] font-black uppercase tracking-[0.18em] text-slate-400">Deadline</p>
+            <p className="text-[11px] font-black uppercase tracking-[0.18em] text-slate-400">Hạn chót</p>
             <p className="mt-1 text-sm font-black text-slate-900 dark:text-white">{view.deadline}</p>
           </div>
           <div className="rounded-2xl border-2 border-white/80 bg-white/70 p-3 dark:border-[#20313a] dark:bg-[#10191d]/60">
-            <p className="text-[11px] font-black uppercase tracking-[0.18em] text-slate-400">Badge</p>
+            <p className="text-[11px] font-black uppercase tracking-[0.18em] text-slate-400">Huy hiệu</p>
             <p className="mt-1 text-sm font-black text-slate-900 dark:text-white">{view.badgeLabel}</p>
           </div>
         </div>
@@ -1007,8 +1033,12 @@ const Toast = ({ toast }: { toast: ToastState }) => {
   return (
     <div
       className={cn(
-        "quest-toast-pop fixed bottom-5 right-5 z-50 max-w-sm rounded-3xl border-2 bg-white p-4 shadow-[0_18px_40px_rgba(15,23,42,0.18)] dark:bg-[#141f23]",
-        toast.tone === "success" ? "border-emerald-200 dark:border-emerald-900/60" : "border-[#d8ecfb] dark:border-[#20313a]",
+        "quest-toast-pop fixed bottom-4 left-4 right-4 z-50 rounded-3xl border-2 bg-white p-4 shadow-[0_18px_40px_rgba(15,23,42,0.18)] dark:bg-[#141f23] sm:bottom-5 sm:left-auto sm:max-w-sm",
+        toast.tone === "success"
+          ? "border-emerald-200 dark:border-emerald-900/60"
+          : toast.tone === "error"
+            ? "border-rose-200 dark:border-rose-900/60"
+            : "border-[#d8ecfb] dark:border-[#20313a]",
       )}
     >
       <p className="text-sm font-black text-slate-900 dark:text-white">{toast.title}</p>
@@ -1018,7 +1048,7 @@ const Toast = ({ toast }: { toast: ToastState }) => {
 };
 
 const DemoStateShell = ({ children }: { children: ReactNode }) => {
-  return <div className="mx-auto w-full max-w-[1240px] pb-10 xl:pb-14">{children}</div>;
+  return <div className="mx-auto w-full max-w-[1320px] px-3 pb-10 sm:px-4 xl:px-0 xl:pb-14">{children}</div>;
 };
 
 const LoadingBlock = ({ className }: { className?: string }) => {
@@ -1028,11 +1058,11 @@ const LoadingBlock = ({ className }: { className?: string }) => {
 const QuestsLoadingState = () => {
   return (
     <DemoStateShell>
-      <div className="grid gap-6 xl:grid-cols-[minmax(0,1fr)_360px] xl:items-start">
-        <div className="space-y-6">
+      <div className="grid gap-4 sm:gap-5 xl:grid-cols-[minmax(0,840px)_330px] xl:items-start xl:justify-center">
+        <div className="space-y-3.5 sm:space-y-4">
           <LoadingBlock className="h-[380px]" />
           <CardShell>
-            <div className="space-y-4">
+            <div className="space-y-3.5 sm:space-y-4">
               <LoadingBlock className="h-10 w-64" />
               <LoadingBlock className="h-32" />
               <LoadingBlock className="h-32" />
@@ -1057,9 +1087,9 @@ const QuestsEmptyState = () => {
         <div className="mx-auto flex size-20 items-center justify-center rounded-[28px] bg-[#e8f5ff] text-[#1486CC] dark:bg-[#1c3547] dark:text-sky-300">
           <PackageOpen className="size-10" strokeWidth={2.8} />
         </div>
-        <h1 className="mt-5 text-3xl font-black text-slate-900 dark:text-white">Hôm nay chưa có nhiệm vụ mới</h1>
+        <h1 className="mt-5 text-3xl font-black text-slate-900 dark:text-white">Chưa có dữ liệu nhiệm vụ hôm nay</h1>
         <p className="mx-auto mt-3 max-w-xl text-base font-semibold leading-7 text-slate-500 dark:text-slate-400">
-          Đây là empty state để kiểm tra UI khi hệ thống chưa trả về nhiệm vụ. Người dùng vẫn có đường quay lại học.
+          Bắt đầu một bài học để Robogo cập nhật tiến độ và mở nhiệm vụ trong ngày.
         </p>
         <div className="mt-6 flex flex-col justify-center gap-3 sm:flex-row">
           <Button asChild variant="primary" className="h-12 rounded-2xl px-6 font-black">
@@ -1081,9 +1111,9 @@ const QuestsErrorState = () => {
         <div className="mx-auto flex size-20 items-center justify-center rounded-[28px] bg-rose-50 text-rose-500 dark:bg-rose-950/30 dark:text-rose-300">
           <RotateCcw className="size-10" strokeWidth={2.8} />
         </div>
-        <h1 className="mt-5 text-3xl font-black text-slate-900 dark:text-white">Không tải được nhiệm vụ</h1>
+        <h1 className="mt-5 text-3xl font-black text-slate-900 dark:text-white">Chưa tải được nhiệm vụ hôm nay</h1>
         <p className="mx-auto mt-3 max-w-xl text-base font-semibold leading-7 text-slate-500 dark:text-slate-400">
-          Đây là error state dùng để kiểm tra fallback khi API nhiệm vụ lỗi ở Phase 5. Trang không crash và có nút thử lại.
+          Robogo chưa lấy được tiến độ hiện tại. Thử lại sau vài giây hoặc quay lại học trước.
         </p>
         <div className="mt-6 flex flex-col justify-center gap-3 sm:flex-row">
           <Button asChild variant="primary" className="h-12 rounded-2xl px-6 font-black">
@@ -1098,7 +1128,7 @@ const QuestsErrorState = () => {
   );
 };
 
-export const QuestsClient = ({ initialData, demoState = "normal", presetName = "almostPerfect" }: QuestsClientProps) => {
+export const QuestsClient = ({ initialData, demoState = "normal", presetName = "empty" }: QuestsClientProps) => {
   const storageSnapshot = useSyncExternalStore(
     subscribeToQuestStorage,
     getQuestStorageSnapshot,
@@ -1120,22 +1150,33 @@ export const QuestsClient = ({ initialData, demoState = "normal", presetName = "
     window.setTimeout(() => setToast(null), 2400);
   };
 
-  const handleClaimQuest = (quest: ResolvedQuest) => {
+  const handleClaimQuest = async (quest: ResolvedQuest) => {
     if (!quest.canClaim) return;
 
-    void claimQuestReward(quest.id);
-    showToast({
-      title: "Đã nhận thưởng",
-      description: `${quest.reward.label} từ nhiệm vụ “${quest.title}” đã được lưu cho hôm nay.`,
-      tone: "success",
-    });
+    try {
+      const result = await claimQuestReward(quest.id);
+
+      showToast({
+        title: "Đã nhận thưởng",
+        description: result?.alreadyClaimed
+          ? "Bạn đã nhận phần thưởng này hôm nay."
+          : `Bạn nhận được ${result?.rewardXp ?? result?.reward?.xp ?? quest.reward.label}.`,
+        tone: "success",
+      });
+    } catch {
+      showToast({
+        title: "Chưa thể nhận thưởng",
+        description: "Phần thưởng sẽ mở khi dữ liệu học tập thật được ghi nhận.",
+        tone: "error",
+      });
+    }
   };
 
   const handleResetDemo = () => {
     clearQuestStorage();
     showToast({
-      title: "Đã reset demo",
-      description: "Trạng thái nhận thưởng theo ngày trong localStorage đã được xóa để test lại Phase 5.",
+      title: "Đã xóa trạng thái thử",
+      description: "Trạng thái nhận thưởng tạm thời đã được làm mới.",
       tone: "info",
     });
   };
@@ -1145,18 +1186,18 @@ export const QuestsClient = ({ initialData, demoState = "normal", presetName = "
   if (demoState === "error") return <QuestsErrorState />;
 
   return (
-    <div className="mx-auto w-full max-w-[1240px] pb-10 xl:pb-14">
+    <div className="mx-auto w-full max-w-[1320px] px-3 pb-10 sm:px-4 xl:px-0 xl:pb-14">
       <QuestPolishStyles />
-      <div className="grid gap-6 xl:grid-cols-[minmax(0,1fr)_360px] xl:items-start">
-        <div className="space-y-6">
+      <div className="grid gap-4 sm:gap-5 xl:grid-cols-[minmax(0,840px)_330px] xl:items-start xl:justify-center">
+        <div className="space-y-3.5 sm:space-y-4">
           <QuestsHero data={data} onResetDemo={handleResetDemo} presetName={presetName} />
           <QuestMobileOverview data={data} />
 
           <CardShell>
             <SectionHeader
-              eyebrow="Daily quests"
-              title="Nhiệm vụ hằng ngày"
-              description="Ba nhiệm vụ nhỏ tạo thành vòng lặp học mỗi ngày: vào học, học chính xác, giữ đủ thời gian."
+              eyebrow="Mục tiêu mỗi ngày"
+              title="Ba nhiệm vụ nhỏ"
+              description="Vào học, học chính xác và giữ đủ thời gian để mở rương thưởng hôm nay."
               rightSlot={
                 <SurfacePill className="border-[#d8ecfb] bg-[#f6fbff] text-[#1486CC] dark:border-[#20313a] dark:bg-[#10191d] dark:text-sky-300">
                   <BadgeCheck className="size-4" strokeWidth={3} />
@@ -1164,7 +1205,7 @@ export const QuestsClient = ({ initialData, demoState = "normal", presetName = "
                 </SurfacePill>
               }
             />
-            <div className="space-y-4">
+            <div className="space-y-3.5 sm:space-y-4">
               {data.dailyQuests.map((quest, index) => (
                 <QuestCard key={quest.id} quest={quest} delayIndex={index} onClaim={handleClaimQuest} />
               ))}
@@ -1175,9 +1216,9 @@ export const QuestsClient = ({ initialData, demoState = "normal", presetName = "
 
           <CardShell>
             <SectionHeader
-              eyebrow="Long-term goals"
+              eyebrow="Mục tiêu dài hạn"
               title="Mục tiêu tuần và tháng"
-              description="Weekly và Monthly tạo lý do quay lại: có deadline, milestone, huy hiệu preview và phần thưởng dài hạn."
+              description="Mục tiêu tuần và tháng giúp bạn giữ động lực quay lại học đều hơn."
             />
             <div className="grid gap-4 lg:grid-cols-2">
               {longTermQuests.map((quest) => (
@@ -1192,7 +1233,7 @@ export const QuestsClient = ({ initialData, demoState = "normal", presetName = "
           </div>
         </div>
 
-        <QuestSidebar data={data} className="hidden xl:sticky xl:top-8 xl:block" />
+        <QuestSidebar data={data} className="hidden xl:sticky xl:top-6 xl:block" />
       </div>
       {toast ? <Toast toast={toast} /> : null}
     </div>

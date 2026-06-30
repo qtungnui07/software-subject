@@ -135,6 +135,53 @@ export const lessonXpClaims = pgTable(
     })
 );
 
+export const questDailyStats = pgTable(
+    "quest_daily_stats",
+    {
+        id: serial("id").primaryKey(),
+        userId: text("user_id").notNull(),
+        statDate: date("stat_date").notNull(),
+        lessonsCompleted: integer("lessons_completed").notNull().default(0),
+        xpEarned: integer("xp_earned").notNull().default(0),
+        minutesLearned: integer("minutes_learned").notNull().default(0),
+        bestAccuracy: integer("best_accuracy").notNull().default(0),
+        createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+        updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
+    },
+    (table) => ({
+        userDateIdx: uniqueIndex("quest_daily_stats_user_date_idx").on(
+            table.userId,
+            table.statDate
+        ),
+        userIdx: index("quest_daily_stats_user_idx").on(table.userId),
+        statDateIdx: index("quest_daily_stats_stat_date_idx").on(table.statDate),
+    })
+);
+
+export const questRewardClaims = pgTable(
+    "quest_reward_claims",
+    {
+        id: serial("id").primaryKey(),
+        userId: text("user_id").notNull(),
+        questId: text("quest_id").notNull(),
+        claimDate: date("claim_date").notNull(),
+        rewardType: text("reward_type").notNull().default("quest"),
+        rewardXp: integer("reward_xp").notNull().default(0),
+        createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+    },
+    (table) => ({
+        userQuestDateIdx: uniqueIndex("quest_reward_claims_user_quest_date_idx").on(
+            table.userId,
+            table.questId,
+            table.claimDate
+        ),
+        userDateIdx: index("quest_reward_claims_user_date_idx").on(
+            table.userId,
+            table.claimDate
+        ),
+    })
+);
+
 export const UserProgressRelations = relations(userProgress, ({ one, many }) => ({
     activeCourse: one(courses, {
         fields: [userProgress.activeCourseId],
@@ -150,6 +197,8 @@ export const UserProgressRelations = relations(userProgress, ({ one, many }) => 
     }),
     xpEvents: many(xpEvents),
     lessonXpClaims: many(lessonXpClaims),
+    questDailyStats: many(questDailyStats),
+    questRewardClaims: many(questRewardClaims),
 }));
 
 export const userStreaksRelations = relations(userStreaks, ({ many, one }) => ({
@@ -188,6 +237,20 @@ export const lessonXpClaimsRelations = relations(lessonXpClaims, ({ one }) => ({
     }),
 }));
 
+export const questDailyStatsRelations = relations(questDailyStats, ({ one }) => ({
+    userProgress: one(userProgress, {
+        fields: [questDailyStats.userId],
+        references: [userProgress.userId],
+    }),
+}));
+
+export const questRewardClaimsRelations = relations(questRewardClaims, ({ one }) => ({
+    userProgress: one(userProgress, {
+        fields: [questRewardClaims.userId],
+        references: [userProgress.userId],
+    }),
+}));
+
 export type UserStreak = typeof userStreaks.$inferSelect;
 export type NewUserStreak = typeof userStreaks.$inferInsert;
 export type DailyStreakLog = typeof dailyStreakLogs.$inferSelect;
@@ -198,3 +261,7 @@ export type XpEvent = typeof xpEvents.$inferSelect;
 export type NewXpEvent = typeof xpEvents.$inferInsert;
 export type LessonXpClaim = typeof lessonXpClaims.$inferSelect;
 export type NewLessonXpClaim = typeof lessonXpClaims.$inferInsert;
+export type QuestDailyStat = typeof questDailyStats.$inferSelect;
+export type NewQuestDailyStat = typeof questDailyStats.$inferInsert;
+export type QuestRewardClaim = typeof questRewardClaims.$inferSelect;
+export type NewQuestRewardClaim = typeof questRewardClaims.$inferInsert;
