@@ -111,7 +111,7 @@ const getMilestoneLabel = (minutes: number) => {
   return "Chưa đạt chuỗi";
 };
 
-const curveBetween = (from: LessonNode, to: LessonNode) => {
+const curveBetween = (from: { x: number; y: number }, to: { x: number; y: number }) => {
   const middleY = from.y + (to.y - from.y) / 2;
   const pull = Math.abs(to.x - from.x) < 20 ? 78 : 26;
   const direction = to.x >= from.x ? 1 : -1;
