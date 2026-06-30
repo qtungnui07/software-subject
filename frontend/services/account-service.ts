@@ -5,6 +5,7 @@ import { backendRequest } from "@/services/backend-client";
 export type Account = {
   name: string;
   email: string;
+  imageSrc: string;
   isClerk: boolean;
 };
 
