@@ -3,7 +3,6 @@ import "server-only";
 import { auth } from "@/auth";
 import {
   defaultQuestSnapshotPreset,
-  defaultWeekActivity,
   questSnapshotPresets,
   QUEST_TIMEZONE,
   type QuestSnapshotPresetName,
@@ -11,6 +10,7 @@ import {
 import { getRecentStreakLogs, getUserStreak } from "@/db/queries";
 import { buildQuestsPageData } from "@/lib/quests/quest-adapter";
 import { DEFAULT_STREAK_TIME_ZONE, getDateKey, normalizeDateKey } from "@/lib/streak";
+import { getQuestTodayState, type QuestTodayStateResult } from "@/services/quest-service";
 import { getUserXpSummary, type UserXpProfileSummary } from "@/services/xp-service";
 import type {
   QuestDataSource,
@@ -29,6 +29,15 @@ type RecentStreakLog = {
   studyDate: unknown;
   completedLessons?: unknown;
   earnedXp?: unknown;
+};
+
+const SHOULD_LOG_QUEST_INTEGRATION =
+  process.env.NEXT_PUBLIC_SHOW_QUEST_DEBUG === "true";
+
+const logQuestIntegrationWarning = (message: string, error: unknown) => {
+  if (!SHOULD_LOG_QUEST_INTEGRATION) return;
+
+  console.warn(message, error);
 };
 
 const toSafeNumber = (value: unknown, fallback = 0) => {
@@ -58,7 +67,10 @@ const getCurrentQuestUser = async (): Promise<QuestIntegrationUser | null> => {
       };
     }
   } catch (error) {
-    console.warn("Robogo quests could not read auth session. Falling back safely.", error);
+    logQuestIntegrationWarning(
+      "Robogo quests could not read auth session. Falling back safely.",
+      error,
+    );
   }
 
   if (process.env.NODE_ENV !== "production") {
@@ -103,12 +115,23 @@ const shiftDateKey = (dateKey: string, offsetDays: number) => {
   return date.toISOString().slice(0, 10);
 };
 
+const buildEmptyWeekActivity = (todayKey: string): WeekActivityDay[] => {
+  return Array.from({ length: 7 }, (_, index) => {
+    const dateKey = shiftDateKey(todayKey, index - 6);
+
+    return {
+      day: getWeekdayLabel(dateKey),
+      completed: false,
+    };
+  });
+};
+
 const buildWeekActivityFromLogs = (
   logs: RecentStreakLog[],
   todayKey: string,
 ): WeekActivityDay[] => {
   if (logs.length === 0) {
-    return defaultWeekActivity;
+    return buildEmptyWeekActivity(todayKey);
   }
 
   const completedByDate = new Map<string, boolean>();
@@ -117,11 +140,9 @@ const buildWeekActivityFromLogs = (
     const dateKey = normalizeLogDate(log.studyDate);
 
     if (!dateKey) return;
+    const completedLessons = toSafeNumber(log.completedLessons, 0);
 
-    const completedLessons = toSafeNumber(log.completedLessons);
-    const earnedXp = toSafeNumber(log.earnedXp);
-
-    completedByDate.set(dateKey, completedLessons > 0 || earnedXp > 0);
+    completedByDate.set(dateKey, completedLessons > 0);
   });
 
   return Array.from({ length: 7 }, (_, index) => {
@@ -134,40 +155,29 @@ const buildWeekActivityFromLogs = (
   });
 };
 
-const inferBestAccuracyFromXp = (dailyXp: number) => {
-  if (dailyXp >= 25) return 86;
-  if (dailyXp >= 10) return 80;
-
-  return 0;
-};
-
-const inferMinutesFromProgress = (dailyXp: number, lessonsCompletedToday: number) => {
-  if (lessonsCompletedToday > 0) {
-    return Math.max(10, lessonsCompletedToday * 10);
-  }
-
-  if (dailyXp > 0) {
-    return Math.min(10, Math.max(4, Math.round(dailyXp / 3)));
-  }
-
-  return 0;
-};
-
 const getSyncStatus = ({
   source,
   isDemoUser,
   hasXpSummary,
   hasStreak,
+  hasQuestService,
 }: {
   source: QuestDataSource;
   isDemoUser?: boolean;
   hasXpSummary: boolean;
   hasStreak: boolean;
+  hasQuestService: boolean;
 }): QuestSyncStatus => {
   const lastSyncedAt = new Date().toISOString();
 
   if (source === "api") {
-    const parts = [hasXpSummary ? "XP" : null, hasStreak ? "Streak" : null].filter(Boolean).join("/");
+    const parts = [
+      hasQuestService ? "Quest" : null,
+      hasXpSummary ? "XP" : null,
+      hasStreak ? "Streak" : null,
+    ]
+      .filter(Boolean)
+      .join("/");
 
     return {
       source,
@@ -184,7 +194,7 @@ const getSyncStatus = ({
     return {
       source,
       label: "Fallback an toàn",
-      message: "Không lấy được XP/Streak ổn định, UI vẫn chạy bằng dữ liệu tạm.",
+      message: "Không lấy được Quest/XP/Streak ổn định, UI vẫn chạy bằng dữ liệu tạm.",
       lastSyncedAt,
       isDemoUser,
     };
@@ -212,6 +222,7 @@ export const getIntegratedQuestsPageData = async (
         source: "fallback",
         hasXpSummary: false,
         hasStreak: false,
+        hasQuestService: false,
       }),
     });
   }
@@ -220,11 +231,15 @@ export const getIntegratedQuestsPageData = async (
   let xpSummary: UserXpProfileSummary | null = null;
   let currentStreak = 0;
   let recentActivity: RecentStreakLog[] = [];
+  let questTodayState: QuestTodayStateResult | null = null;
 
   try {
     xpSummary = await getUserXpSummary({ userId: user.id });
   } catch (error) {
-    console.warn("Robogo quests could not load XP summary. Falling back where needed.", error);
+    logQuestIntegrationWarning(
+      "Robogo quests could not load XP summary. Falling back where needed.",
+      error,
+    );
   }
 
   try {
@@ -236,28 +251,49 @@ export const getIntegratedQuestsPageData = async (
     currentStreak = toSafeNumber(streak?.currentStreak);
     recentActivity = logs;
   } catch (error) {
-    console.warn("Robogo quests could not load streak data. Falling back where needed.", error);
+    logQuestIntegrationWarning(
+      "Robogo quests could not load streak data. Falling back where needed.",
+      error,
+    );
+  }
+
+  try {
+    questTodayState = await getQuestTodayState({
+      userId: user.id,
+      currentStreak,
+      dateKey: todayKey,
+    });
+  } catch (error) {
+    logQuestIntegrationWarning(
+      "Robogo quests could not load quest service state. Falling back where needed.",
+      error,
+    );
   }
 
   const hasXpSummary = Boolean(xpSummary);
   const hasStreak = currentStreak > 0 || recentActivity.length > 0;
-  const dataSource: QuestDataSource = hasXpSummary || hasStreak ? "api" : "fallback";
+  const hasQuestService = questTodayState?.source === "db";
+  const dataSource: QuestDataSource = hasQuestService || hasXpSummary || hasStreak ? "api" : "fallback";
+
   const todayLog = recentActivity.find((log) => normalizeLogDate(log.studyDate) === todayKey);
-  const dailyXp = toSafeNumber(xpSummary?.dailyXp, fallbackSnapshot.xpEarnedToday);
-  const lessonsCompletedToday = Math.max(
-    toSafeNumber(todayLog?.completedLessons),
-    dailyXp > 0 ? 1 : fallbackSnapshot.lessonsCompletedToday,
-  );
-  const bestAccuracyToday = inferBestAccuracyFromXp(dailyXp) || fallbackSnapshot.bestAccuracyToday;
-  const minutesLearnedToday = inferMinutesFromProgress(dailyXp, lessonsCompletedToday) || fallbackSnapshot.minutesLearnedToday;
-  const snapshot: UserQuestSnapshot = {
+  const isXpForToday = xpSummary?.currentDay === todayKey;
+  const dailyXp = isXpForToday ? toSafeNumber(xpSummary?.dailyXp, 0) : 0;
+  const lessonsCompletedToday = toSafeNumber(todayLog?.completedLessons, 0);
+  const fallbackDataTruthSnapshot: UserQuestSnapshot = {
     lessonsCompletedToday,
-    bestAccuracyToday,
-    minutesLearnedToday,
+    bestAccuracyToday: 0,
+    minutesLearnedToday: 0,
     xpEarnedToday: dailyXp,
-    currentStreak: currentStreak || fallbackSnapshot.currentStreak,
+    currentStreak,
     claimedQuestIds: [],
   };
+  const shouldUseQuestServiceState = questTodayState?.source === "db";
+  const snapshot = shouldUseQuestServiceState
+    ? questTodayState.snapshot
+    : fallbackDataTruthSnapshot;
+  const weekActivity = shouldUseQuestServiceState
+    ? questTodayState.weekActivity
+    : buildWeekActivityFromLogs(recentActivity, todayKey);
 
   return buildQuestsPageData(snapshot, {
     dataSource,
@@ -266,7 +302,8 @@ export const getIntegratedQuestsPageData = async (
       isDemoUser: user.isDemoUser,
       hasXpSummary,
       hasStreak,
+      hasQuestService,
     }),
-    weekActivity: buildWeekActivityFromLogs(recentActivity, todayKey),
+    weekActivity,
   });
 };

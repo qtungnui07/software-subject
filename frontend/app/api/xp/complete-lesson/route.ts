@@ -1,6 +1,13 @@
 import { NextResponse } from "next/server";
 
 import { auth } from "@/auth";
+import { recordQuestLessonProgress } from "@/services/quest-service";
+import {
+  getQuestProgressSkipCode,
+  normalizeQuestAccuracy,
+  normalizeQuestDurationSeconds,
+  shouldRecordQuestProgress,
+} from "@/services/quest-progress-policy";
 import { completeLessonXp } from "@/services/xp-service";
 
 export const dynamic = "force-dynamic";
@@ -8,6 +15,7 @@ export const dynamic = "force-dynamic";
 type CompleteLessonXpRequestBody = {
   lessonId?: unknown;
   accuracy?: unknown;
+  durationSeconds?: unknown;
 };
 
 const parseAccuracy = (value: unknown) => {
@@ -26,9 +34,23 @@ const parseAccuracy = (value: unknown) => {
   return null;
 };
 
+const parseDurationSeconds = (value: unknown) => {
+  return normalizeQuestDurationSeconds(value);
+};
+
+const SHOULD_LOG_XP_QUEST_BRIDGE =
+  process.env.NEXT_PUBLIC_SHOW_QUEST_DEBUG === "true";
+
+const logXpQuestBridgeWarning = (message: string, error: unknown) => {
+  if (!SHOULD_LOG_XP_QUEST_BRIDGE) return;
+
+  console.warn(message, error);
+};
+
 const parseBody = (body: CompleteLessonXpRequestBody) => {
   const lessonId = typeof body.lessonId === "string" ? body.lessonId.trim() : "";
   const accuracy = parseAccuracy(body.accuracy);
+  const durationSeconds = parseDurationSeconds(body.durationSeconds);
 
   if (!lessonId) {
     return {
@@ -50,7 +72,40 @@ const parseBody = (body: CompleteLessonXpRequestBody) => {
     error: null,
     lessonId,
     accuracy,
+    durationSeconds,
   };
+};
+
+const recordQuestProgressAfterLesson = async ({
+  userId,
+  earnedXp,
+  accuracy,
+  durationSeconds,
+}: {
+  userId: string;
+  earnedXp: number;
+  accuracy: number;
+  durationSeconds: number;
+}) => {
+  try {
+    return await recordQuestLessonProgress({
+      userId,
+      earnedXp,
+      accuracy,
+      durationSeconds,
+    });
+  } catch (error) {
+    logXpQuestBridgeWarning(
+      "Robogo XP completion could not record quest progress. Lesson completion remains valid.",
+      error,
+    );
+
+    return {
+      success: true as const,
+      skipped: true,
+      code: "QUEST_PROGRESS_RECORD_FAILED",
+    };
+  }
 };
 
 const getCurrentXpUser = async () => {
@@ -99,9 +154,23 @@ export async function POST(request: Request) {
       lessonId: parsedBody.lessonId,
       accuracy: parsedBody.accuracy,
     });
+    const shouldRecordQuestProgressForLesson = shouldRecordQuestProgress(result);
+    const questProgress = shouldRecordQuestProgressForLesson
+      ? await recordQuestProgressAfterLesson({
+          userId: currentUser.id,
+          earnedXp: result.earnedXp,
+          accuracy: normalizeQuestAccuracy(result.accuracy),
+          durationSeconds: parsedBody.durationSeconds,
+        })
+      : {
+          success: true as const,
+          skipped: true,
+          code: getQuestProgressSkipCode(result) ?? "QUEST_PROGRESS_NOT_RECORDED",
+        };
 
     return NextResponse.json({
       ...result,
+      questProgress,
       isDemoUser: currentUser.isDemoUser,
     });
   } catch (error) {
