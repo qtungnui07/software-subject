@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { ClerkProvider } from "@clerk/nextjs";
 import { ToasterLoader } from "@/components/toaster-loader";
+import { ThemeListener } from "@/components/theme-listener";
 import "./globals.css";
 
 import Script from "next/script";
@@ -23,6 +24,7 @@ export default function RootLayout({
         </head>
         <body className="min-h-screen flex flex-col">
           <ToasterLoader />
+          <ThemeListener />
           {children}
         </body>
       </html>

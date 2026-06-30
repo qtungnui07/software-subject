@@ -34,15 +34,7 @@ export const UserProgress = ({
       <StreakWidget className="h-14 rounded-[18px]" />
 
       <div
-        className="flex h-14 items-center gap-x-2 rounded-[18px] border-2 border-orange-100 bg-orange-50 px-3 text-sm font-black text-orange-600 shadow-sm dark:border-orange-950/40 dark:bg-orange-950/20 dark:text-orange-400"
-        aria-label="Kinh nghiệm hiện tại"
-      >
-        <Image src="/points.svg" height={26} width={26} alt="XP" />
-        <span>{points}</span>
-      </div>
-
-      <div
-        className="flex h-14 items-center gap-x-2 rounded-[18px] border-2 border-rose-100 bg-rose-50 px-3 text-sm font-black text-rose-500 shadow-sm dark:border-rose-950/40 dark:bg-rose-950/20 dark:text-rose-400"
+        className="flex h-14 items-center gap-x-2 rounded-[18px] border-2 border-rose-100 dark:border-rose-950/40 bg-rose-50 dark:bg-rose-950/20 px-3 text-sm font-black text-rose-500 dark:text-rose-400 shadow-sm"
         aria-label="Số tim còn lại"
       >
         <Image src="/heart.svg" height={25} width={25} alt="Tim" />
