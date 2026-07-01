@@ -15,11 +15,11 @@ const request = async (path: string, init?: RequestInit): Promise<ApiResponse> =
   };
 };
 
-const assert = (condition: unknown, message: string): asserts condition => {
+function assert(condition: unknown, message: string): asserts condition {
   if (!condition) {
     throw new Error(message);
   }
-};
+}
 
 const assertBodyIncludes = (body: string, pattern: string, label: string) => {
   assert(
