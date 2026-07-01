@@ -7,6 +7,7 @@ import { CheckCircle2, XCircle, RefreshCw, Home, Heart } from "lucide-react";
 
 import { LessonHeader } from "@/components/lesson-header";
 import { ExitModal } from "@/components/exit-modal";
+import { LessonStudyTimer } from "@/components/lesson-study-timer";
 import { LessonResultScreen } from "@/components/lesson-result-screen";
 import { Button } from "@/components/ui/button";
 import { lessonNodes } from "@/constants/lessons";
@@ -132,6 +133,7 @@ const LessonContent = () => {
   const [streakResult, setStreakResult] = useState<StreakNotificationInput | null>(null);
   const [completionBlockedMessage, setCompletionBlockedMessage] = useState<string | null>(null);
   const hasHandledCompletionRef = useRef(false);
+  const studyDurationSecondsRef = useRef(0);
 
   const currentQuestion = MOCK_QUESTIONS[currentQuestionIndex];
   const progress = (currentQuestionIndex / MOCK_QUESTIONS.length) * 100;
@@ -194,6 +196,7 @@ const LessonContent = () => {
           body: JSON.stringify({
             lessonId: xpLessonId,
             accuracy,
+            durationSeconds: studyDurationSecondsRef.current,
           }),
         });
 
@@ -300,6 +303,7 @@ const LessonContent = () => {
     setStreakResult(null);
     setCompletionBlockedMessage(null);
     hasHandledCompletionRef.current = false;
+    studyDurationSecondsRef.current = 0;
   };
 
   // Redirect to learn page
@@ -526,6 +530,12 @@ const LessonContent = () => {
         isOpen={isExitModalOpen}
         onClose={() => setIsExitModalOpen(false)}
         onConfirm={redirectToLearn}
+      />
+      <LessonStudyTimer
+        isActive={!isFinished && hearts > 0 && !shouldRedirectToLearn}
+        onActiveSecondsChange={(seconds) => {
+          studyDurationSecondsRef.current = seconds;
+        }}
       />
     </div>
   );

@@ -1,3 +1,5 @@
+"use client";
+
 import Image from "next/image";
 import Link from "next/link";
 
@@ -6,14 +8,13 @@ import { cn } from "@/lib/utils";
 
 import { MobileSidebar } from "./mobile-sidebar";
 import { StreakWidget } from "./streak/streak-widget";
+import { useStudyTimeMinutes } from "./use-study-time-summary";
 
 type Props = {
   isLoggedIn?: boolean;
   hearts?: number;
   points?: number;
 };
-
-const todayMinutes = 43;
 
 const tierStyles = {
   none: "border-slate-200 bg-slate-50 text-slate-500",
@@ -22,7 +23,8 @@ const tierStyles = {
   gold: "border-amber-200 bg-amber-50 text-amber-700",
 };
 
-export const MobileHeader = ({ isLoggedIn = false, hearts = 5, points = 0 }: Props) => {
+export const MobileHeader = ({ isLoggedIn = false, hearts = 5 }: Props) => {
+  const todayMinutes = useStudyTimeMinutes(isLoggedIn);
   const studyTier = getStudyTier(todayMinutes);
 
   return (
@@ -75,4 +77,3 @@ export const MobileHeader = ({ isLoggedIn = false, hearts = 5, points = 0 }: Pro
     </nav>
   );
 };
-

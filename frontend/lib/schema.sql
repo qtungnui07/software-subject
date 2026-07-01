@@ -43,6 +43,19 @@ CREATE TABLE IF NOT EXISTS user_xp_summary (
   updated_at          TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 
+CREATE TABLE IF NOT EXISTS study_time_summary (
+  user_id             TEXT PRIMARY KEY,
+  total_seconds       INTEGER NOT NULL DEFAULT 0,
+  today_seconds       INTEGER NOT NULL DEFAULT 0,
+  current_day         DATE NOT NULL DEFAULT ((NOW() AT TIME ZONE 'Asia/Ho_Chi_Minh')::DATE),
+  daily_goal_seconds  INTEGER NOT NULL DEFAULT 3600,
+  created_at          TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  updated_at          TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+CREATE INDEX IF NOT EXISTS study_time_summary_current_day_idx
+ON study_time_summary (current_day);
+
 CREATE TABLE IF NOT EXISTS xp_events (
   id              SERIAL PRIMARY KEY,
   user_id         TEXT NOT NULL,
@@ -81,4 +94,3 @@ ON lesson_xp_claims (user_id, lesson_id);
 
 CREATE INDEX IF NOT EXISTS lesson_xp_claims_user_idx
 ON lesson_xp_claims (user_id);
-

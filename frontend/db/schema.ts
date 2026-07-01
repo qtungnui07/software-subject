@@ -85,6 +85,22 @@ export const userXpSummary = pgTable("user_xp_summary", {
     updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
 });
 
+export const studyTimeSummary = pgTable(
+    "study_time_summary",
+    {
+        userId: text("user_id").primaryKey(),
+        totalSeconds: integer("total_seconds").notNull().default(0),
+        todaySeconds: integer("today_seconds").notNull().default(0),
+        currentDay: date("current_day").notNull(),
+        dailyGoalSeconds: integer("daily_goal_seconds").notNull().default(3600),
+        createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+        updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
+    },
+    (table) => ({
+        currentDayIdx: index("study_time_summary_current_day_idx").on(table.currentDay),
+    })
+);
+
 export const xpEvents = pgTable(
     "xp_events",
     {
@@ -195,6 +211,10 @@ export const UserProgressRelations = relations(userProgress, ({ one, many }) => 
         fields: [userProgress.userId],
         references: [userXpSummary.userId],
     }),
+    studyTimeSummary: one(studyTimeSummary, {
+        fields: [userProgress.userId],
+        references: [studyTimeSummary.userId],
+    }),
     xpEvents: many(xpEvents),
     lessonXpClaims: many(lessonXpClaims),
     questDailyStats: many(questDailyStats),
@@ -219,6 +239,13 @@ export const dailyStreakLogsRelations = relations(dailyStreakLogs, ({ one }) => 
 export const userXpSummaryRelations = relations(userXpSummary, ({ one }) => ({
     userProgress: one(userProgress, {
         fields: [userXpSummary.userId],
+        references: [userProgress.userId],
+    }),
+}));
+
+export const studyTimeSummaryRelations = relations(studyTimeSummary, ({ one }) => ({
+    userProgress: one(userProgress, {
+        fields: [studyTimeSummary.userId],
         references: [userProgress.userId],
     }),
 }));
@@ -257,6 +284,8 @@ export type DailyStreakLog = typeof dailyStreakLogs.$inferSelect;
 export type NewDailyStreakLog = typeof dailyStreakLogs.$inferInsert;
 export type UserXpSummary = typeof userXpSummary.$inferSelect;
 export type NewUserXpSummary = typeof userXpSummary.$inferInsert;
+export type StudyTimeSummary = typeof studyTimeSummary.$inferSelect;
+export type NewStudyTimeSummary = typeof studyTimeSummary.$inferInsert;
 export type XpEvent = typeof xpEvents.$inferSelect;
 export type NewXpEvent = typeof xpEvents.$inferInsert;
 export type LessonXpClaim = typeof lessonXpClaims.$inferSelect;

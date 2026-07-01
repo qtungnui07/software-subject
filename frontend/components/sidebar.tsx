@@ -10,6 +10,7 @@ import { CircleUser } from "lucide-react";
 
 import { SidebarItem } from "./sidebar-item";
 import { Button } from "@/components/ui/button";
+import { useStudyTimeMinutes } from "@/components/use-study-time-summary";
 
 import { getStudyTier } from "@/lib/study-tier";
 import { cn } from "@/lib/utils";
@@ -43,14 +44,7 @@ const routes = [
 ];
 
 
-const currentMinutes = 43;
 const goalMinutes = 60;
-const progressPercent = Math.min(
-  Math.round((currentMinutes / goalMinutes) * 100),
-  100,
-);
-
-const currentTier = getStudyTier(currentMinutes);
 
 const milestones = [
   {
@@ -77,6 +71,12 @@ export const Sidebar = ({ className, isLoggedIn = false }: Props) => {
   const pathname = usePathname();
   const [isMoreOpen, setIsMoreOpen] = useState(false);
   const { signOut } = useClerk();
+  const currentMinutes = useStudyTimeMinutes(isLoggedIn);
+  const progressPercent = Math.min(
+    Math.round((currentMinutes / goalMinutes) * 100),
+    100,
+  );
+  const currentTier = getStudyTier(currentMinutes);
 
   const handleHelp = () => {
     setIsMoreOpen(false);

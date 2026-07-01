@@ -31,6 +31,9 @@ const databaseUrl = process.env.DATABASE_URL;
 const apiKey = process.env.BACKEND_API_KEY;
 
 const sql = databaseUrl ? postgres(databaseUrl, { max: 5 }) : null;
+const VIETNAM_TIME_ZONE = "Asia/Ho_Chi_Minh";
+
+let studyTimeSchemaReady = false;
 
 const sendJson = (res, status, data) => {
   const body = JSON.stringify(data);
@@ -78,6 +81,33 @@ const requireDatabase = () => {
   if (!sql) {
     throw new Error("DATABASE_URL is not set");
   }
+};
+
+const ensureStudyTimeSchema = async () => {
+  requireDatabase();
+
+  if (studyTimeSchemaReady) {
+    return;
+  }
+
+  await sql`
+    create table if not exists study_time_summary (
+      user_id text primary key,
+      total_seconds integer not null default 0,
+      today_seconds integer not null default 0,
+      current_day date not null default ((now() at time zone 'Asia/Ho_Chi_Minh')::date),
+      daily_goal_seconds integer not null default 3600,
+      created_at timestamptz not null default now(),
+      updated_at timestamptz not null default now()
+    )
+  `;
+
+  await sql`
+    create index if not exists study_time_summary_current_day_idx
+    on study_time_summary (current_day)
+  `;
+
+  studyTimeSchemaReady = true;
 };
 
 const requireApiKey = (req) => {
@@ -348,6 +378,84 @@ const accountResponse = (user) => ({
   isClerk: Boolean(user.clerk_user_id),
 });
 
+const normalizeStudyTimeSummary = (row) => ({
+  userId: row.user_id,
+  totalSeconds: Number(row.total_seconds || 0),
+  todaySeconds: Number(row.today_seconds || 0),
+  dailyGoalSeconds: Number(row.daily_goal_seconds || 3600),
+  currentDay: row.current_day,
+  updatedAt: row.updated_at,
+});
+
+const getStudyTimeSummary = async (userId, database = sql) => {
+  await ensureStudyTimeSchema();
+  await findAccount(userId, database);
+
+  const todayExpression = database`(now() at time zone ${VIETNAM_TIME_ZONE})::date`;
+  const [summary] = await database`
+    insert into study_time_summary (user_id, current_day, updated_at)
+    values (${userId}, ${todayExpression}, now())
+    on conflict (user_id) do update set
+      today_seconds = case
+        when study_time_summary.current_day = ${todayExpression}
+          then study_time_summary.today_seconds
+        else 0
+      end,
+      current_day = ${todayExpression},
+      updated_at = now()
+    returning user_id, total_seconds, today_seconds, daily_goal_seconds, current_day, updated_at
+  `;
+
+  return normalizeStudyTimeSummary(summary);
+};
+
+const recordStudyTime = async (userId, payload) => {
+  requireDatabase();
+  await ensureStudyTimeSchema();
+
+  const durationSeconds = Math.trunc(Number(payload.durationSeconds || 0));
+
+  if (!Number.isFinite(durationSeconds) || durationSeconds <= 0) {
+    const error = new Error("durationSeconds must be a positive number");
+    error.status = 400;
+    throw error;
+  }
+
+  if (durationSeconds > 60 * 60) {
+    const error = new Error("durationSeconds is too large");
+    error.status = 400;
+    throw error;
+  }
+
+  return sql.begin(async (transaction) => {
+    await findAccount(userId, transaction);
+
+    const todayExpression = transaction`(now() at time zone ${VIETNAM_TIME_ZONE})::date`;
+    const [summary] = await transaction`
+      insert into study_time_summary (
+        user_id,
+        total_seconds,
+        today_seconds,
+        current_day,
+        updated_at
+      )
+      values (${userId}, ${durationSeconds}, ${durationSeconds}, ${todayExpression}, now())
+      on conflict (user_id) do update set
+        total_seconds = study_time_summary.total_seconds + ${durationSeconds},
+        today_seconds = case
+          when study_time_summary.current_day = ${todayExpression}
+            then study_time_summary.today_seconds + ${durationSeconds}
+          else ${durationSeconds}
+        end,
+        current_day = ${todayExpression},
+        updated_at = now()
+      returning user_id, total_seconds, today_seconds, daily_goal_seconds, current_day, updated_at
+    `;
+
+    return normalizeStudyTimeSummary(summary);
+  });
+};
+
 const getAccount = async (userId) => accountResponse(await findAccount(userId));
 
 const updateAccount = async (userId, payload) => {
@@ -563,6 +671,24 @@ const server = http.createServer(async (req, res) => {
       const profile = await updateProfile(userId, await readJson(req));
       logRequest(req, 200, `user_id=${userId}`);
       sendJson(res, 200, { ok: true, profile });
+      return;
+    }
+
+    if (req.method === "GET" && url.pathname === "/study-time") {
+      requireApiKey(req);
+      const userId = requireUserId(req);
+      const summary = await getStudyTimeSummary(userId);
+      logRequest(req, 200, `user_id=${userId}`);
+      sendJson(res, 200, { ok: true, summary });
+      return;
+    }
+
+    if (req.method === "POST" && url.pathname === "/study-time/track") {
+      requireApiKey(req);
+      const userId = requireUserId(req);
+      const summary = await recordStudyTime(userId, await readJson(req));
+      logRequest(req, 200, `user_id=${userId}`);
+      sendJson(res, 200, { ok: true, summary });
       return;
     }
 
