@@ -4,6 +4,7 @@ import { ClerkProvider } from "@clerk/nextjs";
 import { ToasterLoader } from "@/components/toaster-loader";
 import { ThemeListener } from "@/components/theme-listener";
 import { LearnRouteTransition } from "@/components/learn-route-transition";
+import { SessionResetGuard } from "@/components/session-reset-guard";
 import "./globals.css";
 
 export const metadata: Metadata = {
@@ -258,6 +259,7 @@ export default function RootLayout({
             strategy="afterInteractive"
             dangerouslySetInnerHTML={{ __html: initialHomeLoaderScript }}
           />
+          <SessionResetGuard />
           <ToasterLoader />
           <ThemeListener />
           <LearnRouteTransition />

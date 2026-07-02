@@ -16,7 +16,10 @@ import {
   completeChapterOneCheckpoint,
   completeChapterOneLesson,
   getChapterOneProgress,
+  normalizeChapterOneProgressState,
+  saveChapterOneProgress,
   setChapterOneProgressOwner,
+  type ChapterOneProgressState,
 } from "@/lib/chapter-one-progress";
 import { StreakNotification } from "@/components/streak/streak-notification";
 import type { StreakNotificationInput } from "@/components/streak/streak-data";
@@ -97,6 +100,7 @@ type CurrentAuthApiResult = {
   user: {
     id: string;
   } | null;
+  progress?: Partial<ChapterOneProgressState>;
 };
 
 const LessonContent = () => {
@@ -156,19 +160,25 @@ const LessonContent = () => {
 
     const syncProgressOwner = async () => {
       try {
-        const response = await fetch("/api/auth/current", {
+        const response = await fetch("/api/progress/chapter-one", {
           method: "GET",
           cache: "no-store",
         });
 
-        if (!response.ok) {
+        if (response.status === 401) {
+          setChapterOneProgressOwner(null);
           return;
         }
+
+        if (!response.ok) return;
 
         const data = (await response.json()) as CurrentAuthApiResult;
 
         if (isMounted) {
           setChapterOneProgressOwner(data.user?.id ?? null);
+          if (data.progress && typeof data.progress === "object") {
+            saveChapterOneProgress(normalizeChapterOneProgressState(data.progress));
+          }
         }
       } catch (error) {
         console.warn("Could not resolve progress owner:", error);
@@ -212,11 +222,17 @@ const LessonContent = () => {
     setCompletionBlockedMessage(null);
 
     try {
-      if (isCheckpoint) {
-        completeChapterOneCheckpoint(xpLessonId);
-      } else {
-        completeChapterOneLesson(xpLessonId);
-      }
+      const nextProgressState = isCheckpoint
+        ? completeChapterOneCheckpoint(xpLessonId)
+        : completeChapterOneLesson(xpLessonId);
+
+      void fetch("/api/progress/chapter-one", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ progress: nextProgressState }),
+      }).catch((error) => {
+        console.warn("Could not sync Chapter 1 lesson progress:", error);
+      });
     } catch (err) {
       console.warn("Could not update Chapter 1 progress:", err);
     }

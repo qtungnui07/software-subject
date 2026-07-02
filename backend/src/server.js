@@ -224,6 +224,12 @@ const ensureAccountData = async (database, { userId, name, imageSrc }) => {
     values (${userId}, ${todayKey}, now())
     on conflict (user_id) do nothing
   `;
+
+  await database`
+    insert into chapter_one_progress (user_id, completed_lessons, claimed_chests, completed_checkpoint, updated_at)
+    values (${userId}, '[]', '[]', 0, now())
+    on conflict (user_id) do nothing
+  `;
 };
 
 const createLocalUser = async (payload) => {

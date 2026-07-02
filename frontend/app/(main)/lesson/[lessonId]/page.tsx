@@ -4,6 +4,8 @@ import { ChapterOneLessonDetailClient } from "@/components/chapter-one-lesson-de
 import { lessonNodes } from "@/constants/lessons";
 import { getUserProgress } from "@/db/queries";
 import { auth } from "@/auth";
+import { getChapterOneProgressForUser } from "@/services/chapter-one-progress-service";
+import { getInitialChapterOneProgress } from "@/lib/chapter-one-progress";
 
 type Props = {
   params: Promise<{
@@ -34,6 +36,12 @@ const LessonDetailPage = async ({ params }: Props) => {
     title: "Tiếng Anh",
     imageSrc: "/globe.svg",
   };
+  const chapterOneProgress = session?.user?.id
+    ? await getChapterOneProgressForUser(session.user.id).catch((error) => {
+        console.error("Failed to load Chapter 1 progress", error);
+        return getInitialChapterOneProgress();
+      })
+    : getInitialChapterOneProgress();
 
   return (
     <ChapterOneLessonDetailClient
@@ -42,6 +50,7 @@ const LessonDetailPage = async ({ params }: Props) => {
       hearts={userProgressData?.hearts ?? 5}
       points={userProgressData?.points ?? 100}
       progressOwnerId={session?.user?.id ?? null}
+      initialProgressState={chapterOneProgress}
     />
   );
 };

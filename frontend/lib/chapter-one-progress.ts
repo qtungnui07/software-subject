@@ -135,7 +135,7 @@ const inferCurrentChapterOneNodeId = (state: Pick<ChapterOneProgressState, "comp
   return CHAPTER_ONE_CHECKPOINT_ID;
 };
 
-const normalizeChapterOneProgress = (state: Partial<ChapterOneProgressState>): ChapterOneProgressState => {
+export const normalizeChapterOneProgressState = (state: Partial<ChapterOneProgressState>): ChapterOneProgressState => {
   const completedLessons = uniqueValidIds(state.completedLessons, chapterOneLessonIds);
   const claimedChests = uniqueValidIds(state.claimedChests, chapterOneChestIds);
   const completedCheckpoint = Boolean(state.completedCheckpoint);
@@ -167,7 +167,7 @@ const readStoredChapterOneProgress = () => {
       return null;
     }
 
-    return normalizeChapterOneProgress(parsedProgress);
+    return normalizeChapterOneProgressState(parsedProgress);
   } catch {
     return null;
   }
@@ -207,7 +207,7 @@ export const getChapterOneProgress = () => {
 };
 
 export const saveChapterOneProgress = (state: ChapterOneProgressState) => {
-  const nextState = normalizeChapterOneProgress({
+  const nextState = normalizeChapterOneProgressState({
     ...state,
     updatedAt: new Date().toISOString(),
   });
@@ -271,7 +271,7 @@ export const completeChapterOneLesson = (lessonId: string) => {
     chapterOneLessonIds
   );
   const nextNode = getNextChapterOneNode(lessonId);
-  const nextState = normalizeChapterOneProgress({
+  const nextState = normalizeChapterOneProgressState({
     ...currentState,
     completedLessons,
     currentNodeId: nextNode?.id ?? inferCurrentChapterOneNodeId({
@@ -304,7 +304,7 @@ export const claimChapterOneChest = (chestId: string) => {
 
   const claimedChests = uniqueValidIds([...currentState.claimedChests, chestId], chapterOneChestIds);
   const nextNode = getNextChapterOneNode(chestId);
-  const nextState = normalizeChapterOneProgress({
+  const nextState = normalizeChapterOneProgressState({
     ...currentState,
     claimedChests,
     currentNodeId: nextNode?.id ?? inferCurrentChapterOneNodeId({
@@ -335,7 +335,7 @@ export const completeChapterOneCheckpoint = (checkpointId = CHAPTER_ONE_CHECKPOI
     return currentState;
   }
 
-  const nextState = normalizeChapterOneProgress({
+  const nextState = normalizeChapterOneProgressState({
     ...currentState,
     completedCheckpoint: true,
     currentNodeId: checkpointId,

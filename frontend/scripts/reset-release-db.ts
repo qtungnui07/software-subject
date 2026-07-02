@@ -21,9 +21,11 @@ const courses = [
 
 const tablesToCount = [
   "users",
+  "local_sessions",
   "user_progress",
   "user_xp_summary",
   "study_time_summary",
+  "chapter_one_progress",
   "xp_events",
   "lesson_xp_claims",
   "quest_daily_stats",
@@ -42,10 +44,12 @@ const main = async () => {
         lesson_xp_claims,
         xp_events,
         study_time_summary,
+        chapter_one_progress,
         user_xp_summary,
         daily_streak_logs,
         user_streaks,
         user_progress,
+        local_sessions,
         users
       restart identity cascade
     `);
