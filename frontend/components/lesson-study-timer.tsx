@@ -1,6 +1,13 @@
 "use client";
 
-import { useCallback, useEffect, useRef, useState } from "react";
+import {
+  forwardRef,
+  useCallback,
+  useEffect,
+  useImperativeHandle,
+  useRef,
+  useState,
+} from "react";
 import { TimerReset } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
@@ -14,10 +21,15 @@ type Props = {
   onActiveSecondsChange?: (seconds: number) => void;
 };
 
-export const LessonStudyTimer = ({
+export type LessonStudyTimerHandle = {
+  flush: (options?: { keepalive?: boolean }) => Promise<number>;
+  getActiveSeconds: () => number;
+};
+
+export const LessonStudyTimer = forwardRef<LessonStudyTimerHandle, Props>(({
   isActive,
   onActiveSecondsChange,
-}: Props) => {
+}, ref) => {
   const [isAfk, setIsAfk] = useState(false);
 
   const activeSecondsRef = useRef(0);
@@ -37,7 +49,7 @@ export const LessonStudyTimer = ({
         flushInFlightRef.current ||
         pendingSecondsRef.current <= 0
       ) {
-        return;
+        return activeSecondsRef.current;
       }
 
       const durationSeconds = pendingSecondsRef.current;
@@ -56,7 +68,7 @@ export const LessonStudyTimer = ({
 
         if (response.status === 401) {
           canSyncRef.current = false;
-          return;
+          return activeSecondsRef.current;
         }
 
         if (!response.ok || !data?.summary) {
@@ -70,8 +82,19 @@ export const LessonStudyTimer = ({
       } finally {
         flushInFlightRef.current = false;
       }
+
+      return activeSecondsRef.current;
     },
     []
+  );
+
+  useImperativeHandle(
+    ref,
+    () => ({
+      flush: flushStudyTime,
+      getActiveSeconds: () => activeSecondsRef.current,
+    }),
+    [flushStudyTime]
   );
 
   useEffect(() => {
@@ -196,4 +219,6 @@ export const LessonStudyTimer = ({
       </div>
     </div>
   );
-};
+});
+
+LessonStudyTimer.displayName = "LessonStudyTimer";

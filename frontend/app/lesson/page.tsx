@@ -7,7 +7,10 @@ import { CheckCircle2, XCircle, RefreshCw, Home, Heart } from "lucide-react";
 
 import { LessonHeader } from "@/components/lesson-header";
 import { ExitModal } from "@/components/exit-modal";
-import { LessonStudyTimer } from "@/components/lesson-study-timer";
+import {
+  LessonStudyTimer,
+  type LessonStudyTimerHandle,
+} from "@/components/lesson-study-timer";
 import { LessonResultScreen } from "@/components/lesson-result-screen";
 import { Button } from "@/components/ui/button";
 import { lessonNodes } from "@/constants/lessons";
@@ -143,8 +146,10 @@ const LessonContent = () => {
   const [xpError, setXpError] = useState<string | null>(null);
   const [streakResult, setStreakResult] = useState<StreakNotificationInput | null>(null);
   const [completionBlockedMessage, setCompletionBlockedMessage] = useState<string | null>(null);
+  const [isProgressReady, setIsProgressReady] = useState(false);
   const hasHandledCompletionRef = useRef(false);
   const studyDurationSecondsRef = useRef(0);
+  const studyTimerRef = useRef<LessonStudyTimerHandle | null>(null);
 
   const currentQuestion = MOCK_QUESTIONS[currentQuestionIndex];
   const progress = (currentQuestionIndex / MOCK_QUESTIONS.length) * 100;
@@ -167,10 +172,18 @@ const LessonContent = () => {
 
         if (response.status === 401) {
           setChapterOneProgressOwner(null);
+          if (isMounted) {
+            setIsProgressReady(true);
+          }
           return;
         }
 
-        if (!response.ok) return;
+        if (!response.ok) {
+          if (isMounted) {
+            setIsProgressReady(true);
+          }
+          return;
+        }
 
         const data = (await response.json()) as CurrentAuthApiResult;
 
@@ -179,9 +192,13 @@ const LessonContent = () => {
           if (data.progress && typeof data.progress === "object") {
             saveChapterOneProgress(normalizeChapterOneProgressState(data.progress));
           }
+          setIsProgressReady(true);
         }
       } catch (error) {
         console.warn("Could not resolve progress owner:", error);
+        if (isMounted) {
+          setIsProgressReady(true);
+        }
       }
     };
 
@@ -196,6 +213,7 @@ const LessonContent = () => {
   // Progress is localStorage-first, while XP/streak APIs are best-effort extras.
   useEffect(() => {
     if (!isFinished || hasHandledCompletionRef.current) return;
+    if (!isProgressReady) return;
 
     hasHandledCompletionRef.current = true;
 
@@ -221,28 +239,39 @@ const LessonContent = () => {
 
     setCompletionBlockedMessage(null);
 
-    try {
+    const syncChapterOneProgress = async () => {
       const nextProgressState = isCheckpoint
         ? completeChapterOneCheckpoint(xpLessonId)
         : completeChapterOneLesson(xpLessonId);
 
-      void fetch("/api/progress/chapter-one", {
+      const response = await fetch("/api/progress/chapter-one", {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ progress: nextProgressState }),
-      }).catch((error) => {
-        console.warn("Could not sync Chapter 1 lesson progress:", error);
       });
-    } catch (err) {
-      console.warn("Could not update Chapter 1 progress:", err);
-    }
+
+      if (!response.ok) {
+        throw new Error("Chapter 1 progress API request failed");
+      }
+    };
 
     const completeLesson = async () => {
       let xpForStreak = 0;
 
       try {
+        await syncChapterOneProgress();
+      } catch (err) {
+        console.warn("Could not update Chapter 1 progress:", err);
+        setXpError("Không thể lưu tiến độ bài học lúc này. Hãy thử lại sau.");
+      }
+
+      try {
         setIsClaimingXp(true);
-        setXpError(null);
+        setXpError((currentError) =>
+          currentError === "Không thể lưu tiến độ bài học lúc này. Hãy thử lại sau."
+            ? currentError
+            : null
+        );
 
         const xpResponse = await fetch("/api/xp/complete-lesson", {
           method: "POST",
@@ -296,7 +325,7 @@ const LessonContent = () => {
     };
 
     completeLesson();
-  }, [accuracy, isCheckpoint, isFinished, passed, xpLessonId]);
+  }, [accuracy, isCheckpoint, isFinished, isProgressReady, passed, xpLessonId]);
 
   // Handle checking the selected answer
   const onCheck = () => {
@@ -314,13 +343,17 @@ const LessonContent = () => {
   };
 
   // Handle continuing to the next question or finishing
-  const onContinue = () => {
+  const onContinue = async () => {
     setSelectedOption(null);
     setIsAnswered(false);
 
     if (currentQuestionIndex < MOCK_QUESTIONS.length - 1) {
       setCurrentQuestionIndex((prev) => prev + 1);
     } else {
+      const activeSeconds = await studyTimerRef.current?.flush({ keepalive: true });
+      if (typeof activeSeconds === "number") {
+        studyDurationSecondsRef.current = activeSeconds;
+      }
       setIsFinished(true);
     }
   };
@@ -586,6 +619,7 @@ const LessonContent = () => {
         onConfirm={redirectToLearn}
       />
       <LessonStudyTimer
+        ref={studyTimerRef}
         isActive={!isFinished && hearts > 0 && !shouldRedirectToLearn}
         onActiveSecondsChange={(seconds) => {
           studyDurationSecondsRef.current = seconds;

@@ -30,7 +30,13 @@ const emptySummary: StudyTimeSummary = {
 
 const clampPercent = (value: number) => Math.max(0, Math.min(100, value));
 
-const formatMinutes = (seconds: number) => `${Math.floor(seconds / 60)} phút`;
+const formatMinutes = (seconds: number) => {
+  if (seconds > 0 && seconds < 60) {
+    return "<1 phút";
+  }
+
+  return `${Math.floor(seconds / 60)} phút`;
+};
 
 const formatLongDuration = (seconds: number) => {
   const totalMinutes = Math.floor(seconds / 60);
@@ -38,6 +44,10 @@ const formatLongDuration = (seconds: number) => {
   const minutes = totalMinutes % 60;
 
   if (hours <= 0) {
+    if (seconds > 0 && seconds < 60) {
+      return "<1 phút";
+    }
+
     return `${minutes} phút`;
   }
 
