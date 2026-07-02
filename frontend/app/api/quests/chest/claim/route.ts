@@ -22,10 +22,7 @@ export async function POST() {
       userImageSrc: currentUser.image,
     });
 
-    return NextResponse.json({
-      ...result,
-      isLocalFallbackUser: currentUser.isLocalFallback,
-    });
+    return NextResponse.json(result);
   } catch (error) {
     if (isQuestServiceError(error)) {
       return NextResponse.json(

@@ -116,16 +116,6 @@ const getCurrentXpUser = async () => {
       id: session.user.id,
       name: session.user.name || "User",
       image: session.user.image || "/mascot.svg",
-      isDemoUser: false,
-    };
-  }
-
-  if (process.env.NODE_ENV !== "production") {
-    return {
-      id: "demo-user",
-      name: "Demo User",
-      image: "/mascot.svg",
-      isDemoUser: true,
     };
   }
 
@@ -171,7 +161,6 @@ export async function POST(request: Request) {
     return NextResponse.json({
       ...result,
       questProgress,
-      isDemoUser: currentUser.isDemoUser,
     });
   } catch (error) {
     console.error("Failed to complete lesson XP", error);

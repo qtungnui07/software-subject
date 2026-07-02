@@ -319,35 +319,27 @@ const toQuestTodayStats = (row: any | null | undefined): QuestTodayStats => {
 };
 
 const canReadQuestDailyStats = () => {
-  return Boolean(db?.query?.questDailyStats?.findFirst);
+  return Boolean(process.env.DATABASE_URL);
 };
 
 const canReadQuestDailyStatsList = () => {
-  return Boolean(db?.query?.questDailyStats?.findMany);
+  return Boolean(process.env.DATABASE_URL);
 };
 
 const canReadQuestRewardClaims = () => {
-  return Boolean(db?.query?.questRewardClaims?.findMany);
+  return Boolean(process.env.DATABASE_URL);
 };
 
 const canReadQuestRewardClaim = () => {
-  return Boolean(db?.query?.questRewardClaims?.findFirst);
+  return Boolean(process.env.DATABASE_URL);
 };
 
 export const isQuestPersistenceAvailable = () => {
-  return Boolean(
-    process.env.DATABASE_URL &&
-      db?.transaction &&
-      db?.query?.questDailyStats?.findFirst &&
-      db?.query?.questRewardClaims?.findFirst &&
-      db?.query?.questRewardClaims?.findMany &&
-      db?.query?.userXpSummary?.findFirst &&
-      db?.query?.userProgress?.findFirst,
-  );
+  return Boolean(process.env.DATABASE_URL);
 };
 
 export const isQuestProgressWriteAvailable = () => {
-  return Boolean(process.env.DATABASE_URL && db?.insert && db?.query?.questDailyStats?.findFirst);
+  return Boolean(process.env.DATABASE_URL);
 };
 
 export const getTodayQuestStats = async ({

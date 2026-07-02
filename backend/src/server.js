@@ -169,8 +169,66 @@ const publicUser = (user) => ({
   image: user.image_src || "/mascot.svg",
 });
 
+const formatDateInTimeZone = (date, timeZone) => {
+  const parts = new Intl.DateTimeFormat("en-CA", {
+    timeZone,
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+  }).formatToParts(date);
+  const year = parts.find((part) => part.type === "year")?.value;
+  const month = parts.find((part) => part.type === "month")?.value;
+  const day = parts.find((part) => part.type === "day")?.value;
+
+  if (!year || !month || !day) {
+    throw new Error("Failed to format date key");
+  }
+
+  return `${year}-${month}-${day}`;
+};
+
+const getCurrentDateKeys = () => {
+  const todayKey = formatDateInTimeZone(new Date(), VIETNAM_TIME_ZONE);
+  const [year, month, day] = todayKey.split("-").map(Number);
+  const utcDate = new Date(Date.UTC(year, month - 1, day));
+  const dayIndex = utcDate.getUTCDay();
+  const distanceFromMonday = dayIndex === 0 ? 6 : dayIndex - 1;
+
+  utcDate.setUTCDate(utcDate.getUTCDate() - distanceFromMonday);
+
+  return {
+    todayKey,
+    weekStartKey: utcDate.toISOString().slice(0, 10),
+  };
+};
+
+const ensureAccountData = async (database, { userId, name, imageSrc }) => {
+  const { todayKey, weekStartKey } = getCurrentDateKeys();
+
+  await database`
+    insert into user_progress (user_id, user_name, user_image_src)
+    values (${userId}, ${name || "User"}, ${imageSrc || "/mascot.svg"})
+    on conflict (user_id) do update set
+      user_name = excluded.user_name,
+      user_image_src = excluded.user_image_src
+  `;
+
+  await database`
+    insert into user_xp_summary (user_id, total_xp, daily_xp, weekly_xp, current_day, current_week_start, updated_at)
+    values (${userId}, 0, 0, 0, ${todayKey}, ${weekStartKey}, now())
+    on conflict (user_id) do nothing
+  `;
+
+  await database`
+    insert into study_time_summary (user_id, current_day, updated_at)
+    values (${userId}, ${todayKey}, now())
+    on conflict (user_id) do nothing
+  `;
+};
+
 const createLocalUser = async (payload) => {
   requireDatabase();
+  await ensureStudyTimeSchema();
 
   const name = String(payload.name || "").trim();
   const email = normalizeEmail(payload.email);
@@ -189,11 +247,21 @@ const createLocalUser = async (payload) => {
   }
 
   try {
-    const [user] = await sql`
-      insert into users (name, email, password_hash, image_src, updated_at)
-      values (${name}, ${email}, ${hashPassword(password)}, '/mascot.svg', now())
-      returning id, email, name, image_src
-    `;
+    const user = await sql.begin(async (transaction) => {
+      const [created] = await transaction`
+        insert into users (name, email, password_hash, image_src, updated_at)
+        values (${name}, ${email}, ${hashPassword(password)}, '/mascot.svg', now())
+        returning id, email, name, image_src
+      `;
+
+      await ensureAccountData(transaction, {
+        userId: String(created.id),
+        name: created.name,
+        imageSrc: created.image_src,
+      });
+
+      return created;
+    });
 
     return publicUser(user);
   } catch (error) {
@@ -209,6 +277,7 @@ const createLocalUser = async (payload) => {
 
 const signInLocalUser = async (payload) => {
   requireDatabase();
+  await ensureStudyTimeSchema();
 
   const email = normalizeEmail(payload.email);
   const password = String(payload.password || "");
@@ -225,11 +294,18 @@ const signInLocalUser = async (payload) => {
     throw error;
   }
 
+  await ensureAccountData(sql, {
+    userId: String(user.id),
+    name: user.name,
+    imageSrc: user.image_src,
+  });
+
   return publicUser(user);
 };
 
 const syncUser = async (payload) => {
   requireDatabase();
+  await ensureStudyTimeSchema();
 
   const clerkUserId = String(payload.clerkUserId || "").trim();
   const email = String(payload.email || "").trim().toLowerCase();
@@ -262,6 +338,12 @@ const syncUser = async (payload) => {
         returning id, clerk_user_id, email, name, image_src, created_at, updated_at
       `;
 
+      await ensureAccountData(transaction, {
+        userId: clerkUserId,
+        name: user.name,
+        imageSrc: user.image_src,
+      });
+
       return user;
     }
 
@@ -284,6 +366,12 @@ const syncUser = async (payload) => {
         returning id, clerk_user_id, email, name, image_src, created_at, updated_at
       `;
 
+      await ensureAccountData(transaction, {
+        userId: clerkUserId,
+        name: user.name,
+        imageSrc: user.image_src,
+      });
+
       return user;
     }
 
@@ -292,6 +380,12 @@ const syncUser = async (payload) => {
       values (${clerkUserId}, ${name}, ${email}, ${imageSrc}, now())
       returning id, clerk_user_id, email, name, image_src, created_at, updated_at
     `;
+
+    await ensureAccountData(transaction, {
+      userId: clerkUserId,
+      name: user.name,
+      imageSrc: user.image_src,
+    });
 
     return user;
   });

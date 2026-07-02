@@ -11,6 +11,7 @@ const REVEAL_DURATION_MS = 680;
 const NAVIGATION_DELAY_MS = 1180;
 const STORAGE_KEY = "robogo-learn-transition";
 const THEME_STORAGE_KEY = "robogo-learn-transition-theme";
+const POPUP_SEEN_STORAGE_KEY = "robogo-learn-popup-seen";
 
 type TransitionPhase = "idle" | "covering" | "covered" | "revealing";
 type TransitionTheme = "light" | "dark";
@@ -329,6 +330,11 @@ const animateReveal = (overlay: HTMLElement, onComplete: () => void) => {
 };
 
 const animateLearnAppPopup = () => {
+  if (localStorage.getItem(POPUP_SEEN_STORAGE_KEY) === "true") {
+    return;
+  }
+
+  localStorage.setItem(POPUP_SEEN_STORAGE_KEY, "true");
   document.documentElement.classList.add("learn-app-pop-enter");
 
   window.setTimeout(() => {

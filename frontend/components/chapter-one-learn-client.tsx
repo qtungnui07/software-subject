@@ -20,6 +20,7 @@ import {
   getChapterOneNodeStatus,
   getChapterOneProgress,
   getInitialChapterOneProgress,
+  setChapterOneProgressOwner,
   subscribeChapterOneProgress,
   type ChapterOneNodeStatus,
   type ChapterOneProgressState,
@@ -30,6 +31,7 @@ import type { StudyTimeSummary } from "@/services/study-time-service";
 import { Header } from "@/app/(main)/learn/header";
 
 const learnTransitionStorageKey = "robogo-learn-transition";
+const learnPopupSeenStorageKey = "robogo-learn-popup-seen";
 
 const sidebarCards = [
   {
@@ -55,6 +57,7 @@ type Props = {
   points: number;
   showAuthCard: boolean;
   initialStudyTimeSummary: StudyTimeSummary | null;
+  progressOwnerId: string | null;
 };
 
 const getProgressLessonStatus = (
@@ -99,6 +102,7 @@ export const ChapterOneLearnClient = ({
   points,
   showAuthCard,
   initialStudyTimeSummary,
+  progressOwnerId,
 }: Props) => {
   const shellRef = useRef<HTMLDivElement>(null);
   const [progressState, setProgressState] = useState<ChapterOneProgressState>(
@@ -113,6 +117,12 @@ export const ChapterOneLearnClient = ({
     if (!shell) {
       return;
     }
+
+    if (localStorage.getItem(learnPopupSeenStorageKey) === "true") {
+      return;
+    }
+
+    localStorage.setItem(learnPopupSeenStorageKey, "true");
 
     const isAfterHomeTransition =
       sessionStorage.getItem(learnTransitionStorageKey) === "pending";
@@ -136,12 +146,14 @@ export const ChapterOneLearnClient = ({
   }, []);
 
   useEffect(() => {
+    setChapterOneProgressOwner(progressOwnerId);
+
     const syncProgress = () => setProgressState(getChapterOneProgress());
 
     syncProgress();
 
     return subscribeChapterOneProgress(syncProgress);
-  }, []);
+  }, [progressOwnerId]);
 
   const progressUnits = useMemo(
     () => buildChapterOneProgressUnits(progressState),

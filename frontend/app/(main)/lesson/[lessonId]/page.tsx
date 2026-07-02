@@ -3,6 +3,7 @@ import { notFound } from "next/navigation";
 import { ChapterOneLessonDetailClient } from "@/components/chapter-one-lesson-detail-client";
 import { lessonNodes } from "@/constants/lessons";
 import { getUserProgress } from "@/db/queries";
+import { auth } from "@/auth";
 
 type Props = {
   params: Promise<{
@@ -22,6 +23,7 @@ const LessonDetailPage = async ({ params }: Props) => {
   }
 
   let userProgressData = null;
+  const session = await auth();
   try {
     userProgressData = await getUserProgress();
   } catch (error) {
@@ -39,6 +41,7 @@ const LessonDetailPage = async ({ params }: Props) => {
       activeCourse={{ title: activeCourse.title, imageSrc: activeCourse.imageSrc }}
       hearts={userProgressData?.hearts ?? 5}
       points={userProgressData?.points ?? 100}
+      progressOwnerId={session?.user?.id ?? null}
     />
   );
 };

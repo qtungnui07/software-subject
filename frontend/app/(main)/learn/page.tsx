@@ -36,6 +36,7 @@ const LearnPage = async () => {
       points={userProgressData.points}
       showAuthCard={!session?.user}
       initialStudyTimeSummary={studyTimeSummary}
+      progressOwnerId={session?.user?.id ?? null}
     />
   );
 };

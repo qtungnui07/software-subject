@@ -16,6 +16,7 @@ import {
   completeChapterOneCheckpoint,
   completeChapterOneLesson,
   getChapterOneProgress,
+  setChapterOneProgressOwner,
 } from "@/lib/chapter-one-progress";
 import { StreakNotification } from "@/components/streak/streak-notification";
 import type { StreakNotificationInput } from "@/components/streak/streak-data";
@@ -92,6 +93,12 @@ type LessonXpApiResult = {
   isDemoUser?: boolean;
 };
 
+type CurrentAuthApiResult = {
+  user: {
+    id: string;
+  } | null;
+};
+
 const LessonContent = () => {
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -143,6 +150,37 @@ const LessonContent = () => {
   const passed = accuracy >= PASS_THRESHOLD;
   const isCheckpoint = lessonNode.type === "checkpoint";
   const xpLessonId = lessonNode.nodeId;
+
+  useEffect(() => {
+    let isMounted = true;
+
+    const syncProgressOwner = async () => {
+      try {
+        const response = await fetch("/api/auth/current", {
+          method: "GET",
+          cache: "no-store",
+        });
+
+        if (!response.ok) {
+          return;
+        }
+
+        const data = (await response.json()) as CurrentAuthApiResult;
+
+        if (isMounted) {
+          setChapterOneProgressOwner(data.user?.id ?? null);
+        }
+      } catch (error) {
+        console.warn("Could not resolve progress owner:", error);
+      }
+    };
+
+    void syncProgressOwner();
+
+    return () => {
+      isMounted = false;
+    };
+  }, []);
 
   // Apply pass/fail rules once when the result screen is shown.
   // Progress is localStorage-first, while XP/streak APIs are best-effort extras.

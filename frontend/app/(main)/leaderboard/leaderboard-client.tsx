@@ -89,6 +89,7 @@ interface LeaderboardClientProps {
   hearts: number;
   activeCourse: { title: string; imageSrc: string };
   todayMinutes: number;
+  isLoggedIn?: boolean;
 }
 
 export const LeaderboardClient: React.FC<LeaderboardClientProps> = ({
@@ -101,6 +102,7 @@ export const LeaderboardClient: React.FC<LeaderboardClientProps> = ({
   hearts,
   activeCourse,
   todayMinutes,
+  isLoggedIn = false,
 }) => {
   // Client state
   const [userLeague, setUserLeague] = useState<number>(initialLeague);
@@ -432,7 +434,7 @@ export const LeaderboardClient: React.FC<LeaderboardClientProps> = ({
                   Còn {countdownText}
                 </span>
 
-                {userLeague === activeLeagueView && (
+                {isLoggedIn && userLeague === activeLeagueView && (
                   <span className={cn(
                     "flex items-center gap-1 px-3 py-1.5 rounded-2xl border",
                     userRankInList <= 15 

@@ -25,6 +25,7 @@ import {
   getChapterOneNodeStatus,
   getChapterOneProgress,
   getInitialChapterOneProgress,
+  setChapterOneProgressOwner,
   subscribeChapterOneProgress,
   type ChapterOneNodeStatus,
   type ChapterOneProgressState,
@@ -89,6 +90,7 @@ type Props = {
   activeCourse: ActiveCoursePreview;
   hearts: number;
   points: number;
+  progressOwnerId: string | null;
 };
 
 type DetailStatusView = {
@@ -199,18 +201,21 @@ export const ChapterOneLessonDetailClient = ({
   activeCourse,
   hearts,
   points,
+  progressOwnerId,
 }: Props) => {
   const [progressState, setProgressState] = useState<ChapterOneProgressState>(
     getInitialChapterOneProgress
   );
 
   useEffect(() => {
+    setChapterOneProgressOwner(progressOwnerId);
+
     const syncProgress = () => setProgressState(getChapterOneProgress());
 
     syncProgress();
 
     return subscribeChapterOneProgress(syncProgress);
-  }, []);
+  }, [progressOwnerId]);
 
   const lesson = lessonNodes.find((node) => node.nodeId === lessonNodeId);
 
