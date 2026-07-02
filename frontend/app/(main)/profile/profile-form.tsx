@@ -12,7 +12,10 @@ type Props = {
   email?: string;
 };
 
-const PRESET_AVATARS = [
+// CHỈNH SỬA TẠI ĐÂY: Đổi thành false nếu muốn mở lại các ảnh đại diện cờ quốc gia khác (Tiếng Nhật, Tiếng Pháp, v.v.)
+const showOnlyEnglishAvatars = true;
+
+const ALL_PRESET_AVATARS = [
   { label: "Mascot", src: "/logo.webp" },
   { label: "Tiếng Anh", src: "/gb.svg" },
   { label: "Tiếng Nhật", src: "/jp.svg" },
@@ -20,6 +23,10 @@ const PRESET_AVATARS = [
   { label: "Tiếng Tây Ban Nha", src: "/es.svg" },
   { label: "Tiếng Ý", src: "/it.svg" },
 ];
+
+const PRESET_AVATARS = showOnlyEnglishAvatars
+  ? ALL_PRESET_AVATARS.filter((avatar) => avatar.label === "Mascot" || avatar.label === "Tiếng Anh")
+  : ALL_PRESET_AVATARS;
 
 export const ProfileForm = ({ initialName, initialImageSrc, email }: Props) => {
   const router = useRouter();
