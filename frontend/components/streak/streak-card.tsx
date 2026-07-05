@@ -77,15 +77,15 @@ const WeekHeatmap = ({ recentActivity }: HeatmapProps) => {
                                 className={[
                                     "flex h-9 w-full items-center justify-center rounded-xl text-base transition",
                                     today && !studied
-                                        ? "ring-2 ring-orange-300 bg-orange-50"
+                                        ? "ring-2 ring-orange-300 bg-orange-50 dark:ring-orange-500/45 dark:bg-orange-500/10"
                                         : "",
                                     studied
-                                        ? "bg-orange-100 shadow-sm"
-                                        : "bg-neutral-100",
+                                        ? "bg-orange-100 dark:bg-orange-500/20 shadow-sm"
+                                        : "bg-neutral-100 dark:bg-[#131f24]/90",
                                 ].join(" ")}
                             >
                                 {studied ? "🔥" : (
-                                    <span className={`text-[11px] font-black ${today ? "text-orange-400" : "text-neutral-300"}`}>
+                                    <span className={`text-[11px] font-black ${today ? "text-orange-400" : "text-neutral-300 dark:text-neutral-700"}`}>
                                         •
                                     </span>
                                 )}
