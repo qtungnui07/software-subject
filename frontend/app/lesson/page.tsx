@@ -530,10 +530,10 @@ const LessonContent = () => {
                   type="button"
                   disabled={isAnswered}
                   onClick={() => setSelectedOption(index)}
-                  className={`flex items-center gap-3 w-full rounded-2xl border-2 p-4 text-left font-bold transition hover:bg-slate-50 dark:hover:bg-[#202f36]/40 active:scale-[0.99] disabled:hover:bg-white dark:disabled:hover:bg-[#182226]
-                    ${isSelected ? "border-sky-500 bg-sky-50 dark:bg-sky-950/20 text-sky-600 dark:text-sky-400 shadow-[0_4px_0_#0ea5e9]" : "border-slate-200 dark:border-[#202f36] bg-white dark:bg-[#141f23] text-slate-600 dark:text-slate-200 shadow-[0_4px_0_#e2e8f0] dark:shadow-[0_4px_0_#202f36]"}
-                    ${isAnswered && isOptionCorrect ? "!border-green-500 !bg-green-50 dark:!bg-green-950/20 !text-green-600 dark:!text-green-400 !shadow-[0_4px_0_#22c55e]" : ""}
-                    ${isAnswered && isSelected && !isCorrect ? "!border-rose-500 !bg-rose-50 dark:!bg-rose-950/20 !text-rose-600 dark:!text-rose-400 !shadow-[0_4px_0_#f43f5e]" : ""}
+                  className={`flex items-center gap-3 w-full rounded-2xl border-2 p-4 text-left font-bold transition hover:bg-slate-50 dark:hover:bg-[#1f2d33] active:scale-[0.99] disabled:hover:bg-white dark:disabled:hover:bg-[#182226]
+                    ${isSelected ? "border-sky-500 bg-sky-50 dark:bg-sky-950/20 text-sky-600 dark:text-sky-400 shadow-[0_4px_0_#0ea5e9] dark:shadow-[0_4px_0_#0284c7]" : "border-slate-200 dark:border-[#202f36] bg-white dark:bg-[#141f23] text-slate-600 dark:text-slate-200 shadow-[0_4px_0_#e2e8f0] dark:shadow-[0_4px_0_#0c1214]"}
+                    ${isAnswered && isOptionCorrect ? "!border-green-500 !bg-green-50 dark:!bg-green-950/20 !text-green-600 dark:!text-green-400 !shadow-[0_4px_0_#22c55e] dark:!shadow-[0_4px_0_#15803d]" : ""}
+                    ${isAnswered && isSelected && !isCorrect ? "!border-rose-500 !bg-rose-50 dark:!bg-rose-950/20 !text-rose-600 dark:!text-rose-400 !shadow-[0_4px_0_#f43f5e] dark:!shadow-[0_4px_0_#b91c1c]" : ""}
                   `}
                 >
                   {/* Số thứ tự */}
