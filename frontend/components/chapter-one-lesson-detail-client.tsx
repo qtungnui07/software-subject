@@ -113,7 +113,7 @@ const getDetailStatusView = (
     if (lesson.type === "chest") {
       return {
         statusLabel: "Đã nhận rương",
-        statusColor: "bg-emerald-100 text-emerald-700 border-emerald-200",
+        statusColor: "bg-emerald-100 text-emerald-700 border-emerald-200 dark:bg-emerald-950/30 dark:text-emerald-400 dark:border-emerald-900/50",
         statusDesc: "Bạn đã nhận phần thưởng của rương này. Bài học tiếp theo đã được mở khóa.",
         StatusIcon: CheckCircle,
         ctaText: "Đã nhận",
@@ -124,7 +124,7 @@ const getDetailStatusView = (
 
     return {
       statusLabel: "Đã hoàn thành",
-      statusColor: "bg-emerald-100 text-emerald-700 border-emerald-200",
+      statusColor: "bg-emerald-100 text-emerald-700 border-emerald-200 dark:bg-emerald-950/30 dark:text-emerald-400 dark:border-emerald-900/50",
       statusDesc: "Bạn đã hoàn thành bài này. Bạn có thể ôn luyện lại bất cứ lúc nào để củng cố kiến thức.",
       StatusIcon: CheckCircle,
       ctaText: lesson.type === "checkpoint" ? "Làm lại kiểm tra" : "Ôn tập lại",
@@ -138,8 +138,8 @@ const getDetailStatusView = (
       statusLabel: lesson.type === "checkpoint" ? "Kiểm tra cuối chương" : "Đang học",
       statusColor:
         lesson.type === "checkpoint"
-          ? "bg-amber-100 text-amber-700 border-amber-200"
-          : "bg-sky-100 text-sky-700 border-sky-200",
+          ? "bg-amber-100 text-amber-700 border-amber-200 dark:bg-amber-950/30 dark:text-amber-400 dark:border-amber-900/50"
+          : "bg-sky-100 text-sky-700 border-sky-200 dark:bg-sky-950/30 dark:text-sky-400 dark:border-sky-900/50",
       statusDesc:
         lesson.type === "checkpoint"
           ? "Đây là bài kiểm tra tổng hợp để hoàn thành Chương 1. Hãy vượt qua để đạt 100% tiến độ."
@@ -154,7 +154,7 @@ const getDetailStatusView = (
   if (status === "available") {
     return {
       statusLabel: "Rương sẵn sàng",
-      statusColor: "bg-amber-100 text-amber-700 border-amber-200",
+      statusColor: "bg-amber-100 text-amber-700 border-amber-200 dark:bg-amber-950/30 dark:text-amber-400 dark:border-amber-900/50",
       statusDesc: "Rương đã mở. Nhận phần thưởng này để mở Bài 4 trong lộ trình Chương 1.",
       StatusIcon: Gift,
       ctaText: "Nhận thưởng",
@@ -166,7 +166,7 @@ const getDetailStatusView = (
   if (lesson.type === "chest") {
     return {
       statusLabel: "Rương đã khóa",
-      statusColor: "bg-slate-100 text-slate-500 border-slate-200",
+      statusColor: "bg-slate-100 text-slate-500 border-slate-200 dark:bg-slate-900/30 dark:text-slate-400 dark:border-slate-800",
       statusDesc: "Rương này sẽ mở sau khi bạn hoàn thành Bài 3.",
       StatusIcon: Gift,
       ctaText: "Chưa mở khóa",
@@ -178,7 +178,7 @@ const getDetailStatusView = (
   if (lesson.type === "checkpoint") {
     return {
       statusLabel: "Kiểm tra đã khóa",
-      statusColor: "bg-slate-100 text-slate-500 border-slate-200",
+      statusColor: "bg-slate-100 text-slate-500 border-slate-200 dark:bg-slate-900/30 dark:text-slate-400 dark:border-slate-800",
       statusDesc: "Bài kiểm tra cuối chương chỉ mở sau khi bạn hoàn thành Bài 6.",
       StatusIcon: Trophy,
       ctaText: "Chưa mở khóa",
@@ -189,7 +189,7 @@ const getDetailStatusView = (
 
   return {
     statusLabel: "Đã khóa",
-    statusColor: "bg-slate-100 text-slate-500 border-slate-200",
+    statusColor: "bg-slate-100 text-slate-500 border-slate-200 dark:bg-slate-900/30 dark:text-slate-400 dark:border-slate-800",
     statusDesc: "Bài học này hiện chưa được mở khóa. Hãy hoàn thành các bài học trước đó trong chương để tiếp tục.",
     StatusIcon: Lock,
     ctaText: "Đã bị khóa",
@@ -258,29 +258,29 @@ export const ChapterOneLessonDetailClient = ({
   return (
     <div className="grid grid-cols-1 gap-6 xl:grid-cols-[minmax(0,1fr)_400px] 2xl:grid-cols-[minmax(0,1fr)_425px] xl:items-start xl:gap-10">
       <FeedWrapper>
-        <div className="rounded-[28px] border-2 border-sky-100 bg-white p-6 md:p-8 shadow-sm">
+        <div className="rounded-[28px] border-2 border-sky-100 dark:border-[#202f36] bg-white dark:bg-[#182226] p-6 md:p-8 shadow-sm">
           <Link
             href="/learn"
-            className="group inline-flex items-center gap-2 text-xs font-black tracking-wider text-slate-400 hover:text-slate-600 transition mb-6 uppercase"
+            className="group inline-flex items-center gap-2 text-xs font-black tracking-wider text-slate-400 hover:text-slate-600 dark:text-slate-500 dark:hover:text-slate-350 transition mb-6 uppercase"
           >
             <ArrowLeft className="h-4 w-4 stroke-[3.5] transition group-hover:-translate-x-0.5" />
             Quay lại lộ trình
           </Link>
 
-          <div className="flex flex-col items-center text-center sm:items-start sm:text-left sm:flex-row gap-6 mb-8 pb-6 border-b-2 border-slate-100">
+          <div className="flex flex-col items-center text-center sm:items-start sm:text-left sm:flex-row gap-6 mb-8 pb-6 border-b-2 border-slate-100 dark:border-slate-800">
             <div
               className={`flex h-20 w-20 shrink-0 items-center justify-center rounded-[24px] border-2 shadow-sm ${
                 isCompleted
-                  ? "bg-emerald-50 border-emerald-200 text-emerald-500"
+                  ? "bg-emerald-50 border-emerald-200 text-emerald-500 dark:bg-emerald-950/20 dark:border-emerald-950/40 dark:text-emerald-400"
                   : status === "current"
-                    ? "bg-sky-50 border-sky-200 text-[#1486CC] animate-pulse"
+                    ? "bg-sky-50 border-sky-200 text-[#1486CC] animate-pulse dark:bg-sky-950/20 dark:border-sky-950/40 dark:text-sky-400"
                     : status === "available"
-                      ? "bg-amber-50 border-amber-200 text-amber-500 animate-pulse"
+                      ? "bg-amber-50 border-amber-200 text-amber-500 animate-pulse dark:bg-amber-950/20 dark:border-amber-950/40 dark:text-amber-400"
                       : lesson.type === "checkpoint"
-                        ? "bg-amber-50 border-amber-200 text-amber-500"
+                        ? "bg-amber-50 border-amber-200 text-amber-500 dark:bg-amber-950/20 dark:border-amber-950/40 dark:text-amber-400"
                         : lesson.type === "chest"
-                          ? "bg-purple-50 border-purple-200 text-purple-500"
-                          : "bg-slate-100 border-slate-200 text-slate-400"
+                          ? "bg-purple-50 border-purple-200 text-purple-500 dark:bg-purple-950/20 dark:border-purple-950/40 dark:text-purple-400"
+                          : "bg-slate-100 border-slate-200 text-slate-400 dark:bg-slate-900/30 dark:border-slate-800 dark:text-slate-500"
               }`}
             >
               <StatusIcon className="h-10 w-10 stroke-[3]" />
@@ -293,31 +293,31 @@ export const ChapterOneLessonDetailClient = ({
                 </span>
               </div>
 
-              <h1 className="text-2xl md:text-3xl font-black text-slate-800 mt-3 leading-tight">
+              <h1 className="text-2xl md:text-3xl font-black text-slate-800 dark:text-slate-100 mt-3 leading-tight">
                 {lesson.title}
               </h1>
             </div>
           </div>
 
           <div className="mb-6">
-            <h3 className="text-xs font-black uppercase tracking-wider text-slate-400">
+            <h3 className="text-xs font-black uppercase tracking-wider text-slate-400 dark:text-slate-500">
               Mô tả bài học
             </h3>
-            <p className="mt-2 text-base font-bold text-slate-600 leading-relaxed">
+            <p className="mt-2 text-base font-bold text-slate-600 dark:text-slate-300 leading-relaxed">
               {lesson.description}
             </p>
           </div>
 
           <div className="mb-6">
-            <h3 className="text-xs font-black uppercase tracking-wider text-slate-400">
+            <h3 className="text-xs font-black uppercase tracking-wider text-slate-400 dark:text-slate-500">
               Mục tiêu học tập
             </h3>
             <ul className="mt-3 space-y-3">
               {objectives.map((obj) => (
-                <li key={obj} className="flex items-start gap-3 text-sm font-bold text-slate-600 leading-relaxed">
+                <li key={obj} className="flex items-start gap-3 text-sm font-bold text-slate-600 dark:text-slate-300 leading-relaxed">
                   <span
                     className={`flex h-5 w-5 shrink-0 items-center justify-center rounded-full mt-0.5 ${
-                      isCompleted ? "bg-emerald-100 text-emerald-600" : "bg-sky-100 text-sky-600"
+                      isCompleted ? "bg-emerald-100 text-emerald-600 dark:bg-emerald-950/40 dark:text-emerald-450" : "bg-sky-100 text-sky-600 dark:bg-sky-950/40 dark:text-sky-400"
                     }`}
                   >
                     <Check className="h-3.5 w-3.5 stroke-[3.5]" />
@@ -331,25 +331,25 @@ export const ChapterOneLessonDetailClient = ({
           <div
             className={`p-4 rounded-2xl border-2 mb-8 ${
               isCompleted
-                ? "bg-emerald-50/50 border-emerald-100 text-slate-600"
+                ? "bg-emerald-50/50 border-emerald-100 text-slate-600 dark:bg-emerald-950/10 dark:border-emerald-950/30 dark:text-slate-300"
                 : status === "current"
-                  ? "bg-sky-50/50 border-sky-100 text-slate-600"
+                  ? "bg-sky-50/50 border-sky-100 text-slate-600 dark:bg-sky-950/10 dark:border-sky-950/30 dark:text-slate-300"
                   : status === "available"
-                    ? "bg-amber-50/40 border-amber-100 text-slate-600"
+                    ? "bg-amber-50/40 border-amber-100 text-slate-600 dark:bg-amber-950/10 dark:border-amber-950/30 dark:text-slate-300"
                     : isLocked
-                      ? "bg-slate-50 border-slate-100 text-slate-500"
-                      : "bg-purple-50/30 border-purple-100 text-slate-600"
+                      ? "bg-slate-50 border-slate-100 text-slate-500 dark:bg-slate-900/30 dark:border-slate-800 dark:text-slate-400"
+                      : "bg-purple-50/30 border-purple-100 text-slate-600 dark:bg-purple-950/10 dark:border-purple-950/30 dark:text-slate-300"
             }`}
           >
             <p className="text-sm font-bold leading-relaxed">{statusDesc}</p>
           </div>
 
           {lesson.xp > 0 ? (
-            <div className="flex items-center gap-3 rounded-2xl border-2 border-orange-100 bg-orange-50/50 p-4 mb-8">
+            <div className="flex items-center gap-3 rounded-2xl border-2 border-orange-100 bg-orange-50/50 p-4 mb-8 dark:border-orange-950/40 dark:bg-orange-950/20">
               <Image src="/points.svg" height={32} width={32} alt="XP" />
               <div>
-                <h4 className="text-sm font-black text-orange-600">Điểm kinh nghiệm nhận được</h4>
-                <p className="text-xs font-bold text-orange-500">
+                <h4 className="text-sm font-black text-orange-600 dark:text-orange-400">Điểm kinh nghiệm nhận được</h4>
+                <p className="text-xs font-bold text-orange-500 dark:text-orange-300/80">
                   Hoàn thành thử thách để nhận +{lesson.xp} XP tích lũy
                 </p>
               </div>
@@ -383,7 +383,7 @@ export const ChapterOneLessonDetailClient = ({
       </FeedWrapper>
 
       <StickyWrapper>
-        <div className="rounded-[24px] border-2 border-sky-100 bg-white p-4 shadow-sm">
+        <div className="rounded-[24px] border-2 border-sky-100 dark:border-[#202f36] bg-white dark:bg-[#182226] p-4 shadow-sm">
           <UserProgress
             activeCourse={{ title: activeCourse.title, imageSrc: activeCourse.imageSrc }}
             hearts={hearts}

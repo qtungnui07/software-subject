@@ -145,7 +145,7 @@ export const ProfileXpPanel = () => {
         </div>
       )}
 
-      <div className="mt-5 grid gap-3 sm:grid-cols-3 lg:grid-cols-1 xl:grid-cols-3">
+      <div className="mt-5 grid gap-3 sm:grid-cols-3 lg:grid-cols-1">
         {xpCards.map((card) => (
           <div key={card.key} className={`rounded-2xl border-2 p-4 ${card.tone}`}>
             <div className="flex items-center gap-3">

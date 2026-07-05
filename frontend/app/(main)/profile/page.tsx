@@ -185,7 +185,7 @@ const ProfilePage = async () => {
               </Button>
             </div>
 
-            <div className="mt-5 grid gap-3 sm:grid-cols-2 lg:grid-cols-1 xl:grid-cols-2">
+            <div className="mt-5 grid gap-3 sm:grid-cols-2 lg:grid-cols-1">
               {quickStats.map((stat) => (
                 <div
                   key={stat.label}

@@ -10,8 +10,6 @@ import {
   Clock,
   Sparkles,
   Info,
-  Flame,
-  Heart,
   Star,
   TrendingUp,
   X,
@@ -21,6 +19,7 @@ import { FeedWrapper } from "@/components/feed-wrapper";
 import { StickyWrapper } from "@/components/sticky-wrapper";
 import { LeagueShield, LEAGUES, LeagueId } from "@/components/league-shield";
 import { updateUserLeague, updateUserStatusEmoji } from "@/actions/user-progress";
+import { UserProgress } from "@/components/user-progress";
 
 // ─── Constants ───────────────────────────────────────────────────────────────
 
@@ -928,46 +927,11 @@ export const LeaderboardClient: React.FC<LeaderboardClientProps> = ({
 
         {/* User Stats Card */}
         <div className="rounded-[24px] border-2 border-slate-200 bg-white p-4 shadow-sm dark:border-slate-800 dark:bg-slate-900/40">
-          <div className="flex w-full items-center justify-between gap-2">
-            <Link
-              href="/courses"
-              className="group flex h-14 min-w-0 flex-1 items-center gap-x-2 rounded-[18px] border-2 border-transparent bg-white px-2 transition hover:border-[#d6ecfb] hover:bg-[#f4fbff] dark:bg-slate-900/20 dark:hover:border-sky-950 dark:hover:bg-sky-950/20"
-            >
-              <span className="flex size-10 shrink-0 items-center justify-center rounded-2xl bg-slate-50 shadow-sm ring-2 ring-slate-100 transition group-hover:ring-sky-100 dark:bg-slate-950 dark:ring-slate-800 dark:group-hover:ring-sky-950">
-                <Image
-                  src={activeCourse.imageSrc || "/globe.svg"}
-                  alt={activeCourse.title}
-                  className="rounded-md"
-                  width={26}
-                  height={26}
-                />
-              </span>
-              <span className="truncate text-sm font-black text-slate-700 dark:text-slate-200">
-                {activeCourse.title}
-              </span>
-            </Link>
-
-            <div className="flex h-14 items-center gap-x-2 rounded-[18px] border-2 border-transparent bg-orange-50 px-3 text-sm font-black text-orange-600 shadow-sm cursor-default dark:bg-orange-950/20 dark:text-orange-400">
-              <Flame className="h-5 w-5 fill-current text-orange-500" />
-              <span>Streak</span>
-            </div>
-
-            <Link
-              href="/shop"
-              className="flex h-14 items-center gap-x-2 rounded-[18px] border-2 border-orange-100 bg-orange-50 px-3 text-sm font-black text-orange-600 shadow-sm transition hover:bg-orange-100 dark:border-orange-950/40 dark:bg-orange-950/20 dark:text-orange-400 dark:hover:bg-orange-950/40"
-            >
-              <Image src="/points.svg" height={26} width={26} alt="XP" />
-              <span>{userScore}</span>
-            </Link>
-
-            <Link
-              href="/shop"
-              className="flex h-14 items-center gap-x-2 rounded-[18px] border-2 border-rose-100 bg-rose-50 px-3 text-sm font-black text-rose-500 shadow-sm transition hover:bg-rose-100 dark:border-rose-950/40 dark:bg-rose-950/20 dark:text-rose-400 dark:hover:bg-rose-950/40"
-            >
-              <Heart className="h-5 w-5 fill-current text-rose-500" />
-              <span>{hearts}</span>
-            </Link>
-          </div>
+          <UserProgress
+            activeCourse={activeCourse}
+            hearts={hearts}
+            points={userPoints}
+          />
         </div>
 
         {/* My Leaderboard Stats */}
