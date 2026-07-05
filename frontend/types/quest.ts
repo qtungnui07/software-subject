@@ -87,8 +87,55 @@ export type QuestsPageData = {
   summary: QuestSummary;
   snapshot: UserQuestSnapshot;
   timezone: "Asia/Ho_Chi_Minh";
+  nextResetAt: string;
   resetTimeLabel: "00:00";
   dataSource: QuestDataSource;
   lastSyncedAt: string;
   syncStatus: QuestSyncStatus;
+};
+
+
+export type QuestClaimTodayStats = {
+  lessonsCompleted: number;
+  xpEarned: number;
+  minutesLearned: number;
+  bestAccuracy: number;
+};
+
+export type QuestClaimChestState = {
+  id: string;
+  status: "locked" | "ready" | "claimed";
+  rewardXp: number;
+  canClaim: boolean;
+};
+
+export type QuestClaimTodaySnapshot = {
+  date: string;
+  dailyCompleted: number;
+  dailyTotal: number;
+  stats: QuestClaimTodayStats;
+  quests: ResolvedQuest[];
+  bonusQuests: ResolvedQuest[];
+  chest: QuestClaimChestState;
+  currentStreak: number;
+  nextResetAt: string;
+  snapshot: UserQuestSnapshot;
+  claimedQuestIds: string[];
+};
+
+export type QuestClaimResponse = {
+  success: true;
+  alreadyClaimed: boolean;
+  questId: string;
+  rewardType: "quest" | "chest";
+  rewardXp: number;
+  reward: {
+    xp: number;
+  };
+  totalXp: number;
+  dailyXp: number;
+  weeklyXp: number;
+  currentDay: string;
+  currentWeekStart: string;
+  today: QuestClaimTodaySnapshot;
 };

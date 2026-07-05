@@ -1,7 +1,14 @@
 "use client";
 
 import Link from "next/link";
-import { useState, useSyncExternalStore, type ReactNode } from "react";
+import { useRouter } from "next/navigation";
+import {
+  useEffect,
+  useRef,
+  useState,
+  useSyncExternalStore,
+  type ReactNode,
+} from "react";
 import {
   ArrowRight,
   BadgeCheck,
@@ -13,6 +20,7 @@ import {
   Flame,
   Gift,
   Lightbulb,
+  LoaderCircle,
   Lock,
   PackageOpen,
   PartyPopper,
@@ -38,6 +46,7 @@ import {
   getTodayChestView,
 } from "@/lib/quests/quest-gamification";
 import {
+  applyQuestClaimResultToPageData,
   claimQuestReward,
   clearQuestStorage,
   getQuestServerSnapshot,
@@ -45,6 +54,11 @@ import {
   getQuestsPageDataFromSnapshotSync,
   subscribeToQuestStorage,
 } from "@/lib/quests";
+import {
+  getQuestResetCountdown,
+  QUEST_COUNTDOWN_PLACEHOLDER,
+  QUEST_COUNTDOWN_REFRESHING_LABEL,
+} from "@/lib/quests/quest-time";
 import { cn } from "@/lib/utils";
 import type {
   QuestDemoState,
@@ -120,6 +134,49 @@ const robotMoodView: Record<RobotMood, { emoji: string; title: string; descripti
 
 const SHOW_QUEST_DEMO_CONTROLS =
   process.env.NEXT_PUBLIC_SHOW_QUEST_DEBUG === "true";
+
+const useQuestResetCountdown = (nextResetAt: string) => {
+  const router = useRouter();
+  const hasTriggeredRefreshRef = useRef(false);
+  const [countdownLabel, setCountdownLabel] = useState(
+    QUEST_COUNTDOWN_PLACEHOLDER,
+  );
+
+  useEffect(() => {
+    hasTriggeredRefreshRef.current = false;
+
+    const updateCountdown = () => {
+      const countdown = getQuestResetCountdown(nextResetAt);
+
+      if (!countdown.isValid) {
+        setCountdownLabel(QUEST_COUNTDOWN_PLACEHOLDER);
+        return;
+      }
+
+      if (countdown.isExpired) {
+        if (!hasTriggeredRefreshRef.current) {
+          hasTriggeredRefreshRef.current = true;
+          setCountdownLabel(QUEST_COUNTDOWN_REFRESHING_LABEL);
+          router.refresh();
+        }
+
+        return;
+      }
+
+      setCountdownLabel(countdown.label);
+    };
+
+    const initialTimeoutId = window.setTimeout(updateCountdown, 0);
+    const intervalId = window.setInterval(updateCountdown, 1000);
+
+    return () => {
+      window.clearTimeout(initialTimeoutId);
+      window.clearInterval(intervalId);
+    };
+  }, [nextResetAt, router]);
+
+  return countdownLabel;
+};
 
 const metricLabelMap: Record<QuestMetric, string> = {
   lesson_completed: "bài học",
@@ -422,7 +479,15 @@ const RewardTypeIcon = ({
   }
 };
 
-const QuestAction = ({ quest, onClaim }: { quest: ResolvedQuest; onClaim?: (quest: ResolvedQuest) => void }) => {
+const QuestAction = ({
+  quest,
+  isClaiming = false,
+  onClaim,
+}: {
+  quest: ResolvedQuest;
+  isClaiming?: boolean;
+  onClaim?: (quest: ResolvedQuest) => void;
+}) => {
   if (quest.status === "active") {
     return (
       <Button asChild type="button" variant="primary-outline" className="h-10 w-full justify-center rounded-2xl px-5 font-black sm:h-11 sm:w-auto">
@@ -440,8 +505,31 @@ const QuestAction = ({ quest, onClaim }: { quest: ResolvedQuest; onClaim?: (ques
         type="button"
         variant="secondary"
         className="h-10 w-full justify-center rounded-2xl border-emerald-600 bg-emerald-500 px-5 font-black text-white shadow-[0_12px_24px_rgba(16,185,129,0.18)] hover:bg-emerald-500/90 sm:h-11 sm:w-auto"
+        disabled={isClaiming}
+        aria-busy={isClaiming}
         onClick={() => onClaim?.(quest)}
       >
+        {isClaiming ? (
+          <>
+            <LoaderCircle className="mr-2 size-4 animate-spin" strokeWidth={3} />
+            Đang nhận...
+          </>
+        ) : (
+          getQuestActionLabel(quest)
+        )}
+      </Button>
+    );
+  }
+
+  if (quest.status === "claimed") {
+    return (
+      <Button
+        type="button"
+        variant="primary-outline"
+        className="h-10 w-full justify-center rounded-2xl border-2 border-emerald-500/60 bg-slate-900 px-5 font-black text-emerald-300 disabled:opacity-100 dark:border-emerald-700 dark:bg-[#0d171b] dark:text-emerald-300 sm:h-11 sm:w-auto"
+        disabled
+      >
+        <Check className="mr-2 size-4" strokeWidth={3} />
         {getQuestActionLabel(quest)}
       </Button>
     );
@@ -458,11 +546,13 @@ const QuestCard = ({
   quest,
   compact = false,
   delayIndex = 0,
+  isClaiming = false,
   onClaim,
 }: {
   quest: ResolvedQuest;
   compact?: boolean;
   delayIndex?: number;
+  isClaiming?: boolean;
   onClaim?: (quest: ResolvedQuest) => void;
 }) => {
   const isCompleted = quest.status === "completed" || quest.status === "claimed";
@@ -541,7 +631,7 @@ const QuestCard = ({
           {quest.reward.label}
         </div>
 
-        <QuestAction quest={quest} onClaim={onClaim} />
+        <QuestAction quest={quest} isClaiming={isClaiming} onClaim={onClaim} />
       </div>
     </article>
   );
@@ -589,10 +679,12 @@ const QuestsHero = ({
   data,
   onResetDemo,
   presetName,
+  resetCountdown,
 }: {
   data: QuestsPageData;
   onResetDemo: () => void;
   presetName: QuestSnapshotPresetName;
+  resetCountdown: string;
 }) => {
   const remaining = Math.max(data.summary.dailyTotal - data.summary.dailyCompleted, 0);
   const mood = robotMoodView[data.summary.robotMood];
@@ -646,7 +738,7 @@ const QuestsHero = ({
           <div className="mt-3 grid gap-2.5 sm:mt-4 sm:grid-cols-3 sm:gap-3">
             <HeroStat label="Tiến độ" value={`${data.summary.dailyCompleted}/${data.summary.dailyTotal}`} icon={<Target className="size-4" strokeWidth={3} />} />
             <HeroStat label="XP hôm nay" value={`${data.summary.todayXp} XP`} icon={<Zap className="size-4" strokeWidth={3} />} />
-            <HeroStat label="Làm mới lúc" value={data.resetTimeLabel} icon={<Clock className="size-4" strokeWidth={3} />} />
+            <HeroStat label="Làm mới sau" value={resetCountdown} icon={<Clock className="size-4" strokeWidth={3} />} />
           </div>
           {SHOW_QUEST_DEMO_CONTROLS ? (
 
@@ -1129,18 +1221,30 @@ const QuestsErrorState = () => {
 };
 
 export const QuestsClient = ({ initialData, demoState = "normal", presetName = "empty" }: QuestsClientProps) => {
+  const [localQuestData, setLocalQuestData] = useState<{
+    source: QuestsPageData;
+    value: QuestsPageData;
+  } | null>(null);
+  const [claimingQuestId, setClaimingQuestId] = useState<string | null>(null);
+  const claimInFlightRef = useRef<string | null>(null);
+  const questData = localQuestData?.source === initialData
+    ? localQuestData.value
+    : initialData;
+  const resetCountdown = useQuestResetCountdown(questData.nextResetAt);
   const storageSnapshot = useSyncExternalStore(
     subscribeToQuestStorage,
     getQuestStorageSnapshot,
     getQuestServerSnapshot,
   );
   const [toast, setToast] = useState<ToastState | null>(null);
+
   const data = storageSnapshot === getQuestServerSnapshot()
-    ? initialData
-    : getQuestsPageDataFromSnapshotSync(initialData.snapshot, {
-        dataSource: initialData.dataSource,
-        syncStatus: initialData.syncStatus,
-        weekActivity: initialData.summary.weekActivity,
+    ? questData
+    : getQuestsPageDataFromSnapshotSync(questData.snapshot, {
+        dataSource: questData.dataSource,
+        syncStatus: questData.syncStatus,
+        weekActivity: questData.summary.weekActivity,
+        nextResetAt: questData.nextResetAt,
       });
   const perfectDayQuest = data.bonusQuests.find((quest) => quest.type === "perfect-day");
   const longTermQuests = data.bonusQuests.filter((quest) => quest.type !== "perfect-day");
@@ -1151,16 +1255,29 @@ export const QuestsClient = ({ initialData, demoState = "normal", presetName = "
   };
 
   const handleClaimQuest = async (quest: ResolvedQuest) => {
-    if (!quest.canClaim) return;
+    if (!quest.canClaim || claimInFlightRef.current) return;
+
+    claimInFlightRef.current = quest.id;
+    setClaimingQuestId(quest.id);
 
     try {
       const result = await claimQuestReward(quest.id);
 
+      setLocalQuestData((currentState) => {
+        const currentData = currentState?.source === initialData
+          ? currentState.value
+          : initialData;
+
+        return {
+          source: initialData,
+          value: applyQuestClaimResultToPageData(currentData, result),
+        };
+      });
       showToast({
         title: "Đã nhận thưởng",
-        description: result?.alreadyClaimed
+        description: result.alreadyClaimed
           ? "Bạn đã nhận phần thưởng này hôm nay."
-          : `Bạn nhận được ${result?.rewardXp ?? result?.reward?.xp ?? quest.reward.label}.`,
+          : `Bạn nhận được +${result.rewardXp} XP.`,
         tone: "success",
       });
     } catch {
@@ -1169,6 +1286,9 @@ export const QuestsClient = ({ initialData, demoState = "normal", presetName = "
         description: "Phần thưởng sẽ mở khi dữ liệu học tập thật được ghi nhận.",
         tone: "error",
       });
+    } finally {
+      claimInFlightRef.current = null;
+      setClaimingQuestId(null);
     }
   };
 
@@ -1190,7 +1310,12 @@ export const QuestsClient = ({ initialData, demoState = "normal", presetName = "
       <QuestPolishStyles />
       <div className="grid gap-4 sm:gap-5 xl:grid-cols-[minmax(0,840px)_330px] xl:items-start xl:justify-center">
         <div className="space-y-3.5 sm:space-y-4">
-          <QuestsHero data={data} onResetDemo={handleResetDemo} presetName={presetName} />
+          <QuestsHero
+            data={data}
+            onResetDemo={handleResetDemo}
+            presetName={presetName}
+            resetCountdown={resetCountdown}
+          />
           <QuestMobileOverview data={data} />
 
           <CardShell>
@@ -1207,7 +1332,13 @@ export const QuestsClient = ({ initialData, demoState = "normal", presetName = "
             />
             <div className="space-y-3.5 sm:space-y-4">
               {data.dailyQuests.map((quest, index) => (
-                <QuestCard key={quest.id} quest={quest} delayIndex={index} onClaim={handleClaimQuest} />
+                <QuestCard
+                  key={quest.id}
+                  quest={quest}
+                  delayIndex={index}
+                  isClaiming={claimingQuestId === quest.id}
+                  onClaim={handleClaimQuest}
+                />
               ))}
             </div>
           </CardShell>
