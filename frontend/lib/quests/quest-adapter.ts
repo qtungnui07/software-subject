@@ -11,12 +11,14 @@ import {
 import type {
   QuestDataSource,
   QuestSyncStatus,
+  QuestClaimResponse,
   QuestsPageData,
   UserQuestSnapshot,
   WeekActivityDay,
 } from "@/types/quest";
 
 import { getClaimedQuestIds } from "./quest-storage";
+import { getNextQuestResetAt } from "./quest-time";
 import {
   buildQuestSummary,
   resolveBonusQuests,
@@ -69,6 +71,7 @@ export const buildQuestsPageData = (
     dataSource?: QuestDataSource;
     syncStatus?: QuestSyncStatus;
     weekActivity?: WeekActivityDay[];
+    nextResetAt?: string;
   },
 ): QuestsPageData => {
   const dataSource = options?.dataSource ?? "mock";
@@ -87,6 +90,7 @@ export const buildQuestsPageData = (
     summary,
     snapshot,
     timezone: QUEST_TIMEZONE,
+    nextResetAt: options?.nextResetAt ?? getNextQuestResetAt(),
     resetTimeLabel: QUEST_RESET_TIME_LABEL,
     dataSource,
     lastSyncedAt: syncStatus.lastSyncedAt,
@@ -100,12 +104,18 @@ export const getQuestsPageDataFromSnapshotSync = (
     dataSource?: QuestDataSource;
     syncStatus?: QuestSyncStatus;
     weekActivity?: WeekActivityDay[];
+    nextResetAt?: string;
   },
 ): QuestsPageData => {
+  const dataSource = options?.dataSource ?? "mock";
+  const claimedQuestIds = dataSource === "api"
+    ? snapshot.claimedQuestIds
+    : getClaimedQuestIds();
+
   return buildQuestsPageData(
     {
       ...snapshot,
-      claimedQuestIds: getClaimedQuestIds(),
+      claimedQuestIds,
     },
     options,
   );
@@ -125,7 +135,7 @@ export const getQuestsPageData = async (
   return getQuestsPageDataSync(presetName);
 };
 
-export const claimQuestReward = async (questId: string) => {
+export const claimQuestReward = async (questId: string): Promise<QuestClaimResponse> => {
   const response = await fetch("/api/quests/claim", {
     method: "POST",
     headers: {
@@ -139,5 +149,5 @@ export const claimQuestReward = async (questId: string) => {
     throw new Error(payload?.error || "Không thể nhận thưởng nhiệm vụ.");
   }
 
-  return response.json();
+  return (await response.json()) as QuestClaimResponse;
 };

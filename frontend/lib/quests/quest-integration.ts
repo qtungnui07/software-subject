@@ -288,9 +288,13 @@ export const getIntegratedQuestsPageData = async (
     claimedQuestIds: [],
   };
   const shouldUseQuestServiceState = questTodayState?.source === "db";
-  const snapshot = shouldUseQuestServiceState
+  const questSnapshot = shouldUseQuestServiceState
     ? questTodayState.snapshot
     : fallbackDataTruthSnapshot;
+  const snapshot: UserQuestSnapshot = {
+    ...questSnapshot,
+    xpEarnedToday: Math.max(questSnapshot.xpEarnedToday, dailyXp),
+  };
   const weekActivity = shouldUseQuestServiceState
     ? questTodayState.weekActivity
     : buildWeekActivityFromLogs(recentActivity, todayKey);
@@ -305,5 +309,6 @@ export const getIntegratedQuestsPageData = async (
       hasQuestService,
     }),
     weekActivity,
+    nextResetAt: questTodayState?.today.nextResetAt,
   });
 };

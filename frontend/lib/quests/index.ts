@@ -5,3 +5,4 @@ export * from "./quest-utils";
 export * from "./quest-storage";
 export * from "./quest-adapter";
 export * from "./quest-gamification";
+export * from "./quest-claim-state";

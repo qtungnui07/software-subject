@@ -33,7 +33,6 @@ const runScript = (
     execSync(`npx tsx ${scriptPath}`, {
       cwd: process.cwd(),
       env,
-      shell: true,
       stdio: "inherit",
       windowsHide: true,
     });
@@ -51,6 +50,8 @@ const runScript = (
 console.log(`[quests-check] API base: ${API_BASE_URL}`);
 console.log("[quests-check] Make sure `npm run dev` is running before the API contract check.\n");
 
+runScript("Quest reset countdown", "scripts/check-quest-reset-countdown.ts");
+
 runScript("Quest pure logic", "scripts/check-quest-logic.ts", {
   reactServer: true,
 });
@@ -59,6 +60,8 @@ runScript("Quest progress policy", "scripts/check-quest-progress-contract.ts", {
   reactServer: true,
 });
 
+runScript("Quest claim state", "scripts/check-quest-claim-state.ts");
+
 runScript("Quest API contract", "scripts/check-quest-api-contract.ts");
 
-console.log("\nQuest full check passed: logic, progress policy, and API contract are valid.");
+console.log("\nQuest full check passed: countdown, logic, progress policy, claim state, and API contract are valid.");
