@@ -18,6 +18,8 @@ export const ThemeListener = () => {
       document.documentElement.dataset.theme = resolvedTheme;
     };
 
+    updateTheme();
+
     // 1. Listen to storage changes (for multi-tab sync)
     const handleStorageChange = (e: StorageEvent) => {
       if (e.key === "robogo-theme") {
