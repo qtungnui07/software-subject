@@ -201,7 +201,6 @@ export default function RootLayout({
               display: "grid",
               placeItems: "center",
               overflow: "hidden",
-              background: "#eef8ff",
             }}
           >
             <div
