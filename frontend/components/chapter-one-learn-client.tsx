@@ -189,7 +189,7 @@ export const ChapterOneLearnClient = ({
     >
       <FeedWrapper>
         <section className="rounded-[28px] border-2 border-sky-100 dark:border-[#202f36] bg-white dark:bg-[#182226] shadow-sm">
-          <div className="sticky top-[56px] z-40 bg-white/95 dark:bg-[#182226]/95 px-4 py-4 backdrop-blur sm:px-6 lg:top-4">
+          <div className="sticky top-[56px] z-40 bg-white/95 dark:bg-[#182226]/95 px-4 pb-4 pt-4 backdrop-blur sm:px-6 lg:top-0 lg:pt-6 rounded-t-[26px]">
             <Header
               courseTitle={chapterOneDemoScope.courseTitle}
               sectionLabel={chapterOneDemoScope.sectionLabel}
