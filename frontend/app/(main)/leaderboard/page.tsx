@@ -1,34 +1,33 @@
-import { redirect } from "next/navigation";
+import { auth } from "@/auth";
 import { getUserProgress } from "@/db/queries";
 import { LeaderboardClient } from "./leaderboard-client";
 
 export const dynamic = "force-dynamic";
 
 const LeaderboardPage = async () => {
+    const session = await auth();
     const userProgress = await getUserProgress();
-
-    if (!userProgress || !userProgress.activeCourseId) {
-        redirect("/courses");
-    }
+    const isLoggedIn = Boolean(session?.user?.id);
 
     // Safely cast or get properties since TypeScript infers them from schema.ts
-    const userLeague = (userProgress as any).league ?? 1;
-    const userStatusEmoji = (userProgress as any).statusEmoji ?? null;
+    const userLeague = (userProgress as any)?.league ?? 1;
+    const userStatusEmoji = (userProgress as any)?.statusEmoji ?? null;
 
     return (
         <LeaderboardClient
-            userId={userProgress.userId}
-            initialUserName={userProgress.userName}
-            initialUserImageSrc={userProgress.userImageSrc}
-            initialPoints={userProgress.points}
+            userId={userProgress?.userId ?? ""}
+            initialUserName={userProgress?.userName ?? session?.user?.name ?? "Khách"}
+            initialUserImageSrc={userProgress?.userImageSrc ?? session?.user?.image ?? "/mascot.svg"}
+            initialPoints={userProgress?.points ?? 0}
             initialLeague={userLeague}
             initialStatusEmoji={userStatusEmoji}
-            hearts={userProgress.hearts}
+            hearts={userProgress?.hearts ?? 5}
             activeCourse={{
-                title: userProgress.activeCourse?.title || "Tiếng Anh",
-                imageSrc: userProgress.activeCourse?.imageSrc || "/globe.svg",
+                title: userProgress?.activeCourse?.title || "Tiếng Anh",
+                imageSrc: userProgress?.activeCourse?.imageSrc || "/globe.svg",
             }}
             todayMinutes={43} // Simulated daily study minutes, matching Sidebar
+            isLoggedIn={isLoggedIn}
         />
     );
 };

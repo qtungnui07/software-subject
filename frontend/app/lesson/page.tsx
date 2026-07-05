@@ -7,6 +7,10 @@ import { CheckCircle2, XCircle, RefreshCw, Home, Heart } from "lucide-react";
 
 import { LessonHeader } from "@/components/lesson-header";
 import { ExitModal } from "@/components/exit-modal";
+import {
+  LessonStudyTimer,
+  type LessonStudyTimerHandle,
+} from "@/components/lesson-study-timer";
 import { LessonResultScreen } from "@/components/lesson-result-screen";
 import { Button } from "@/components/ui/button";
 import { lessonNodes } from "@/constants/lessons";
@@ -15,6 +19,10 @@ import {
   completeChapterOneCheckpoint,
   completeChapterOneLesson,
   getChapterOneProgress,
+  normalizeChapterOneProgressState,
+  saveChapterOneProgress,
+  setChapterOneProgressOwner,
+  type ChapterOneProgressState,
 } from "@/lib/chapter-one-progress";
 import { StreakNotification } from "@/components/streak/streak-notification";
 import type { StreakNotificationInput } from "@/components/streak/streak-data";
@@ -91,6 +99,13 @@ type LessonXpApiResult = {
   isDemoUser?: boolean;
 };
 
+type CurrentAuthApiResult = {
+  user: {
+    id: string;
+  } | null;
+  progress?: Partial<ChapterOneProgressState>;
+};
+
 const LessonContent = () => {
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -131,7 +146,10 @@ const LessonContent = () => {
   const [xpError, setXpError] = useState<string | null>(null);
   const [streakResult, setStreakResult] = useState<StreakNotificationInput | null>(null);
   const [completionBlockedMessage, setCompletionBlockedMessage] = useState<string | null>(null);
+  const [isProgressReady, setIsProgressReady] = useState(false);
   const hasHandledCompletionRef = useRef(false);
+  const studyDurationSecondsRef = useRef(0);
+  const studyTimerRef = useRef<LessonStudyTimerHandle | null>(null);
 
   const currentQuestion = MOCK_QUESTIONS[currentQuestionIndex];
   const progress = (currentQuestionIndex / MOCK_QUESTIONS.length) * 100;
@@ -142,10 +160,60 @@ const LessonContent = () => {
   const isCheckpoint = lessonNode.type === "checkpoint";
   const xpLessonId = lessonNode.nodeId;
 
+  useEffect(() => {
+    let isMounted = true;
+
+    const syncProgressOwner = async () => {
+      try {
+        const response = await fetch("/api/progress/chapter-one", {
+          method: "GET",
+          cache: "no-store",
+        });
+
+        if (response.status === 401) {
+          setChapterOneProgressOwner(null);
+          if (isMounted) {
+            setIsProgressReady(true);
+          }
+          return;
+        }
+
+        if (!response.ok) {
+          if (isMounted) {
+            setIsProgressReady(true);
+          }
+          return;
+        }
+
+        const data = (await response.json()) as CurrentAuthApiResult;
+
+        if (isMounted) {
+          setChapterOneProgressOwner(data.user?.id ?? null);
+          if (data.progress && typeof data.progress === "object") {
+            saveChapterOneProgress(normalizeChapterOneProgressState(data.progress));
+          }
+          setIsProgressReady(true);
+        }
+      } catch (error) {
+        console.warn("Could not resolve progress owner:", error);
+        if (isMounted) {
+          setIsProgressReady(true);
+        }
+      }
+    };
+
+    void syncProgressOwner();
+
+    return () => {
+      isMounted = false;
+    };
+  }, []);
+
   // Apply pass/fail rules once when the result screen is shown.
   // Progress is localStorage-first, while XP/streak APIs are best-effort extras.
   useEffect(() => {
     if (!isFinished || hasHandledCompletionRef.current) return;
+    if (!isProgressReady) return;
 
     hasHandledCompletionRef.current = true;
 
@@ -171,22 +239,39 @@ const LessonContent = () => {
 
     setCompletionBlockedMessage(null);
 
-    try {
-      if (isCheckpoint) {
-        completeChapterOneCheckpoint(xpLessonId);
-      } else {
-        completeChapterOneLesson(xpLessonId);
+    const syncChapterOneProgress = async () => {
+      const nextProgressState = isCheckpoint
+        ? completeChapterOneCheckpoint(xpLessonId)
+        : completeChapterOneLesson(xpLessonId);
+
+      const response = await fetch("/api/progress/chapter-one", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ progress: nextProgressState }),
+      });
+
+      if (!response.ok) {
+        throw new Error("Chapter 1 progress API request failed");
       }
-    } catch (err) {
-      console.warn("Could not update Chapter 1 progress:", err);
-    }
+    };
 
     const completeLesson = async () => {
       let xpForStreak = 0;
 
       try {
+        await syncChapterOneProgress();
+      } catch (err) {
+        console.warn("Could not update Chapter 1 progress:", err);
+        setXpError("Không thể lưu tiến độ bài học lúc này. Hãy thử lại sau.");
+      }
+
+      try {
         setIsClaimingXp(true);
-        setXpError(null);
+        setXpError((currentError) =>
+          currentError === "Không thể lưu tiến độ bài học lúc này. Hãy thử lại sau."
+            ? currentError
+            : null
+        );
 
         const xpResponse = await fetch("/api/xp/complete-lesson", {
           method: "POST",
@@ -194,6 +279,7 @@ const LessonContent = () => {
           body: JSON.stringify({
             lessonId: xpLessonId,
             accuracy,
+            durationSeconds: studyDurationSecondsRef.current,
           }),
         });
 
@@ -239,7 +325,7 @@ const LessonContent = () => {
     };
 
     completeLesson();
-  }, [accuracy, isCheckpoint, isFinished, passed, xpLessonId]);
+  }, [accuracy, isCheckpoint, isFinished, isProgressReady, passed, xpLessonId]);
 
   // Handle checking the selected answer
   const onCheck = () => {
@@ -257,13 +343,17 @@ const LessonContent = () => {
   };
 
   // Handle continuing to the next question or finishing
-  const onContinue = () => {
+  const onContinue = async () => {
     setSelectedOption(null);
     setIsAnswered(false);
 
     if (currentQuestionIndex < MOCK_QUESTIONS.length - 1) {
       setCurrentQuestionIndex((prev) => prev + 1);
     } else {
+      const activeSeconds = await studyTimerRef.current?.flush({ keepalive: true });
+      if (typeof activeSeconds === "number") {
+        studyDurationSecondsRef.current = activeSeconds;
+      }
       setIsFinished(true);
     }
   };
@@ -300,6 +390,7 @@ const LessonContent = () => {
     setStreakResult(null);
     setCompletionBlockedMessage(null);
     hasHandledCompletionRef.current = false;
+    studyDurationSecondsRef.current = 0;
   };
 
   // Redirect to learn page
@@ -526,6 +617,13 @@ const LessonContent = () => {
         isOpen={isExitModalOpen}
         onClose={() => setIsExitModalOpen(false)}
         onConfirm={redirectToLearn}
+      />
+      <LessonStudyTimer
+        ref={studyTimerRef}
+        isActive={!isFinished && hearts > 0 && !shouldRedirectToLearn}
+        onActiveSecondsChange={(seconds) => {
+          studyDurationSecondsRef.current = seconds;
+        }}
       />
     </div>
   );

@@ -37,7 +37,7 @@ export async function PATCH(req: Request) {
     result.ok &&
     result.data.account.isClerk === false
   ) {
-    setLocalSessionCookie(nextResponse, {
+    await setLocalSessionCookie(nextResponse, {
       id: session.user.id,
       name: result.data.account.name,
       email: result.data.account.email,

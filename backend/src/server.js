@@ -31,6 +31,9 @@ const databaseUrl = process.env.DATABASE_URL;
 const apiKey = process.env.BACKEND_API_KEY;
 
 const sql = databaseUrl ? postgres(databaseUrl, { max: 5 }) : null;
+const VIETNAM_TIME_ZONE = "Asia/Ho_Chi_Minh";
+
+let studyTimeSchemaReady = false;
 
 const sendJson = (res, status, data) => {
   const body = JSON.stringify(data);
@@ -78,6 +81,33 @@ const requireDatabase = () => {
   if (!sql) {
     throw new Error("DATABASE_URL is not set");
   }
+};
+
+const ensureStudyTimeSchema = async () => {
+  requireDatabase();
+
+  if (studyTimeSchemaReady) {
+    return;
+  }
+
+  await sql`
+    create table if not exists study_time_summary (
+      user_id text primary key,
+      total_seconds integer not null default 0,
+      today_seconds integer not null default 0,
+      current_day date not null default ((now() at time zone 'Asia/Ho_Chi_Minh')::date),
+      daily_goal_seconds integer not null default 3600,
+      created_at timestamptz not null default now(),
+      updated_at timestamptz not null default now()
+    )
+  `;
+
+  await sql`
+    create index if not exists study_time_summary_current_day_idx
+    on study_time_summary (current_day)
+  `;
+
+  studyTimeSchemaReady = true;
 };
 
 const requireApiKey = (req) => {
@@ -139,8 +169,72 @@ const publicUser = (user) => ({
   image: user.image_src || "/mascot.svg",
 });
 
+const formatDateInTimeZone = (date, timeZone) => {
+  const parts = new Intl.DateTimeFormat("en-CA", {
+    timeZone,
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+  }).formatToParts(date);
+  const year = parts.find((part) => part.type === "year")?.value;
+  const month = parts.find((part) => part.type === "month")?.value;
+  const day = parts.find((part) => part.type === "day")?.value;
+
+  if (!year || !month || !day) {
+    throw new Error("Failed to format date key");
+  }
+
+  return `${year}-${month}-${day}`;
+};
+
+const getCurrentDateKeys = () => {
+  const todayKey = formatDateInTimeZone(new Date(), VIETNAM_TIME_ZONE);
+  const [year, month, day] = todayKey.split("-").map(Number);
+  const utcDate = new Date(Date.UTC(year, month - 1, day));
+  const dayIndex = utcDate.getUTCDay();
+  const distanceFromMonday = dayIndex === 0 ? 6 : dayIndex - 1;
+
+  utcDate.setUTCDate(utcDate.getUTCDate() - distanceFromMonday);
+
+  return {
+    todayKey,
+    weekStartKey: utcDate.toISOString().slice(0, 10),
+  };
+};
+
+const ensureAccountData = async (database, { userId, name, imageSrc }) => {
+  const { todayKey, weekStartKey } = getCurrentDateKeys();
+
+  await database`
+    insert into user_progress (user_id, user_name, user_image_src)
+    values (${userId}, ${name || "User"}, ${imageSrc || "/mascot.svg"})
+    on conflict (user_id) do update set
+      user_name = excluded.user_name,
+      user_image_src = excluded.user_image_src
+  `;
+
+  await database`
+    insert into user_xp_summary (user_id, total_xp, daily_xp, weekly_xp, current_day, current_week_start, updated_at)
+    values (${userId}, 0, 0, 0, ${todayKey}, ${weekStartKey}, now())
+    on conflict (user_id) do nothing
+  `;
+
+  await database`
+    insert into study_time_summary (user_id, current_day, updated_at)
+    values (${userId}, ${todayKey}, now())
+    on conflict (user_id) do nothing
+  `;
+
+  await database`
+    insert into chapter_one_progress (user_id, completed_lessons, claimed_chests, completed_checkpoint, updated_at)
+    values (${userId}, '[]', '[]', 0, now())
+    on conflict (user_id) do nothing
+  `;
+};
+
 const createLocalUser = async (payload) => {
   requireDatabase();
+  await ensureStudyTimeSchema();
 
   const name = String(payload.name || "").trim();
   const email = normalizeEmail(payload.email);
@@ -159,11 +253,21 @@ const createLocalUser = async (payload) => {
   }
 
   try {
-    const [user] = await sql`
-      insert into users (name, email, password_hash, image_src, updated_at)
-      values (${name}, ${email}, ${hashPassword(password)}, '/mascot.svg', now())
-      returning id, email, name, image_src
-    `;
+    const user = await sql.begin(async (transaction) => {
+      const [created] = await transaction`
+        insert into users (name, email, password_hash, image_src, updated_at)
+        values (${name}, ${email}, ${hashPassword(password)}, '/mascot.svg', now())
+        returning id, email, name, image_src
+      `;
+
+      await ensureAccountData(transaction, {
+        userId: String(created.id),
+        name: created.name,
+        imageSrc: created.image_src,
+      });
+
+      return created;
+    });
 
     return publicUser(user);
   } catch (error) {
@@ -179,6 +283,7 @@ const createLocalUser = async (payload) => {
 
 const signInLocalUser = async (payload) => {
   requireDatabase();
+  await ensureStudyTimeSchema();
 
   const email = normalizeEmail(payload.email);
   const password = String(payload.password || "");
@@ -195,11 +300,18 @@ const signInLocalUser = async (payload) => {
     throw error;
   }
 
+  await ensureAccountData(sql, {
+    userId: String(user.id),
+    name: user.name,
+    imageSrc: user.image_src,
+  });
+
   return publicUser(user);
 };
 
 const syncUser = async (payload) => {
   requireDatabase();
+  await ensureStudyTimeSchema();
 
   const clerkUserId = String(payload.clerkUserId || "").trim();
   const email = String(payload.email || "").trim().toLowerCase();
@@ -232,6 +344,12 @@ const syncUser = async (payload) => {
         returning id, clerk_user_id, email, name, image_src, created_at, updated_at
       `;
 
+      await ensureAccountData(transaction, {
+        userId: clerkUserId,
+        name: user.name,
+        imageSrc: user.image_src,
+      });
+
       return user;
     }
 
@@ -254,6 +372,12 @@ const syncUser = async (payload) => {
         returning id, clerk_user_id, email, name, image_src, created_at, updated_at
       `;
 
+      await ensureAccountData(transaction, {
+        userId: clerkUserId,
+        name: user.name,
+        imageSrc: user.image_src,
+      });
+
       return user;
     }
 
@@ -262,6 +386,12 @@ const syncUser = async (payload) => {
       values (${clerkUserId}, ${name}, ${email}, ${imageSrc}, now())
       returning id, clerk_user_id, email, name, image_src, created_at, updated_at
     `;
+
+    await ensureAccountData(transaction, {
+      userId: clerkUserId,
+      name: user.name,
+      imageSrc: user.image_src,
+    });
 
     return user;
   });
@@ -347,6 +477,84 @@ const accountResponse = (user) => ({
   imageSrc: user.image_src || "/mascot.svg",
   isClerk: Boolean(user.clerk_user_id),
 });
+
+const normalizeStudyTimeSummary = (row) => ({
+  userId: row.user_id,
+  totalSeconds: Number(row.total_seconds || 0),
+  todaySeconds: Number(row.today_seconds || 0),
+  dailyGoalSeconds: Number(row.daily_goal_seconds || 3600),
+  currentDay: row.current_day,
+  updatedAt: row.updated_at,
+});
+
+const getStudyTimeSummary = async (userId, database = sql) => {
+  await ensureStudyTimeSchema();
+  await findAccount(userId, database);
+
+  const todayExpression = database`(now() at time zone ${VIETNAM_TIME_ZONE})::date`;
+  const [summary] = await database`
+    insert into study_time_summary (user_id, current_day, updated_at)
+    values (${userId}, ${todayExpression}, now())
+    on conflict (user_id) do update set
+      today_seconds = case
+        when study_time_summary.current_day = ${todayExpression}
+          then study_time_summary.today_seconds
+        else 0
+      end,
+      current_day = ${todayExpression},
+      updated_at = now()
+    returning user_id, total_seconds, today_seconds, daily_goal_seconds, current_day, updated_at
+  `;
+
+  return normalizeStudyTimeSummary(summary);
+};
+
+const recordStudyTime = async (userId, payload) => {
+  requireDatabase();
+  await ensureStudyTimeSchema();
+
+  const durationSeconds = Math.trunc(Number(payload.durationSeconds || 0));
+
+  if (!Number.isFinite(durationSeconds) || durationSeconds <= 0) {
+    const error = new Error("durationSeconds must be a positive number");
+    error.status = 400;
+    throw error;
+  }
+
+  if (durationSeconds > 60 * 60) {
+    const error = new Error("durationSeconds is too large");
+    error.status = 400;
+    throw error;
+  }
+
+  return sql.begin(async (transaction) => {
+    await findAccount(userId, transaction);
+
+    const todayExpression = transaction`(now() at time zone ${VIETNAM_TIME_ZONE})::date`;
+    const [summary] = await transaction`
+      insert into study_time_summary (
+        user_id,
+        total_seconds,
+        today_seconds,
+        current_day,
+        updated_at
+      )
+      values (${userId}, ${durationSeconds}, ${durationSeconds}, ${todayExpression}, now())
+      on conflict (user_id) do update set
+        total_seconds = study_time_summary.total_seconds + ${durationSeconds},
+        today_seconds = case
+          when study_time_summary.current_day = ${todayExpression}
+            then study_time_summary.today_seconds + ${durationSeconds}
+          else ${durationSeconds}
+        end,
+        current_day = ${todayExpression},
+        updated_at = now()
+      returning user_id, total_seconds, today_seconds, daily_goal_seconds, current_day, updated_at
+    `;
+
+    return normalizeStudyTimeSummary(summary);
+  });
+};
 
 const getAccount = async (userId) => accountResponse(await findAccount(userId));
 
@@ -563,6 +771,24 @@ const server = http.createServer(async (req, res) => {
       const profile = await updateProfile(userId, await readJson(req));
       logRequest(req, 200, `user_id=${userId}`);
       sendJson(res, 200, { ok: true, profile });
+      return;
+    }
+
+    if (req.method === "GET" && url.pathname === "/study-time") {
+      requireApiKey(req);
+      const userId = requireUserId(req);
+      const summary = await getStudyTimeSummary(userId);
+      logRequest(req, 200, `user_id=${userId}`);
+      sendJson(res, 200, { ok: true, summary });
+      return;
+    }
+
+    if (req.method === "POST" && url.pathname === "/study-time/track") {
+      requireApiKey(req);
+      const userId = requireUserId(req);
+      const summary = await recordStudyTime(userId, await readJson(req));
+      logRequest(req, 200, `user_id=${userId}`);
+      sendJson(res, 200, { ok: true, summary });
       return;
     }
 

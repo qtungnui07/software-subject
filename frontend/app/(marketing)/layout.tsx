@@ -7,7 +7,7 @@ type Props = {
 
 const MarketingLayout = ({ children }: Props) => {
   return (
-    <div className="min-h-screen bg-white dark:bg-slate-950">
+    <div className="marketing-shell min-h-screen bg-white dark:bg-slate-950">
       <Header />
       {children}
       <Footer />

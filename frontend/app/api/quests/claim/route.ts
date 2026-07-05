@@ -41,10 +41,7 @@ export async function POST(request: Request) {
       questId,
     });
 
-    return NextResponse.json({
-      ...result,
-      isLocalFallbackUser: currentUser.isLocalFallback,
-    });
+    return NextResponse.json(result);
   } catch (error) {
     if (isQuestServiceError(error)) {
       return NextResponse.json(

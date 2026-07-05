@@ -38,7 +38,7 @@ export async function PATCH(req: Request) {
     !session.user.id.startsWith("user_") &&
     result.data.profile
   ) {
-    setLocalSessionCookie(nextResponse, {
+    await setLocalSessionCookie(nextResponse, {
       id: session.user.id,
       name: result.data.profile.name,
       email: result.data.profile.email || session.user.email || "",

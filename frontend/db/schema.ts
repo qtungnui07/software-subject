@@ -45,6 +45,23 @@ export const userProgress = pgTable("user_progress", {
     statusEmoji: text("status_emoji"),
 });
 
+export const localSessions = pgTable(
+    "local_sessions",
+    {
+        sessionId: text("session_id").primaryKey(),
+        userId: text("user_id").notNull(),
+        tokenHash: text("token_hash").notNull().unique(),
+        expiresAt: timestamp("expires_at", { withTimezone: true }).notNull(),
+        revokedAt: timestamp("revoked_at", { withTimezone: true }),
+        createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+        updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
+    },
+    (table) => ({
+        userIdx: index("local_sessions_user_idx").on(table.userId),
+        expiresAtIdx: index("local_sessions_expires_at_idx").on(table.expiresAt),
+    })
+);
+
 export const userStreaks = pgTable("user_streaks", {
     userId: text("user_id").primaryKey(),
     currentStreak: integer("current_streak").notNull().default(0),
@@ -81,6 +98,31 @@ export const userXpSummary = pgTable("user_xp_summary", {
     weeklyXp: integer("weekly_xp").notNull().default(0),
     currentDay: date("current_day"),
     currentWeekStart: date("current_week_start"),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+    updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
+});
+
+export const studyTimeSummary = pgTable(
+    "study_time_summary",
+    {
+        userId: text("user_id").primaryKey(),
+        totalSeconds: integer("total_seconds").notNull().default(0),
+        todaySeconds: integer("today_seconds").notNull().default(0),
+        currentDay: date("current_day").notNull(),
+        dailyGoalSeconds: integer("daily_goal_seconds").notNull().default(3600),
+        createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+        updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
+    },
+    (table) => ({
+        currentDayIdx: index("study_time_summary_current_day_idx").on(table.currentDay),
+    })
+);
+
+export const chapterOneProgress = pgTable("chapter_one_progress", {
+    userId: text("user_id").primaryKey(),
+    completedLessons: text("completed_lessons").notNull().default("[]"),
+    claimedChests: text("claimed_chests").notNull().default("[]"),
+    completedCheckpoint: integer("completed_checkpoint").notNull().default(0),
     createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
     updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
 });
@@ -195,10 +237,25 @@ export const UserProgressRelations = relations(userProgress, ({ one, many }) => 
         fields: [userProgress.userId],
         references: [userXpSummary.userId],
     }),
+    studyTimeSummary: one(studyTimeSummary, {
+        fields: [userProgress.userId],
+        references: [studyTimeSummary.userId],
+    }),
+    chapterOneProgress: one(chapterOneProgress, {
+        fields: [userProgress.userId],
+        references: [chapterOneProgress.userId],
+    }),
     xpEvents: many(xpEvents),
     lessonXpClaims: many(lessonXpClaims),
     questDailyStats: many(questDailyStats),
     questRewardClaims: many(questRewardClaims),
+}));
+
+export const localSessionsRelations = relations(localSessions, ({ one }) => ({
+    userProgress: one(userProgress, {
+        fields: [localSessions.userId],
+        references: [userProgress.userId],
+    }),
 }));
 
 export const userStreaksRelations = relations(userStreaks, ({ many, one }) => ({
@@ -219,6 +276,20 @@ export const dailyStreakLogsRelations = relations(dailyStreakLogs, ({ one }) => 
 export const userXpSummaryRelations = relations(userXpSummary, ({ one }) => ({
     userProgress: one(userProgress, {
         fields: [userXpSummary.userId],
+        references: [userProgress.userId],
+    }),
+}));
+
+export const studyTimeSummaryRelations = relations(studyTimeSummary, ({ one }) => ({
+    userProgress: one(userProgress, {
+        fields: [studyTimeSummary.userId],
+        references: [userProgress.userId],
+    }),
+}));
+
+export const chapterOneProgressRelations = relations(chapterOneProgress, ({ one }) => ({
+    userProgress: one(userProgress, {
+        fields: [chapterOneProgress.userId],
         references: [userProgress.userId],
     }),
 }));
@@ -257,6 +328,12 @@ export type DailyStreakLog = typeof dailyStreakLogs.$inferSelect;
 export type NewDailyStreakLog = typeof dailyStreakLogs.$inferInsert;
 export type UserXpSummary = typeof userXpSummary.$inferSelect;
 export type NewUserXpSummary = typeof userXpSummary.$inferInsert;
+export type StudyTimeSummary = typeof studyTimeSummary.$inferSelect;
+export type NewStudyTimeSummary = typeof studyTimeSummary.$inferInsert;
+export type ChapterOneProgress = typeof chapterOneProgress.$inferSelect;
+export type NewChapterOneProgress = typeof chapterOneProgress.$inferInsert;
+export type LocalSession = typeof localSessions.$inferSelect;
+export type NewLocalSession = typeof localSessions.$inferInsert;
 export type XpEvent = typeof xpEvents.$inferSelect;
 export type NewXpEvent = typeof xpEvents.$inferInsert;
 export type LessonXpClaim = typeof lessonXpClaims.$inferSelect;

@@ -20,7 +20,6 @@ export async function GET() {
 
     return NextResponse.json({
       success: true,
-      isLocalFallbackUser: currentUser.isLocalFallback,
       source: state.source,
       date: state.date,
       dailyCompleted: state.today.dailyCompleted,

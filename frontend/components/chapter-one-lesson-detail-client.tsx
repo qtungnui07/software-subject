@@ -25,6 +25,8 @@ import {
   getChapterOneNodeStatus,
   getChapterOneProgress,
   getInitialChapterOneProgress,
+  saveChapterOneProgress,
+  setChapterOneProgressOwner,
   subscribeChapterOneProgress,
   type ChapterOneNodeStatus,
   type ChapterOneProgressState,
@@ -89,6 +91,8 @@ type Props = {
   activeCourse: ActiveCoursePreview;
   hearts: number;
   points: number;
+  progressOwnerId: string | null;
+  initialProgressState: ChapterOneProgressState;
 };
 
 type DetailStatusView = {
@@ -199,18 +203,23 @@ export const ChapterOneLessonDetailClient = ({
   activeCourse,
   hearts,
   points,
+  progressOwnerId,
+  initialProgressState,
 }: Props) => {
   const [progressState, setProgressState] = useState<ChapterOneProgressState>(
     getInitialChapterOneProgress
   );
 
   useEffect(() => {
+    setChapterOneProgressOwner(progressOwnerId);
+    saveChapterOneProgress(initialProgressState);
+
     const syncProgress = () => setProgressState(getChapterOneProgress());
 
     syncProgress();
 
     return subscribeChapterOneProgress(syncProgress);
-  }, []);
+  }, [initialProgressState, progressOwnerId]);
 
   const lesson = lessonNodes.find((node) => node.nodeId === lessonNodeId);
 
@@ -236,6 +245,14 @@ export const ChapterOneLessonDetailClient = ({
   const handleClaimChest = () => {
     const nextState = claimChapterOneChest(lesson.nodeId);
     setProgressState(nextState);
+
+    void fetch("/api/progress/chapter-one", {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ progress: nextState }),
+    }).catch((error) => {
+      console.warn("Could not sync Chapter 1 chest progress:", error);
+    });
   };
 
   return (

@@ -23,7 +23,9 @@ export type ChapterOneProgressSummary = {
 };
 
 export const CHAPTER_ONE_PROGRESS_KEY = "robogo_chapter_1_progress";
+export const CHAPTER_ONE_PROGRESS_OWNER_KEY = "robogo_chapter_1_progress_owner";
 export const CHAPTER_ONE_PROGRESS_UPDATED_EVENT = "robogo-chapter-one-progress-updated";
+const CHAPTER_ONE_GUEST_PROGRESS_OWNER = "guest";
 
 const FIRST_CHAPTER_ONE_NODE_ID = "lesson-1";
 const CHAPTER_ONE_CHECKPOINT_ID = "chapter-1-test";
@@ -36,6 +38,30 @@ const chapterOneChestIds = new Set(
 );
 
 const isBrowser = () => typeof window !== "undefined";
+
+const sanitizeProgressOwnerId = (ownerId: string | null | undefined) => {
+  const trimmedOwnerId = typeof ownerId === "string" ? ownerId.trim() : "";
+
+  if (!trimmedOwnerId) {
+    return CHAPTER_ONE_GUEST_PROGRESS_OWNER;
+  }
+
+  return trimmedOwnerId.replace(/[^a-zA-Z0-9_-]/g, "_");
+};
+
+const getChapterOneProgressStorageKey = (ownerId?: string | null) => {
+  if (!isBrowser()) {
+    return `${CHAPTER_ONE_PROGRESS_KEY}:${CHAPTER_ONE_GUEST_PROGRESS_OWNER}`;
+  }
+
+  const explicitOwnerId = sanitizeProgressOwnerId(ownerId);
+  const storedOwnerId = sanitizeProgressOwnerId(
+    window.localStorage.getItem(CHAPTER_ONE_PROGRESS_OWNER_KEY)
+  );
+  const resolvedOwnerId = ownerId === undefined ? storedOwnerId : explicitOwnerId;
+
+  return `${CHAPTER_ONE_PROGRESS_KEY}:${resolvedOwnerId}`;
+};
 
 const uniqueValidIds = (ids: unknown, allowedIds: Set<string>) => {
   if (!Array.isArray(ids)) return [];
@@ -109,7 +135,7 @@ const inferCurrentChapterOneNodeId = (state: Pick<ChapterOneProgressState, "comp
   return CHAPTER_ONE_CHECKPOINT_ID;
 };
 
-const normalizeChapterOneProgress = (state: Partial<ChapterOneProgressState>): ChapterOneProgressState => {
+export const normalizeChapterOneProgressState = (state: Partial<ChapterOneProgressState>): ChapterOneProgressState => {
   const completedLessons = uniqueValidIds(state.completedLessons, chapterOneLessonIds);
   const claimedChests = uniqueValidIds(state.claimedChests, chapterOneChestIds);
   const completedCheckpoint = Boolean(state.completedCheckpoint);
@@ -132,7 +158,7 @@ const readStoredChapterOneProgress = () => {
   if (!isBrowser()) return null;
 
   try {
-    const rawProgress = window.localStorage.getItem(CHAPTER_ONE_PROGRESS_KEY);
+    const rawProgress = window.localStorage.getItem(getChapterOneProgressStorageKey());
     if (!rawProgress) return null;
 
     const parsedProgress = JSON.parse(rawProgress) as Partial<ChapterOneProgressState>;
@@ -141,7 +167,7 @@ const readStoredChapterOneProgress = () => {
       return null;
     }
 
-    return normalizeChapterOneProgress(parsedProgress);
+    return normalizeChapterOneProgressState(parsedProgress);
   } catch {
     return null;
   }
@@ -155,18 +181,42 @@ const emitChapterOneProgressUpdated = () => {
 
 export const getInitialChapterOneProgress = () => getDefaultChapterOneProgress();
 
+export const setChapterOneProgressOwner = (ownerId: string | null | undefined) => {
+  if (!isBrowser()) {
+    return;
+  }
+
+  const nextOwnerId = sanitizeProgressOwnerId(ownerId);
+  const previousOwnerId = sanitizeProgressOwnerId(
+    window.localStorage.getItem(CHAPTER_ONE_PROGRESS_OWNER_KEY)
+  );
+
+  window.localStorage.setItem(CHAPTER_ONE_PROGRESS_OWNER_KEY, nextOwnerId);
+
+  // The old global key predates per-account progress. Removing it prevents a
+  // fresh user in the same browser from inheriting someone else's lesson state.
+  window.localStorage.removeItem(CHAPTER_ONE_PROGRESS_KEY);
+
+  if (previousOwnerId !== nextOwnerId) {
+    emitChapterOneProgressUpdated();
+  }
+};
+
 export const getChapterOneProgress = () => {
   return readStoredChapterOneProgress() ?? getDefaultChapterOneProgress();
 };
 
 export const saveChapterOneProgress = (state: ChapterOneProgressState) => {
-  const nextState = normalizeChapterOneProgress({
+  const nextState = normalizeChapterOneProgressState({
     ...state,
     updatedAt: new Date().toISOString(),
   });
 
   if (isBrowser()) {
-    window.localStorage.setItem(CHAPTER_ONE_PROGRESS_KEY, JSON.stringify(nextState));
+    window.localStorage.setItem(
+      getChapterOneProgressStorageKey(),
+      JSON.stringify(nextState)
+    );
     emitChapterOneProgressUpdated();
   }
 
@@ -177,7 +227,7 @@ export const resetChapterOneProgress = () => {
   const defaultState = getDefaultChapterOneProgress();
 
   if (isBrowser()) {
-    window.localStorage.removeItem(CHAPTER_ONE_PROGRESS_KEY);
+    window.localStorage.removeItem(getChapterOneProgressStorageKey());
     emitChapterOneProgressUpdated();
   }
 
@@ -221,7 +271,7 @@ export const completeChapterOneLesson = (lessonId: string) => {
     chapterOneLessonIds
   );
   const nextNode = getNextChapterOneNode(lessonId);
-  const nextState = normalizeChapterOneProgress({
+  const nextState = normalizeChapterOneProgressState({
     ...currentState,
     completedLessons,
     currentNodeId: nextNode?.id ?? inferCurrentChapterOneNodeId({
@@ -254,7 +304,7 @@ export const claimChapterOneChest = (chestId: string) => {
 
   const claimedChests = uniqueValidIds([...currentState.claimedChests, chestId], chapterOneChestIds);
   const nextNode = getNextChapterOneNode(chestId);
-  const nextState = normalizeChapterOneProgress({
+  const nextState = normalizeChapterOneProgressState({
     ...currentState,
     claimedChests,
     currentNodeId: nextNode?.id ?? inferCurrentChapterOneNodeId({
@@ -285,7 +335,7 @@ export const completeChapterOneCheckpoint = (checkpointId = CHAPTER_ONE_CHECKPOI
     return currentState;
   }
 
-  const nextState = normalizeChapterOneProgress({
+  const nextState = normalizeChapterOneProgressState({
     ...currentState,
     completedCheckpoint: true,
     currentNodeId: checkpointId,

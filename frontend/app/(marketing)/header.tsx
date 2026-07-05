@@ -10,6 +10,7 @@ import {
   ThemeToggle,
 } from "./header-controls";
 import { HeaderSignOutButton } from "./header-signout-button";
+import { LearnTransitionLink } from "./learn-transition-link";
 
 export const Header = async () => {
   const session = await auth();
@@ -58,13 +59,9 @@ export const Header = async () => {
 
           {user ? (
             <div className="flex items-center gap-3">
-              <Link
-                id="header-learn-link"
-                href="/learn"
+              <LearnTransitionLink
                 className="rounded-2xl border-b-4 border-[#0B6FAE] bg-[#1D9BF0] px-6 py-3 text-base font-black text-white shadow-sm transition-all duration-150 hover:bg-[#1486CC] active:translate-y-0.5 active:border-b-2"
-              >
-                Vào học
-              </Link>
+              />
 
               <div className="hidden items-center gap-3 rounded-2xl bg-slate-100 px-4 py-3 text-base font-bold text-slate-700 dark:bg-slate-800 dark:text-slate-200 2xl:flex">
                 <span className="inline-flex h-9 w-9 items-center justify-center rounded-full bg-sky-100 text-sm font-black uppercase text-[#1486CC] dark:bg-slate-700">

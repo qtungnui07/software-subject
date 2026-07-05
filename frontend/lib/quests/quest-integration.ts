@@ -22,7 +22,6 @@ import type {
 
 type QuestIntegrationUser = {
   id: string;
-  isDemoUser: boolean;
 };
 
 type RecentStreakLog = {
@@ -63,7 +62,6 @@ const getCurrentQuestUser = async (): Promise<QuestIntegrationUser | null> => {
     if (session?.user?.id) {
       return {
         id: session.user.id,
-        isDemoUser: false,
       };
     }
   } catch (error) {
@@ -71,13 +69,6 @@ const getCurrentQuestUser = async (): Promise<QuestIntegrationUser | null> => {
       "Robogo quests could not read auth session. Falling back safely.",
       error,
     );
-  }
-
-  if (process.env.NODE_ENV !== "production") {
-    return {
-      id: "demo-user",
-      isDemoUser: true,
-    };
   }
 
   return null;
@@ -157,13 +148,11 @@ const buildWeekActivityFromLogs = (
 
 const getSyncStatus = ({
   source,
-  isDemoUser,
   hasXpSummary,
   hasStreak,
   hasQuestService,
 }: {
   source: QuestDataSource;
-  isDemoUser?: boolean;
   hasXpSummary: boolean;
   hasStreak: boolean;
   hasQuestService: boolean;
@@ -181,12 +170,11 @@ const getSyncStatus = ({
 
     return {
       source,
-      label: isDemoUser ? "Demo API" : "Đã đồng bộ",
+      label: "Đã đồng bộ",
       message: parts
         ? `Đang dùng dữ liệu ${parts} từ hệ thống hiện có.`
         : "Đang dùng dữ liệu thật khả dụng từ hệ thống hiện có.",
       lastSyncedAt,
-      isDemoUser,
     };
   }
 
@@ -196,16 +184,14 @@ const getSyncStatus = ({
       label: "Fallback an toàn",
       message: "Không lấy được Quest/XP/Streak ổn định, UI vẫn chạy bằng dữ liệu tạm.",
       lastSyncedAt,
-      isDemoUser,
     };
   }
 
   return {
     source,
-    label: "Demo preset",
-    message: "Đang dùng preset mock để test trạng thái nhiệm vụ.",
+    label: "Dữ liệu tạm",
+    message: "Đang dùng preset nội bộ để giữ giao diện ổn định.",
     lastSyncedAt,
-    isDemoUser,
   };
 };
 
@@ -298,7 +284,6 @@ export const getIntegratedQuestsPageData = async (
     dataSource,
     syncStatus: getSyncStatus({
       source: dataSource,
-      isDemoUser: user.isDemoUser,
       hasXpSummary,
       hasStreak,
       hasQuestService,

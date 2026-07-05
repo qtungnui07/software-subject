@@ -11,7 +11,7 @@ export async function POST(req: Request) {
   }
 
   const nextResponse = NextResponse.json(result.data, { status: result.status });
-  setLocalSessionCookie(nextResponse, result.data.user);
+  await setLocalSessionCookie(nextResponse, result.data.user);
 
   return nextResponse;
 }
