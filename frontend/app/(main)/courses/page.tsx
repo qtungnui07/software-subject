@@ -17,7 +17,7 @@ const CoursesPage = async () => {
     const showOnlyEnglish = true; 
 
     const filteredCourses = showOnlyEnglish
-        ? courses.filter(course => course.title === "Tiếng Anh")
+        ? courses.filter((course: any) => course.title === "Tiếng Anh")
         : courses;
 
     return (
