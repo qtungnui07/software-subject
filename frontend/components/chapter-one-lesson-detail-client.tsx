@@ -261,7 +261,7 @@ export const ChapterOneLessonDetailClient = ({
         <div className="rounded-[28px] border-2 border-sky-100 dark:border-[#202f36] bg-white dark:bg-[#182226] p-6 md:p-8 shadow-sm">
           <Link
             href="/learn"
-            className="group inline-flex items-center gap-2 text-xs font-black tracking-wider text-slate-400 hover:text-slate-600 dark:text-slate-500 dark:hover:text-slate-350 transition mb-6 uppercase"
+            className="group inline-flex items-center gap-2 text-xs font-black tracking-wider text-slate-400 hover:text-slate-600 dark:text-slate-500 dark:hover:text-slate-300 transition mb-6 uppercase"
           >
             <ArrowLeft className="h-4 w-4 stroke-[3.5] transition group-hover:-translate-x-0.5" />
             Quay lại lộ trình
