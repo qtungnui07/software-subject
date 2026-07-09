@@ -1,0 +1,72 @@
+import {
+  createArrangeWordsExercise,
+  createDialogueChoiceExercise,
+  createFillBlankExercise,
+  createListeningChoiceExercise,
+  createMultipleChoiceExercise,
+} from "@/data/exercises/english/exercise-builders";
+import type { Exercise } from "@/types/exercise";
+
+const lessonId = "en-s2-c1-lesson-3";
+
+export const sectionTwoLessonThreeExercises: Exercise[] = [
+  createMultipleChoiceExercise({
+    id: "en-s2-c1-l3-exercise-1",
+    lessonId,
+    skill: "conversation",
+    difficulty: 2,
+    instruction: "Chọn câu gọi món lịch sự",
+    prompt: "Bạn muốn gọi một bát súp. Bạn nói gì?",
+    explanation: "“I’d like …, please” là cách gọi món lịch sự.",
+    options: ["I'd like a bowl of soup, please.", "Give soup now.", "I liked soup yesterday.", "Where is your soup?"],
+    correctIndex: 0,
+  }),
+  createArrangeWordsExercise({
+    id: "en-s2-c1-l3-exercise-2",
+    lessonId,
+    skill: "grammar",
+    difficulty: 2,
+    instruction: "Sắp xếp thành câu hỏi",
+    prompt: "Hỏi giá chiếc áo.",
+    explanation: "Câu đúng là “How much does this shirt cost?”",
+    wordsInCorrectOrder: ["How", "much", "does", "this", "shirt", "cost"],
+    shuffledOrder: [4, 0, 5, 2, 1, 3],
+  }),
+  createFillBlankExercise({
+    id: "en-s2-c1-l3-exercise-3",
+    lessonId,
+    skill: "grammar",
+    difficulty: 2,
+    instruction: "Điền từ chỉ số lượng",
+    prompt: "Hoàn thành lời gọi món.",
+    explanation: "“Some” thường được dùng trong lời yêu cầu lịch sự.",
+    sentenceBefore: "Could I have",
+    sentenceAfter: "water, please?",
+    acceptedAnswers: ["some"],
+  }),
+  createDialogueChoiceExercise({
+    id: "en-s2-c1-l3-exercise-4",
+    lessonId,
+    skill: "conversation",
+    difficulty: 2,
+    instruction: "Chọn phản hồi phù hợp",
+    prompt: "Hoàn thành đoạn hội thoại ở nhà hàng.",
+    explanation: "Câu trả lời chọn món phù hợp với câu hỏi của nhân viên.",
+    speaker: "Waiter",
+    dialogue: "Are you ready to order?",
+    options: ["Yes, I'll have the chicken salad.", "The bill was expensive.", "I went there yesterday.", "This shirt is too small."],
+    correctIndex: 0,
+  }),
+  createListeningChoiceExercise({
+    id: "en-s2-c1-l3-exercise-5",
+    lessonId,
+    skill: "listening",
+    difficulty: 2,
+    instruction: "Nghe và chọn giá đúng",
+    prompt: "Nghe rồi chọn giá của chiếc áo.",
+    explanation: "Chiếc áo có giá hai mươi lăm đô la.",
+    spokenText: "The blue shirt is twenty-five dollars.",
+    options: ["15 dollars", "20 dollars", "25 dollars", "50 dollars"],
+    correctIndex: 2,
+  }),
+];

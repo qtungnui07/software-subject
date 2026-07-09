@@ -1,0 +1,72 @@
+import {
+  createArrangeWordsExercise,
+  createDialogueChoiceExercise,
+  createFillBlankExercise,
+  createListeningChoiceExercise,
+  createMultipleChoiceExercise,
+} from "@/data/exercises/english/exercise-builders";
+import type { Exercise } from "@/types/exercise";
+
+const lessonId = "en-s3-c1-lesson-2";
+
+export const sectionThreeLessonTwoExercises: Exercise[] = [
+  createMultipleChoiceExercise({
+    id: "en-s3-c1-l2-exercise-1",
+    lessonId,
+    skill: "conversation",
+    difficulty: 3,
+    instruction: "Chọn cách phản đối lịch sự",
+    prompt: "Câu nào thể hiện sự không đồng ý một cách tôn trọng?",
+    explanation: "Câu đầu thừa nhận quan điểm đối phương trước khi phản biện.",
+    options: ["I see your point, but I don't fully agree.", "That is completely stupid.", "You are wrong, end of discussion.", "I never listen to other opinions."],
+    correctIndex: 0,
+  }),
+  createArrangeWordsExercise({
+    id: "en-s3-c1-l2-exercise-2",
+    lessonId,
+    skill: "grammar",
+    difficulty: 3,
+    instruction: "Sắp xếp thành câu đồng ý có giới hạn",
+    prompt: "Tạo câu thể hiện bạn chỉ đồng ý một phần.",
+    explanation: "Câu đúng là “I agree with you to some extent.”",
+    wordsInCorrectOrder: ["I", "agree", "with", "you", "to", "some", "extent"],
+    shuffledOrder: [6, 2, 0, 5, 3, 1, 4],
+  }),
+  createFillBlankExercise({
+    id: "en-s3-c1-l2-exercise-3",
+    lessonId,
+    skill: "grammar",
+    difficulty: 3,
+    instruction: "Điền từ nối tương phản",
+    prompt: "Hoàn thành lập luận.",
+    explanation: "“However” dùng để đưa ra ý tương phản.",
+    sentenceBefore: "The idea is creative.",
+    sentenceAfter: ", it may be too expensive.",
+    acceptedAnswers: ["However"],
+  }),
+  createDialogueChoiceExercise({
+    id: "en-s3-c1-l2-exercise-4",
+    lessonId,
+    skill: "conversation",
+    difficulty: 3,
+    instruction: "Chọn phản hồi phù hợp",
+    prompt: "Hoàn thành cuộc thảo luận.",
+    explanation: "Câu trả lời phản biện lịch sự và đưa ra lý do.",
+    speaker: "Kai",
+    dialogue: "I think schools should remove all homework.",
+    options: ["I understand why, but some practice at home can still be useful.", "Homework is a building near my school.", "I removed my bag yesterday.", "The lesson starts at nine."],
+    correctIndex: 0,
+  }),
+  createListeningChoiceExercise({
+    id: "en-s3-c1-l2-exercise-5",
+    lessonId,
+    skill: "listening",
+    difficulty: 3,
+    instruction: "Nghe và xác định mức độ đồng ý",
+    prompt: "Nghe rồi chọn nhận định đúng.",
+    explanation: "Người nói đồng ý một phần nhưng lo ngại chi phí.",
+    spokenText: "I agree that the plan could help, but I am concerned about its cost.",
+    options: ["The speaker agrees without any concern.", "The speaker partly agrees but worries about cost.", "The speaker completely rejects the plan.", "The speaker does not understand the plan."],
+    correctIndex: 1,
+  }),
+];

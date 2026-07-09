@@ -48,7 +48,7 @@ export const LessonResultScreen = ({
     ? completionBlocked
       ? "Hoàn thành lượt luyện tập"
       : isCheckpoint
-        ? "Hoàn thành Chương 1!"
+        ? "Hoàn thành checkpoint!"
         : "Hoàn thành bài học!"
     : isCheckpoint
       ? "Chưa vượt qua kiểm tra cuối chương"
@@ -58,10 +58,10 @@ export const LessonResultScreen = ({
     ? completionBlocked
       ? "Bạn đã hoàn thành lượt luyện tập này, nhưng node này chưa mở trên lộ trình nên tiến độ không thay đổi."
       : isCheckpoint
-        ? "Bạn đã vượt qua bài kiểm tra cuối chương. Chương 1 đã đạt 100%."
+        ? "Bạn đã vượt qua checkpoint. Phần học tiếp theo sẽ được mở nếu có."
         : "Bài học đã được tính hoàn thành. Bài tiếp theo đã sẵn sàng trên lộ trình."
     : isCheckpoint
-      ? `Cần đạt tối thiểu ${passThreshold}% để hoàn thành Chương 1. Hãy thử lại bài kiểm tra.`
+      ? `Cần đạt tối thiểu ${passThreshold}% để hoàn thành checkpoint. Hãy thử lại bài kiểm tra.`
       : `Cần đạt tối thiểu ${passThreshold}% để mở khóa bước tiếp theo. Hãy thử lại một lượt nữa.`;
 
   const badgeClasses = passed
@@ -137,10 +137,10 @@ export const LessonResultScreen = ({
           ? completionBlocked
             ? xpStatusMessage
             : isWaitingForXp
-              ? "Đang cập nhật XP và streak..."
+              ? "Đang đồng bộ XP, streak và nhiệm vụ..."
               : xpStatusMessage
           : isCheckpoint
-            ? "Checkpoint chưa hoàn thành. Tiến độ Chương 1 được giữ nguyên."
+            ? "Checkpoint chưa hoàn thành. Điểm cao nhất trước đó và các phần đã mở vẫn được giữ nguyên."
             : "Không cập nhật tiến độ, XP hoặc streak khi chưa đạt điều kiện pass."}
       </div>
 

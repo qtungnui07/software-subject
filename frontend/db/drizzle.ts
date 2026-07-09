@@ -2,6 +2,7 @@ import { drizzle } from "drizzle-orm/postgres-js";
 import postgres from "postgres";
 
 import * as schema from "./schema";
+import { canUseOfflineDatabaseFallback } from "@/lib/env/env-policy";
 
 const databaseUrl = process.env.DATABASE_URL;
 
@@ -10,7 +11,7 @@ let db: any;
 if (databaseUrl) {
     const client = postgres(databaseUrl);
     db = drizzle(client, { schema });
-} else {
+} else if (canUseOfflineDatabaseFallback()) {
     console.warn("DATABASE_URL is not set. Using offline/in-memory mock database wrapper.");
 
     const mockUserProgress = {
@@ -114,6 +115,27 @@ if (databaseUrl) {
             console.log("[Mock DB] starting mock transaction");
             return callback(db);
         }
+    };
+} else {
+    const unavailable = () => {
+        throw new Error("DATABASE_URL is required at production runtime.");
+    };
+    const unavailableQuery = new Proxy({}, {
+        get() {
+            return {
+                findFirst: unavailable,
+                findMany: unavailable,
+            };
+        },
+    });
+
+    db = {
+        query: unavailableQuery,
+        insert: unavailable,
+        update: unavailable,
+        delete: unavailable,
+        execute: unavailable,
+        transaction: unavailable,
     };
 }
  

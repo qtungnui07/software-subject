@@ -1,0 +1,72 @@
+import {
+  createArrangeWordsExercise,
+  createDialogueChoiceExercise,
+  createFillBlankExercise,
+  createListeningChoiceExercise,
+  createMultipleChoiceExercise,
+} from "@/data/exercises/english/exercise-builders";
+import type { Exercise } from "@/types/exercise";
+
+const lessonId = "en-s3-c1-lesson-4";
+
+export const sectionThreeLessonFourExercises: Exercise[] = [
+  createMultipleChoiceExercise({
+    id: "en-s3-c1-l4-exercise-1",
+    lessonId,
+    skill: "grammar",
+    difficulty: 3,
+    instruction: "Chọn đại từ quan hệ đúng",
+    prompt: "Students ___ receive clear feedback often improve faster.",
+    explanation: "“Who” thay thế cho người trong mệnh đề quan hệ.",
+    options: ["who", "where", "whose it", "which person"],
+    correctIndex: 0,
+  }),
+  createFillBlankExercise({
+    id: "en-s3-c1-l4-exercise-2",
+    lessonId,
+    skill: "grammar",
+    difficulty: 3,
+    instruction: "Điền liên từ phù hợp",
+    prompt: "Hoàn thành câu điều kiện.",
+    explanation: "“Unless” có nghĩa là “nếu không”.",
+    sentenceBefore: "We will not reduce waste",
+    sentenceAfter: "people change their habits.",
+    acceptedAnswers: ["unless"],
+  }),
+  createArrangeWordsExercise({
+    id: "en-s3-c1-l4-exercise-3",
+    lessonId,
+    skill: "reading",
+    difficulty: 3,
+    instruction: "Sắp xếp thành câu đề xuất",
+    prompt: "Nêu một điều trường học nên dạy.",
+    explanation: "Câu đúng là “Schools should teach students how to recycle.”",
+    wordsInCorrectOrder: ["Schools", "should", "teach", "students", "how", "to", "recycle"],
+    shuffledOrder: [6, 3, 0, 5, 2, 4, 1],
+  }),
+  createDialogueChoiceExercise({
+    id: "en-s3-c1-l4-exercise-4",
+    lessonId,
+    skill: "conversation",
+    difficulty: 3,
+    instruction: "Chọn phản hồi có lý do",
+    prompt: "Hoàn thành cuộc thảo luận.",
+    explanation: "Câu trả lời nêu rõ quan điểm và lý do liên quan.",
+    speaker: "Teacher",
+    dialogue: "Should environmental education be compulsory?",
+    options: ["Yes, because students need practical knowledge about protecting the planet.", "The classroom has thirty chairs.", "I studied mathematics yesterday.", "Compulsory means the bus is late."],
+    correctIndex: 0,
+  }),
+  createListeningChoiceExercise({
+    id: "en-s3-c1-l4-exercise-5",
+    lessonId,
+    skill: "listening",
+    difficulty: 3,
+    instruction: "Nghe và chọn giải pháp",
+    prompt: "Nghe rồi chọn giải pháp được đề xuất.",
+    explanation: "Người nói đề xuất lắp thêm trạm tiếp nước.",
+    spokenText: "The school could reduce plastic waste by installing more water refill stations.",
+    options: ["Sell more plastic bottles", "Install water refill stations", "Close the school library", "Use more paper cups"],
+    correctIndex: 1,
+  }),
+];

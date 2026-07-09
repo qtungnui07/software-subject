@@ -5,8 +5,10 @@ import { redirect } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { auth } from "@/auth";
 import { ProfileForm } from "./profile-form";
-import { chapterOneProgressCourse } from "@/data/progress-data";
-import { getCourseProgressSummary } from "@/lib/progress-utils";
+import { createDefaultCourseProgress } from "@/lib/courses/course-progress";
+import { getLearningProfileStats } from "@/lib/learning/profile-stats";
+import { getCourseProgressForUser } from "@/services/course-progress-service";
+import { getUserXpSummary } from "@/services/xp-service";
 import { requireProfile, type Profile } from "@/services/profile-service";
 import { ProfileXpPanel } from "@/components/profile/profile-xp-panel";
 
@@ -24,7 +26,14 @@ const ProfilePage = async () => {
   } catch (error) {
     console.error("Failed to load user profile:", error);
   }
-  const courseProgress = getCourseProgressSummary(chapterOneProgressCourse);
+  const [genericCourseProgress, xpSummary] = await Promise.all([
+    getCourseProgressForUser(user.id).catch((error) => {
+      console.error("Failed to load generic course progress:", error);
+      return createDefaultCourseProgress();
+    }),
+    getUserXpSummary({ userId: user.id }).catch(() => null),
+  ]);
+  const courseProgress = getLearningProfileStats(genericCourseProgress);
 
   const displayName = profile?.name || user.name || "User";
   const avatarSrc = profile?.imageSrc || user.image || "/logo.webp";
@@ -40,22 +49,22 @@ const ProfilePage = async () => {
     },
     {
       label: "Points",
-      value: `${profile?.points ?? 0} XP`,
+      value: `${xpSummary?.totalXp ?? profile?.points ?? 0} XP`,
       description: "Điểm kinh nghiệm",
       icon: "⚡",
       tone: "border-sky-100 bg-sky-50 text-sky-600 dark:border-sky-950/40 dark:bg-sky-950/20 dark:text-sky-400",
     },
     {
       label: "Bài học",
-      value: `${courseProgress.completedLessons} / ${courseProgress.totalLessons}`,
+      value: `${courseProgress.completedLearningNodes} / ${courseProgress.totalLearningNodes}`,
       description: "Đã hoàn thành",
       icon: "📘",
       tone: "border-violet-100 bg-violet-50 text-violet-600 dark:border-violet-950/40 dark:bg-violet-950/20 dark:text-violet-400",
     },
     {
-      label: "Khóa học",
-      value: profile?.activeCourse?.title || "Chưa chọn",
-      description: "Đang theo học",
+      label: "Phần hiện tại",
+      value: courseProgress.currentSectionTitle,
+      description: `${courseProgress.unlockedSections}/3 phần đã mở`,
       icon: "🌍",
       tone: "border-emerald-100 bg-emerald-50 text-emerald-600 dark:border-emerald-950/40 dark:bg-emerald-950/20 dark:text-emerald-400",
     },
@@ -144,7 +153,7 @@ const ProfilePage = async () => {
                       Tiến độ khóa học
                     </p>
                     <p className="mt-1 text-sm font-bold text-slate-500 dark:text-slate-400">
-                      {courseProgress.completedLessons} / {courseProgress.totalLessons} bài học đã hoàn thành
+                      {courseProgress.completedLearningNodes} / {courseProgress.totalLearningNodes} bước học đã hoàn thành
                     </p>
                   </div>
                   <div className="rounded-2xl bg-white px-3 py-2 text-lg font-black text-sky-600 shadow-sm dark:bg-slate-950 dark:text-sky-400">

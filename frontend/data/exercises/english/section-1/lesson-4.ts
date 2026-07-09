@@ -1,0 +1,72 @@
+import {
+  createArrangeWordsExercise,
+  createDialogueChoiceExercise,
+  createFillBlankExercise,
+  createListeningChoiceExercise,
+  createMultipleChoiceExercise,
+} from "@/data/exercises/english/exercise-builders";
+import type { Exercise } from "@/types/exercise";
+
+const lessonId = "lesson-4";
+
+export const sectionOneLessonFourExercises: Exercise[] = [
+  createMultipleChoiceExercise({
+    id: "lesson-4-exercise-1",
+    lessonId,
+    skill: "conversation",
+    difficulty: 1,
+    instruction: "Chọn câu hỏi đúng",
+    prompt: "Câu nào dùng để hỏi tuổi?",
+    explanation: "“How old are you?” dùng để hỏi tuổi.",
+    options: ["How old are you?", "How are you?", "Where are you?", "What do you do?"],
+    correctIndex: 0,
+  }),
+  createArrangeWordsExercise({
+    id: "lesson-4-exercise-2",
+    lessonId,
+    skill: "grammar",
+    difficulty: 1,
+    instruction: "Sắp xếp thành câu hỏi",
+    prompt: "Tạo câu hỏi về tuổi.",
+    explanation: "Câu đúng là “How old are you?”",
+    wordsInCorrectOrder: ["How", "old", "are", "you"],
+    shuffledOrder: [3, 0, 2, 1],
+  }),
+  createFillBlankExercise({
+    id: "lesson-4-exercise-3",
+    lessonId,
+    skill: "grammar",
+    difficulty: 1,
+    instruction: "Điền từ còn thiếu",
+    prompt: "Hoàn thành câu hỏi về tên.",
+    explanation: "Mẫu câu đúng là “What is your name?”",
+    sentenceBefore: "What",
+    sentenceAfter: "your name?",
+    acceptedAnswers: ["is"],
+  }),
+  createDialogueChoiceExercise({
+    id: "lesson-4-exercise-4",
+    lessonId,
+    skill: "conversation",
+    difficulty: 1,
+    instruction: "Chọn câu trả lời phù hợp",
+    prompt: "Hoàn thành đoạn hội thoại.",
+    explanation: "“I’m twenty years old.” là câu trả lời về tuổi.",
+    speaker: "Nam",
+    dialogue: "How old are you?",
+    options: ["I'm twenty years old.", "My name is Hoa.", "I live in Hue.", "I like music."],
+    correctIndex: 0,
+  }),
+  createListeningChoiceExercise({
+    id: "lesson-4-exercise-5",
+    lessonId,
+    skill: "listening",
+    difficulty: 1,
+    instruction: "Nghe và chọn đáp án",
+    prompt: "Nghe rồi chọn tuổi của người em trai.",
+    explanation: "Người nói cho biết em trai mười hai tuổi.",
+    spokenText: "My brother is twelve years old.",
+    options: ["10", "11", "12", "20"],
+    correctIndex: 2,
+  }),
+];
