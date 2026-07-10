@@ -9,6 +9,7 @@ import { createDefaultCourseProgress } from "@/lib/courses/course-progress";
 import { getLearningProfileStats } from "@/lib/learning/profile-stats";
 import { getCourseProgressForUser } from "@/services/course-progress-service";
 import { getUserXpSummary } from "@/services/xp-service";
+import { ProfileLearningProgress } from "./profile-learning-progress";
 import { requireProfile, type Profile } from "@/services/profile-service";
 import { ProfileXpPanel } from "@/components/profile/profile-xp-panel";
 
@@ -26,6 +27,7 @@ const ProfilePage = async () => {
   } catch (error) {
     console.error("Failed to load user profile:", error);
   }
+
   const [genericCourseProgress, xpSummary] = await Promise.all([
     getCourseProgressForUser(user.id).catch((error) => {
       console.error("Failed to load generic course progress:", error);
@@ -56,7 +58,7 @@ const ProfilePage = async () => {
     },
     {
       label: "Bài học",
-      value: `${courseProgress.completedLearningNodes} / ${courseProgress.totalLearningNodes}`,
+      value: <ProfileLearningProgress variant="lessons" />,
       description: "Đã hoàn thành",
       icon: "📘",
       tone: "border-violet-100 bg-violet-50 text-violet-600 dark:border-violet-950/40 dark:bg-violet-950/20 dark:text-violet-400",
@@ -153,18 +155,18 @@ const ProfilePage = async () => {
                       Tiến độ khóa học
                     </p>
                     <p className="mt-1 text-sm font-bold text-slate-500 dark:text-slate-400">
-                      {courseProgress.completedLearningNodes} / {courseProgress.totalLearningNodes} bước học đã hoàn thành
+                      <ProfileLearningProgress variant="lessonsWithLabel" />
                     </p>
                   </div>
                   <div className="rounded-2xl bg-white px-3 py-2 text-lg font-black text-sky-600 shadow-sm dark:bg-slate-950 dark:text-sky-400">
-                    {courseProgress.completionPercent}%
+                    <ProfileLearningProgress variant="percent" />
                   </div>
                 </div>
 
                 <div className="mt-4 h-4 overflow-hidden rounded-full bg-white shadow-inner dark:bg-slate-950">
                   <div
                     className="h-full rounded-full bg-sky-500 transition-all duration-700 ease-out"
-                    style={{ width: `${courseProgress.completionPercent}%` }}
+                    style={{ width: "var(--profile-course-progress-percent, 0%)" }}
                   />
                 </div>
               </div>
