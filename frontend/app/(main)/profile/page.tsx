@@ -5,8 +5,7 @@ import { redirect } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { auth } from "@/auth";
 import { ProfileForm } from "./profile-form";
-import { chapterOneProgressCourse } from "@/data/progress-data";
-import { getCourseProgressSummary } from "@/lib/progress-utils";
+import { ProfileLearningProgress } from "./profile-learning-progress";
 import { requireProfile, type Profile } from "@/services/profile-service";
 import { ProfileXpPanel } from "@/components/profile/profile-xp-panel";
 
@@ -24,8 +23,6 @@ const ProfilePage = async () => {
   } catch (error) {
     console.error("Failed to load user profile:", error);
   }
-  const courseProgress = getCourseProgressSummary(chapterOneProgressCourse);
-
   const displayName = profile?.name || user.name || "User";
   const avatarSrc = profile?.imageSrc || user.image || "/logo.webp";
   const email = profile?.email || user.email || "";
@@ -47,7 +44,7 @@ const ProfilePage = async () => {
     },
     {
       label: "Bài học",
-      value: `${courseProgress.completedLessons} / ${courseProgress.totalLessons}`,
+      value: <ProfileLearningProgress variant="lessons" />,
       description: "Đã hoàn thành",
       icon: "📘",
       tone: "border-violet-100 bg-violet-50 text-violet-600",
@@ -144,18 +141,18 @@ const ProfilePage = async () => {
                       Tiến độ khóa học
                     </p>
                     <p className="mt-1 text-sm font-bold text-slate-500">
-                      {courseProgress.completedLessons} / {courseProgress.totalLessons} bài học đã hoàn thành
+                      <ProfileLearningProgress variant="lessonsWithLabel" />
                     </p>
                   </div>
                   <div className="rounded-2xl bg-white px-3 py-2 text-lg font-black text-sky-600 shadow-sm">
-                    {courseProgress.completionPercent}%
+                    <ProfileLearningProgress variant="percent" />
                   </div>
                 </div>
 
                 <div className="mt-4 h-4 overflow-hidden rounded-full bg-white shadow-inner">
                   <div
                     className="h-full rounded-full bg-sky-500 transition-all duration-700 ease-out"
-                    style={{ width: `${courseProgress.completionPercent}%` }}
+                    style={{ width: "var(--profile-course-progress-percent, 0%)" }}
                   />
                 </div>
               </div>
