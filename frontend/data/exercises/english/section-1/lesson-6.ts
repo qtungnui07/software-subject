@@ -1,0 +1,72 @@
+import {
+  createArrangeWordsExercise,
+  createDialogueChoiceExercise,
+  createFillBlankExercise,
+  createListeningChoiceExercise,
+  createMultipleChoiceExercise,
+} from "@/data/exercises/english/exercise-builders";
+import type { Exercise } from "@/types/exercise";
+
+const lessonId = "lesson-6";
+
+export const sectionOneLessonSixExercises: Exercise[] = [
+  createMultipleChoiceExercise({
+    id: "lesson-6-exercise-1",
+    lessonId,
+    skill: "vocabulary",
+    difficulty: 1,
+    instruction: "Chọn đáp án đúng",
+    prompt: "Từ nào là lời cảm ơn?",
+    explanation: "“Thanks” là cách nói ngắn gọn của “Thank you”.",
+    options: ["Sorry", "Please", "Thanks", "Goodbye"],
+    correctIndex: 2,
+  }),
+  createArrangeWordsExercise({
+    id: "lesson-6-exercise-2",
+    lessonId,
+    skill: "grammar",
+    difficulty: 1,
+    instruction: "Sắp xếp thành câu đúng",
+    prompt: "Tạo câu giới thiệu tên.",
+    explanation: "Câu đúng là “My name is An.”",
+    wordsInCorrectOrder: ["My", "name", "is", "An"],
+    shuffledOrder: [3, 1, 0, 2],
+  }),
+  createFillBlankExercise({
+    id: "lesson-6-exercise-3",
+    lessonId,
+    skill: "grammar",
+    difficulty: 1,
+    instruction: "Điền từ còn thiếu",
+    prompt: "Hoàn thành câu hỏi thăm sức khỏe.",
+    explanation: "Mẫu câu đúng là “How are you?”",
+    sentenceBefore: "How",
+    sentenceAfter: "you?",
+    acceptedAnswers: ["are"],
+  }),
+  createDialogueChoiceExercise({
+    id: "lesson-6-exercise-4",
+    lessonId,
+    skill: "conversation",
+    difficulty: 1,
+    instruction: "Chọn phản hồi phù hợp",
+    prompt: "Hoàn thành đoạn hội thoại.",
+    explanation: "“Nice to meet you, too.” là phản hồi tự nhiên.",
+    speaker: "Ben",
+    dialogue: "Nice to meet you.",
+    options: ["Nice to meet you, too.", "I am nineteen.", "Good morning yesterday.", "My brother is tall."],
+    correctIndex: 0,
+  }),
+  createListeningChoiceExercise({
+    id: "lesson-6-exercise-5",
+    lessonId,
+    skill: "listening",
+    difficulty: 1,
+    instruction: "Nghe và chọn thông tin đúng",
+    prompt: "Nghe rồi chọn tuổi của người nói.",
+    explanation: "Sarah nói rằng cô ấy mười sáu tuổi.",
+    spokenText: "I'm Sarah. I'm sixteen years old.",
+    options: ["Sarah is 15.", "Sarah is 16.", "Sarah is 17.", "Sarah is 60."],
+    correctIndex: 1,
+  }),
+];

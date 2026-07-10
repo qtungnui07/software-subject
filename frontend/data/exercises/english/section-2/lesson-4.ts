@@ -1,0 +1,72 @@
+import {
+  createArrangeWordsExercise,
+  createDialogueChoiceExercise,
+  createFillBlankExercise,
+  createListeningChoiceExercise,
+  createMultipleChoiceExercise,
+} from "@/data/exercises/english/exercise-builders";
+import type { Exercise } from "@/types/exercise";
+
+const lessonId = "en-s2-c1-lesson-4";
+
+export const sectionTwoLessonFourExercises: Exercise[] = [
+  createMultipleChoiceExercise({
+    id: "en-s2-c1-l4-exercise-1",
+    lessonId,
+    skill: "grammar",
+    difficulty: 2,
+    instruction: "Chọn cấu trúc tương lai đúng",
+    prompt: "Look at those clouds! It ___ rain.",
+    explanation: "“Be going to” dùng cho dự đoán có dấu hiệu rõ ràng.",
+    options: ["is going to", "went to", "has", "was"],
+    correctIndex: 0,
+  }),
+  createArrangeWordsExercise({
+    id: "en-s2-c1-l4-exercise-2",
+    lessonId,
+    skill: "grammar",
+    difficulty: 2,
+    instruction: "Sắp xếp thành câu tương lai",
+    prompt: "Nói rằng bạn sẽ gọi vào ngày mai.",
+    explanation: "Câu đúng là “I will call you tomorrow.”",
+    wordsInCorrectOrder: ["I", "will", "call", "you", "tomorrow"],
+    shuffledOrder: [4, 2, 0, 3, 1],
+  }),
+  createFillBlankExercise({
+    id: "en-s2-c1-l4-exercise-3",
+    lessonId,
+    skill: "grammar",
+    difficulty: 2,
+    instruction: "Điền trợ động từ tương lai",
+    prompt: "Hoàn thành lời hứa.",
+    explanation: "“Will” thường được dùng cho lời hứa hoặc quyết định tức thời.",
+    sentenceBefore: "I",
+    sentenceAfter: "help you with your homework.",
+    acceptedAnswers: ["will"],
+  }),
+  createDialogueChoiceExercise({
+    id: "en-s2-c1-l4-exercise-4",
+    lessonId,
+    skill: "conversation",
+    difficulty: 2,
+    instruction: "Chọn câu trả lời phù hợp",
+    prompt: "Hoàn thành đoạn hội thoại về kế hoạch.",
+    explanation: "Câu hỏi về kế hoạch phù hợp với cấu trúc “be going to”.",
+    speaker: "Noah",
+    dialogue: "What are you going to do this weekend?",
+    options: ["I'm going to visit my cousins.", "I visited them last week.", "I visit them every day.", "I am at their house yesterday."],
+    correctIndex: 0,
+  }),
+  createListeningChoiceExercise({
+    id: "en-s2-c1-l4-exercise-5",
+    lessonId,
+    skill: "listening",
+    difficulty: 2,
+    instruction: "Nghe và chọn kế hoạch đúng",
+    prompt: "Nghe rồi chọn kế hoạch cuối tuần.",
+    explanation: "Người nói sẽ học cho bài kiểm tra tiếng Anh.",
+    spokenText: "On Sunday, I'm going to study for my English test.",
+    options: ["Go shopping", "Study for a test", "Play football", "Visit a museum"],
+    correctIndex: 1,
+  }),
+];

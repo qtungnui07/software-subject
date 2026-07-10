@@ -6,6 +6,15 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { Mail, Lock } from "lucide-react";
 
+import { getDefaultPostAuthDestination } from "@/lib/onboarding/onboarding-redirect";
+
+const getSafeRedirectPath = () => {
+  if (typeof window === "undefined") return "/onboarding";
+
+  const redirect = new URLSearchParams(window.location.search).get("redirect");
+  return getDefaultPostAuthDestination(redirect);
+};
+
 const getErrorMessage = (error: unknown, fallback: string) => {
   if (
     typeof error === "object" &&
@@ -81,7 +90,7 @@ export default function SignInPage() {
           throw new Error(data?.error || "Email hoặc mật khẩu không đúng.");
         }
 
-        router.push("/learn");
+        router.push(getSafeRedirectPath());
         router.refresh();
       } catch (err: unknown) {
         setError(getErrorMessage(err, "Đăng nhập thất bại. Vui lòng kiểm tra lại thông tin."));
@@ -94,7 +103,7 @@ export default function SignInPage() {
     signIn.authenticateWithRedirect({
       strategy,
       redirectUrl: window.location.origin + "/sso-callback",
-      redirectUrlComplete: window.location.origin + "/learn",
+      redirectUrlComplete: window.location.origin + getSafeRedirectPath(),
     });
   };
 

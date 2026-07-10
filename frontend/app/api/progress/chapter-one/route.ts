@@ -2,10 +2,14 @@ import { NextResponse } from "next/server";
 
 import { auth } from "@/auth";
 import {
-  getChapterOneProgressForUser,
-  saveChapterOneProgressForUser,
-} from "@/services/chapter-one-progress-service";
+  migrateChapterOneProgressToCourseProgress,
+  projectCourseProgressToChapterOne,
+} from "@/lib/courses/chapter-one-adapter";
 import { normalizeChapterOneProgressState } from "@/lib/chapter-one-progress";
+import {
+  getCourseProgressForUser,
+  saveCourseProgressForUser,
+} from "@/services/course-progress-service";
 
 export const dynamic = "force-dynamic";
 
@@ -16,7 +20,8 @@ export async function GET() {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  const progress = await getChapterOneProgressForUser(session.user.id);
+  const courseProgress = await getCourseProgressForUser(session.user.id);
+  const progress = projectCourseProgressToChapterOne(courseProgress);
 
   return NextResponse.json({
     success: true,
@@ -33,10 +38,23 @@ export async function PATCH(request: Request) {
   }
 
   const body = await request.json().catch(() => ({}));
-  const progress = await saveChapterOneProgressForUser(
+  const legacyProgress = normalizeChapterOneProgressState(
+    body?.progress ?? body
+  );
+  const existingCourseProgress = await getCourseProgressForUser(
+    session.user.id
+  );
+  const courseProgress = await saveCourseProgressForUser(
     session.user.id,
-    normalizeChapterOneProgressState(body?.progress ?? body)
+    migrateChapterOneProgressToCourseProgress(
+      legacyProgress,
+      existingCourseProgress
+    )
   );
 
-  return NextResponse.json({ success: true, progress });
+  return NextResponse.json({
+    success: true,
+    progress: projectCourseProgressToChapterOne(courseProgress),
+    courseProgress,
+  });
 }

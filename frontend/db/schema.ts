@@ -127,6 +127,81 @@ export const chapterOneProgress = pgTable("chapter_one_progress", {
     updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
 });
 
+export const courseProgress = pgTable(
+    "course_progress",
+    {
+        id: serial("id").primaryKey(),
+        userId: text("user_id").notNull(),
+        courseId: text("course_id").notNull(),
+        currentSectionId: text("current_section_id")
+            .notNull()
+            .default("english-section-1"),
+        unlockedSectionIds: text("unlocked_section_ids")
+            .notNull()
+            .default('["english-section-1"]'),
+        completedNodeIds: text("completed_node_ids").notNull().default("[]"),
+        claimedRewardNodeIds: text("claimed_reward_node_ids")
+            .notNull()
+            .default("[]"),
+        checkpointScores: text("checkpoint_scores").notNull().default("{}"),
+        onboardingStatus: text("onboarding_status"),
+        onboardingChoice: text("onboarding_choice"),
+        onboardingCompletedAt: timestamp("onboarding_completed_at", {
+            withTimezone: true,
+        }),
+        createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+        updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
+    },
+    (table) => ({
+        userCourseIdx: uniqueIndex("course_progress_user_course_idx").on(
+            table.userId,
+            table.courseId
+        ),
+        userIdx: index("course_progress_user_idx").on(table.userId),
+    })
+);
+
+export const placementTestResults = pgTable(
+    "placement_test_results",
+    {
+        id: serial("id").primaryKey(),
+        userId: text("user_id").notNull(),
+        courseId: text("course_id").notNull().default("english"),
+        testVersion: text("test_version").notNull(),
+        totalCorrect: integer("total_correct").notNull().default(0),
+        basicScore: integer("basic_score").notNull().default(0),
+        intermediateScore: integer("intermediate_score").notNull().default(0),
+        advancedScore: integer("advanced_score").notNull().default(0),
+        latestAssignedSectionId: text("latest_assigned_section_id")
+            .notNull()
+            .default("english-section-1"),
+        highestAssignedSectionId: text("highest_assigned_section_id")
+            .notNull()
+            .default("english-section-1"),
+        answersJson: text("answers_json").notNull().default("[]"),
+        attemptCount: integer("attempt_count").notNull().default(1),
+        durationSeconds: integer("duration_seconds"),
+        startedAt: timestamp("started_at", { withTimezone: true }),
+        completedAt: timestamp("completed_at", { withTimezone: true })
+            .notNull()
+            .defaultNow(),
+        lastSubmissionId: text("last_submission_id"),
+        createdAt: timestamp("created_at", { withTimezone: true })
+            .notNull()
+            .defaultNow(),
+        updatedAt: timestamp("updated_at", { withTimezone: true })
+            .notNull()
+            .defaultNow(),
+    },
+    (table) => ({
+        userCourseIdx: uniqueIndex("placement_test_results_user_course_idx").on(
+            table.userId,
+            table.courseId
+        ),
+        userIdx: index("placement_test_results_user_idx").on(table.userId),
+    })
+);
+
 export const xpEvents = pgTable(
     "xp_events",
     {
@@ -224,6 +299,69 @@ export const questRewardClaims = pgTable(
     })
 );
 
+
+export const learningSyncJobs = pgTable(
+    "learning_sync_jobs",
+    {
+        id: serial("id").primaryKey(),
+        userId: text("user_id").notNull(),
+        nodeId: text("node_id").notNull(),
+        system: text("system").notNull(),
+        status: text("status").notNull().default("pending"),
+        attempts: integer("attempts").notNull().default(0),
+        nextRetryAt: timestamp("next_retry_at", { withTimezone: true })
+            .notNull()
+            .defaultNow(),
+        payloadJson: text("payload_json").notNull().default("{}"),
+        lastErrorCode: text("last_error_code"),
+        completedAt: timestamp("completed_at", { withTimezone: true }),
+        createdAt: timestamp("created_at", { withTimezone: true })
+            .notNull()
+            .defaultNow(),
+        updatedAt: timestamp("updated_at", { withTimezone: true })
+            .notNull()
+            .defaultNow(),
+    },
+    (table) => ({
+        userNodeSystemIdx: uniqueIndex("learning_sync_jobs_user_node_system_idx").on(
+            table.userId,
+            table.nodeId,
+            table.system
+        ),
+        pendingRetryIdx: index("learning_sync_jobs_status_retry_idx").on(
+            table.status,
+            table.nextRetryAt
+        ),
+        userIdx: index("learning_sync_jobs_user_idx").on(table.userId),
+    })
+);
+
+export const adaptiveRateLimits = pgTable(
+    "adaptive_rate_limits",
+    {
+        id: text("id").primaryKey(),
+        scope: text("scope").notNull(),
+        identifierHash: text("identifier_hash").notNull(),
+        windowStart: timestamp("window_start", { withTimezone: true }).notNull(),
+        requestCount: integer("request_count").notNull().default(0),
+        expiresAt: timestamp("expires_at", { withTimezone: true }).notNull(),
+        createdAt: timestamp("created_at", { withTimezone: true })
+            .notNull()
+            .defaultNow(),
+        updatedAt: timestamp("updated_at", { withTimezone: true })
+            .notNull()
+            .defaultNow(),
+    },
+    (table) => ({
+        scopeIdentifierWindowIdx: uniqueIndex(
+            "adaptive_rate_limits_scope_identifier_window_idx"
+        ).on(table.scope, table.identifierHash, table.windowStart),
+        expiresAtIdx: index("adaptive_rate_limits_expires_at_idx").on(
+            table.expiresAt
+        ),
+    })
+);
+
 export const UserProgressRelations = relations(userProgress, ({ one, many }) => ({
     activeCourse: one(courses, {
         fields: [userProgress.activeCourseId],
@@ -245,10 +383,13 @@ export const UserProgressRelations = relations(userProgress, ({ one, many }) => 
         fields: [userProgress.userId],
         references: [chapterOneProgress.userId],
     }),
+    courseProgress: many(courseProgress),
+    placementTestResults: many(placementTestResults),
     xpEvents: many(xpEvents),
     lessonXpClaims: many(lessonXpClaims),
     questDailyStats: many(questDailyStats),
     questRewardClaims: many(questRewardClaims),
+    learningSyncJobs: many(learningSyncJobs),
 }));
 
 export const localSessionsRelations = relations(localSessions, ({ one }) => ({
@@ -294,6 +435,23 @@ export const chapterOneProgressRelations = relations(chapterOneProgress, ({ one 
     }),
 }));
 
+export const courseProgressRelations = relations(courseProgress, ({ one }) => ({
+    userProgress: one(userProgress, {
+        fields: [courseProgress.userId],
+        references: [userProgress.userId],
+    }),
+}));
+
+export const placementTestResultsRelations = relations(
+    placementTestResults,
+    ({ one }) => ({
+        userProgress: one(userProgress, {
+            fields: [placementTestResults.userId],
+            references: [userProgress.userId],
+        }),
+    })
+);
+
 export const xpEventsRelations = relations(xpEvents, ({ one }) => ({
     userProgress: one(userProgress, {
         fields: [xpEvents.userId],
@@ -322,6 +480,14 @@ export const questRewardClaimsRelations = relations(questRewardClaims, ({ one })
     }),
 }));
 
+
+export const learningSyncJobsRelations = relations(learningSyncJobs, ({ one }) => ({
+    userProgress: one(userProgress, {
+        fields: [learningSyncJobs.userId],
+        references: [userProgress.userId],
+    }),
+}));
+
 export type UserStreak = typeof userStreaks.$inferSelect;
 export type NewUserStreak = typeof userStreaks.$inferInsert;
 export type DailyStreakLog = typeof dailyStreakLogs.$inferSelect;
@@ -332,8 +498,12 @@ export type StudyTimeSummary = typeof studyTimeSummary.$inferSelect;
 export type NewStudyTimeSummary = typeof studyTimeSummary.$inferInsert;
 export type ChapterOneProgress = typeof chapterOneProgress.$inferSelect;
 export type NewChapterOneProgress = typeof chapterOneProgress.$inferInsert;
+export type CourseProgress = typeof courseProgress.$inferSelect;
+export type NewCourseProgress = typeof courseProgress.$inferInsert;
 export type LocalSession = typeof localSessions.$inferSelect;
 export type NewLocalSession = typeof localSessions.$inferInsert;
+export type PlacementTestResult = typeof placementTestResults.$inferSelect;
+export type NewPlacementTestResult = typeof placementTestResults.$inferInsert;
 export type XpEvent = typeof xpEvents.$inferSelect;
 export type NewXpEvent = typeof xpEvents.$inferInsert;
 export type LessonXpClaim = typeof lessonXpClaims.$inferSelect;
@@ -342,3 +512,7 @@ export type QuestDailyStat = typeof questDailyStats.$inferSelect;
 export type NewQuestDailyStat = typeof questDailyStats.$inferInsert;
 export type QuestRewardClaim = typeof questRewardClaims.$inferSelect;
 export type NewQuestRewardClaim = typeof questRewardClaims.$inferInsert;
+export type LearningSyncJob = typeof learningSyncJobs.$inferSelect;
+export type NewLearningSyncJob = typeof learningSyncJobs.$inferInsert;
+export type AdaptiveRateLimit = typeof adaptiveRateLimits.$inferSelect;
+export type NewAdaptiveRateLimit = typeof adaptiveRateLimits.$inferInsert;

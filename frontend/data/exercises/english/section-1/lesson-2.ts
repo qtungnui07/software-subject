@@ -1,0 +1,72 @@
+import {
+  createArrangeWordsExercise,
+  createDialogueChoiceExercise,
+  createFillBlankExercise,
+  createListeningChoiceExercise,
+  createMultipleChoiceExercise,
+} from "@/data/exercises/english/exercise-builders";
+import type { Exercise } from "@/types/exercise";
+
+const lessonId = "lesson-2";
+
+export const sectionOneLessonTwoExercises: Exercise[] = [
+  createMultipleChoiceExercise({
+    id: "lesson-2-exercise-1",
+    lessonId,
+    skill: "conversation",
+    difficulty: 1,
+    instruction: "Chọn đáp án đúng",
+    prompt: "Câu nào có nghĩa là “Bạn khỏe không?”",
+    explanation: "“How are you?” là câu hỏi thăm sức khỏe thông dụng.",
+    options: ["How are you?", "Where are you?", "Who are you?", "How old are you?"],
+    correctIndex: 0,
+  }),
+  createArrangeWordsExercise({
+    id: "lesson-2-exercise-2",
+    lessonId,
+    skill: "grammar",
+    difficulty: 1,
+    instruction: "Sắp xếp các từ thành câu đúng",
+    prompt: "Tạo câu dùng để nói rằng bạn rất vui được gặp ai đó.",
+    explanation: "Thứ tự đúng là “Nice to meet you.”",
+    wordsInCorrectOrder: ["Nice", "to", "meet", "you"],
+    shuffledOrder: [3, 0, 2, 1],
+  }),
+  createFillBlankExercise({
+    id: "lesson-2-exercise-3",
+    lessonId,
+    skill: "vocabulary",
+    difficulty: 1,
+    instruction: "Điền từ còn thiếu",
+    prompt: "Hoàn thành lời chào sau.",
+    explanation: "“Good morning!” là lời chào buổi sáng.",
+    sentenceBefore: "Good",
+    sentenceAfter: "!",
+    acceptedAnswers: ["morning"],
+  }),
+  createDialogueChoiceExercise({
+    id: "lesson-2-exercise-4",
+    lessonId,
+    skill: "conversation",
+    difficulty: 1,
+    instruction: "Chọn câu trả lời phù hợp",
+    prompt: "Hoàn thành đoạn hội thoại.",
+    explanation: "“I’m fine, thank you.” là phản hồi phù hợp khi được hỏi thăm sức khỏe.",
+    speaker: "Alex",
+    dialogue: "How are you today?",
+    options: ["I'm fine, thank you.", "My name is Lan.", "Good night.", "See you tomorrow."],
+    correctIndex: 0,
+  }),
+  createListeningChoiceExercise({
+    id: "lesson-2-exercise-5",
+    lessonId,
+    skill: "listening",
+    difficulty: 1,
+    instruction: "Nghe và chọn câu bạn nghe được",
+    prompt: "Nhấn nút phát âm thanh, sau đó chọn đáp án.",
+    explanation: "Câu được đọc là “Good morning, nice to meet you.”",
+    spokenText: "Good morning, nice to meet you.",
+    options: ["Good morning, nice to meet you.", "Good evening, see you later.", "Good night, thank you.", "Hello, what is your name?"],
+    correctIndex: 0,
+  }),
+];

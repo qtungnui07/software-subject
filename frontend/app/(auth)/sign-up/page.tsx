@@ -98,7 +98,7 @@ export default function SignUpPage() {
           throw new Error(data?.error || "Không thể tạo tài khoản.");
         }
 
-        router.push("/learn");
+        router.push("/onboarding");
         router.refresh();
       } catch (err: unknown) {
         setError(getErrorMessage(err, "Đăng ký thất bại. Vui lòng kiểm tra lại thông tin."));
@@ -120,7 +120,7 @@ export default function SignUpPage() {
 
         if (verifyResult.status === "complete" && verifyResult.createdSessionId) {
           await setActive({ session: verifyResult.createdSessionId });
-          router.push("/learn");
+          router.push("/onboarding");
         } else {
           setError("Xác thực chưa hoàn tất. Vui lòng thử lại.");
         }
@@ -136,7 +136,7 @@ export default function SignUpPage() {
     signUp.authenticateWithRedirect({
       strategy,
       redirectUrl: window.location.origin + "/sso-callback",
-      redirectUrlComplete: window.location.origin + "/learn",
+      redirectUrlComplete: window.location.origin + "/onboarding",
     });
   };
 

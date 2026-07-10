@@ -1,0 +1,72 @@
+import {
+  createArrangeWordsExercise,
+  createDialogueChoiceExercise,
+  createFillBlankExercise,
+  createListeningChoiceExercise,
+  createMultipleChoiceExercise,
+} from "@/data/exercises/english/exercise-builders";
+import type { Exercise } from "@/types/exercise";
+
+const lessonId = "en-s2-c1-lesson-1";
+
+export const sectionTwoLessonOneExercises: Exercise[] = [
+  createMultipleChoiceExercise({
+    id: "en-s2-c1-l1-exercise-1",
+    lessonId,
+    skill: "grammar",
+    difficulty: 2,
+    instruction: "Chọn dạng quá khứ đúng",
+    prompt: "Yesterday, I ___ to the market.",
+    explanation: "“Went” là dạng quá khứ của “go”.",
+    options: ["go", "went", "gone", "going"],
+    correctIndex: 1,
+  }),
+  createArrangeWordsExercise({
+    id: "en-s2-c1-l1-exercise-2",
+    lessonId,
+    skill: "grammar",
+    difficulty: 2,
+    instruction: "Sắp xếp thành câu quá khứ",
+    prompt: "Kể rằng hôm qua bạn đã thăm bà.",
+    explanation: "Câu đúng là “Yesterday I visited my grandmother.”",
+    wordsInCorrectOrder: ["Yesterday", "I", "visited", "my", "grandmother"],
+    shuffledOrder: [4, 1, 3, 0, 2],
+  }),
+  createFillBlankExercise({
+    id: "en-s2-c1-l1-exercise-3",
+    lessonId,
+    skill: "grammar",
+    difficulty: 2,
+    instruction: "Điền dạng quá khứ của động từ",
+    prompt: "Hoàn thành câu.",
+    explanation: "Động từ “watch” thêm “-ed” ở quá khứ đơn.",
+    sentenceBefore: "Last night, we",
+    sentenceAfter: "a movie.",
+    acceptedAnswers: ["watched"],
+  }),
+  createDialogueChoiceExercise({
+    id: "en-s2-c1-l1-exercise-4",
+    lessonId,
+    skill: "conversation",
+    difficulty: 2,
+    instruction: "Chọn câu trả lời phù hợp",
+    prompt: "Hoàn thành đoạn hội thoại.",
+    explanation: "Câu hỏi dùng quá khứ nên câu trả lời cũng dùng quá khứ đơn.",
+    speaker: "Amy",
+    dialogue: "What did you do after school?",
+    options: ["I played basketball.", "I play basketball every day.", "I will play basketball.", "I am playing basketball now."],
+    correctIndex: 0,
+  }),
+  createListeningChoiceExercise({
+    id: "en-s2-c1-l1-exercise-5",
+    lessonId,
+    skill: "listening",
+    difficulty: 2,
+    instruction: "Nghe và chọn thông tin đúng",
+    prompt: "Nghe rồi chọn hoạt động của người nói vào thứ Bảy.",
+    explanation: "Người nói cho biết họ đã đi biển.",
+    spokenText: "Last Saturday, we went to the beach and swam in the sea.",
+    options: ["They went to the mountains.", "They went to the beach.", "They stayed at home.", "They visited a museum."],
+    correctIndex: 1,
+  }),
+];
