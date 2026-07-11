@@ -22,6 +22,16 @@ const getAuthenticatedUserId = async () => {
 const getStudyPresence = async (userId: string) => {
   try {
     const result = await getStudyTime(userId);
+    if (!result.ok) {
+      return {
+        active: false,
+        status: "off",
+        lastTrackedAt: null,
+        todaySeconds: 0,
+        timeoutSeconds: STUDY_ACTIVE_TTL_SECONDS,
+      };
+    }
+
     const summary = result.data?.summary;
     const updatedAtMs = summary?.updatedAt ? Date.parse(summary.updatedAt) : NaN;
     const isRecent =

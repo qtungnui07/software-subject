@@ -28,16 +28,6 @@ const STATUS_EMOJIS = [
   "🦉", "💯", "💩", "🏆", "🧺", "🐱",
 ];
 
-const MOCK_NAMES = [
-  "lập", "Sita Shrivastava", "Badawi Gomaa", "Jabir Hammoud",
-  "Đinh Yên Đan", "heman rajrana", "Di Thiên", "davis", "Alex Mercer",
-  "Yuki Tanaka", "Minh Khang", "Sophia Martinez", "Sarah Connor",
-  "Ahmad Khan", "Gia Bảo", "Emily Smith", "Nguyễn Hải Yến",
-  "Carlos Lopez", "Tường Vy", "John Doe", "Amélie Laurent",
-  "Hans Schmidt", "Trần Kiều Anh", "Hoàng Nam", "Phan Tuấn",
-  "Kiều Trang", "David Beckham", "Dmitry Petrov", "Helena",
-];
-
 const AVATAR_COLORS = [
   "bg-purple-500", "bg-emerald-500", "bg-blue-500", "bg-cyan-500",
   "bg-amber-500", "bg-rose-500", "bg-indigo-500", "bg-orange-500",
@@ -59,7 +49,6 @@ interface Competitor {
   weeklyXp?: number;
   totalXp?: number;
   rank?: number;
-  isMock?: boolean;
 }
 
 type XpLeaderboardApiUser = {
@@ -100,59 +89,6 @@ interface LeaderboardClientProps {
   todayMinutes: number;
   isLoggedIn?: boolean;
 }
-
-// ─── Seeded pseudo-random (stable per week) ──────────────────────────────────
-
-const seededRandom = (seed: number) => {
-  const x = Math.sin(seed + 1) * 10000;
-  return x - Math.floor(x);
-};
-
-const generateMockUsers = (
-  weekKey: string,
-  realCount: number,
-  userPoints: number
-): Competitor[] => {
-  const target = 30;
-  const needed = Math.max(0, target - realCount);
-  if (needed === 0) return [];
-
-  const base = Math.max(userPoints, 50);
-  const mocks: Competitor[] = [];
-
-  for (let i = 0; i < needed; i++) {
-    const seed = weekKey.split("").reduce((acc, c) => acc + c.charCodeAt(0), 0) + i;
-    const rand0 = seededRandom(seed);
-    const rand1 = seededRandom(seed + 100);
-    const rand2 = seededRandom(seed + 200);
-    const rand3 = seededRandom(seed + 300);
-
-    const spread = base * (0.3 + rand0 * 1.4); // 30% ~ 170% of user's points
-    const weeklyXp = Math.max(10, Math.round(spread));
-    const totalXp = Math.round(weeklyXp * (1 + rand1 * 10));
-    const level = Math.max(1, Math.floor(totalXp / 100) + 1);
-
-    const nameIdx = Math.floor(rand2 * MOCK_NAMES.length);
-    const colorIdx = Math.floor(rand3 * AVATAR_COLORS.length);
-    const name = MOCK_NAMES[nameIdx % MOCK_NAMES.length];
-
-    mocks.push({
-      id: `mock_${i}_${weekKey}`,
-      name,
-      avatarColor: AVATAR_COLORS[colorIdx],
-      avatarLetter: name.trim().charAt(0).toUpperCase(),
-      points: weeklyXp,
-      weeklyXp,
-      totalXp,
-      level,
-      isCurrentUser: false,
-      statusEmoji: null,
-      isMock: true,
-    });
-  }
-
-  return mocks;
-};
 
 // ─── Skeleton Row ─────────────────────────────────────────────────────────────
 
@@ -235,7 +171,6 @@ export const LeaderboardClient: React.FC<LeaderboardClientProps> = ({
       isCurrentUser: user.isCurrentUser,
       statusEmoji: user.isCurrentUser ? userStatusEmoji : null,
     };
-  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [initialUserName, initialUserImageSrc, userStatusEmoji]);
 
   // ── Sort leaderboard by tab ────────────────────────────────────────────────
@@ -294,11 +229,7 @@ export const LeaderboardClient: React.FC<LeaderboardClientProps> = ({
           });
         }
 
-        // Fill up to 30 with mocks
-        const mocks = generateMockUsers(weekKey, realUsers.length, userPoints);
-        const combined = [...realUsers, ...mocks];
-
-        setLeaderboard(combined);
+        setLeaderboard(realUsers);
 
         if (currentUserRow) {
           setUserPoints(currentUserRow.weeklyXp ?? currentUserRow.points);
@@ -307,9 +238,8 @@ export const LeaderboardClient: React.FC<LeaderboardClientProps> = ({
         console.error("Failed to load XP leaderboard:", error);
         if (!isMounted) return;
 
-        setLeaderboardError("Không thể tải bảng xếp hạng mới nhất. Đang hiển thị dữ liệu dự phòng.");
+        setLeaderboardError("Không thể tải bảng xếp hạng mới nhất.");
 
-        // Fallback: current user only + mocks
         const fallback: Competitor[] = isLoggedIn
           ? [{
               id: userId || "current_user",
@@ -325,8 +255,7 @@ export const LeaderboardClient: React.FC<LeaderboardClientProps> = ({
             }]
           : [];
 
-        const mocks = generateMockUsers(weekKey, fallback.length, Math.max(userPoints, 50));
-        setLeaderboard([...fallback, ...mocks]);
+        setLeaderboard(fallback);
       } finally {
         if (isMounted) setIsLoadingLeaderboard(false);
       }
@@ -337,53 +266,8 @@ export const LeaderboardClient: React.FC<LeaderboardClientProps> = ({
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [activeLeagueView, initialUserImageSrc, initialUserName, userStatusEmoji]);
 
-  // ── Sync points ────────────────────────────────────────────────────────────
-  useEffect(() => {
-    setUserPoints(initialPoints);
-  }, [initialPoints]);
-
-  // ── Countdown ──────────────────────────────────────────────────────────────
-  useEffect(() => {
-    const getNextSunday10PM = () => {
-      const now = new Date();
-      const nextSunday = new Date();
-      nextSunday.setDate(now.getDate() + (7 - now.getDay()) % 7);
-      nextSunday.setHours(22, 0, 0, 0);
-      if (now.getTime() > nextSunday.getTime()) {
-        nextSunday.setDate(nextSunday.getDate() + 7);
-      }
-      return nextSunday;
-    };
-
-    const targetDate = getNextSunday10PM();
-    const interval = setInterval(() => {
-      const now = new Date().getTime();
-      const difference = targetDate.getTime() - now;
-
-      if (difference <= 0) {
-        clearInterval(interval);
-        setCountdownText("Giải đấu đã kết thúc!");
-        handleWeeklyReset();
-      } else {
-        const days = Math.floor(difference / (1000 * 60 * 60 * 24));
-        const hours = Math.floor((difference % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
-        const minutes = Math.floor((difference % (1000 * 60 * 60)) / (1000 * 60));
-        const seconds = Math.floor((difference % (1000 * 60)) / 1000);
-
-        if (days > 0) {
-          setCountdownText(`${days} ngày ${hours} giờ`);
-        } else {
-          setCountdownText(`${hours}g ${minutes}p ${seconds}s`);
-        }
-      }
-    }, 1000);
-
-    return () => clearInterval(interval);
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [userLeague]);
-
   // ── Weekly Reset ───────────────────────────────────────────────────────────
-  const handleWeeklyReset = async () => {
+  const handleWeeklyReset = useCallback(async () => {
     if (typeof window === "undefined") return;
 
     const resetTriggeredKey = `reset_triggered_${userId}_${weekKey}`;
@@ -441,7 +325,46 @@ export const LeaderboardClient: React.FC<LeaderboardClientProps> = ({
         console.error("Failed to update league in db:", err);
       }
     }
-  };
+  }, [getSortedLeaderboard, leaderboard, userId, userLeague, weekKey]);
+
+  // ── Countdown ──────────────────────────────────────────────────────────────
+  useEffect(() => {
+    const getNextSunday10PM = () => {
+      const now = new Date();
+      const nextSunday = new Date();
+      nextSunday.setDate(now.getDate() + (7 - now.getDay()) % 7);
+      nextSunday.setHours(22, 0, 0, 0);
+      if (now.getTime() > nextSunday.getTime()) {
+        nextSunday.setDate(nextSunday.getDate() + 7);
+      }
+      return nextSunday;
+    };
+
+    const targetDate = getNextSunday10PM();
+    const interval = setInterval(() => {
+      const now = new Date().getTime();
+      const difference = targetDate.getTime() - now;
+
+      if (difference <= 0) {
+        clearInterval(interval);
+        setCountdownText("Giải đấu đã kết thúc!");
+        handleWeeklyReset();
+      } else {
+        const days = Math.floor(difference / (1000 * 60 * 60 * 24));
+        const hours = Math.floor((difference % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+        const minutes = Math.floor((difference % (1000 * 60 * 60)) / (1000 * 60));
+        const seconds = Math.floor((difference % (1000 * 60)) / 1000);
+
+        if (days > 0) {
+          setCountdownText(`${days} ngày ${hours} giờ`);
+        } else {
+          setCountdownText(`${hours}g ${minutes}p ${seconds}s`);
+        }
+      }
+    }, 1000);
+
+    return () => clearInterval(interval);
+  }, [handleWeeklyReset]);
 
   // ── Emoji Picker ──────────────────────────────────────────────────────────
   const handleEmojiSelect = async (emoji: string) => {
@@ -460,7 +383,6 @@ export const LeaderboardClient: React.FC<LeaderboardClientProps> = ({
   const activeLeagueDetails = LEAGUES.find((l) => l.id === activeLeagueView) || LEAGUES[0];
   const sortedLeaderboard = getSortedLeaderboard(leaderboard, sortTab);
   const userRankInList = sortedLeaderboard.findIndex((c) => c.isCurrentUser) + 1;
-  const userScore = userPoints;
 
   // Progress toward top-15 threshold
   const rank15User = sortedLeaderboard[14];
@@ -509,44 +431,61 @@ export const LeaderboardClient: React.FC<LeaderboardClientProps> = ({
           )}
 
           {/* League Track */}
-          <div className="rounded-[28px] border-2 border-slate-200 bg-white p-5 shadow-sm dark:border-slate-800 dark:bg-slate-900/40">
-            <h2 className="mb-4 text-center text-xs font-black uppercase tracking-wider text-slate-400 dark:text-slate-500">
+          <div className="rounded-[28px] border-2 border-slate-200 bg-white px-4 py-5 shadow-sm dark:border-slate-800 dark:bg-slate-900/40 sm:px-5">
+            <h2 className="mb-4 text-center text-xs font-black uppercase tracking-[0.18em] text-slate-400 dark:text-slate-500">
               Cấp bậc Giải đấu
             </h2>
-            <div className="flex items-center justify-between gap-1 overflow-x-auto pb-2 scrollbar-none">
+            <div className="flex snap-x items-stretch gap-2 overflow-x-auto pb-1 scrollbar-none sm:justify-between sm:gap-3">
               {LEAGUES.map((league) => {
                 const isActive = activeLeagueView === league.id;
                 const isUserActual = userLeague === league.id;
                 const isLocked = league.id > userLeague;
 
                 return (
-                  <div key={league.id} className="flex flex-col items-center shrink-0 min-w-[56px] relative">
-                    <LeagueShield
-                      leagueId={league.id}
-                      size={48}
-                      locked={isLocked}
-                      onClick={() => setActiveLeagueView(league.id)}
-                      className={cn(
-                        "rounded-full p-1 transition-all",
-                        isActive && "ring-4 ring-sky-300 ring-offset-2 scale-110",
-                        !isActive && !isLocked && "opacity-80 hover:opacity-100"
+                  <button
+                    key={league.id}
+                    type="button"
+                    onClick={() => {
+                      if (!isLocked) setActiveLeagueView(league.id);
+                    }}
+                    disabled={isLocked}
+                    title={isLocked ? `${league.name} đang khóa` : `Xem giải đấu ${league.name}`}
+                    className={cn(
+                      "group relative flex min-w-[82px] snap-start flex-col items-center rounded-2xl border border-transparent px-3 py-2.5 transition-all",
+                      "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sky-400 focus-visible:ring-offset-2 dark:focus-visible:ring-offset-slate-950",
+                      isActive
+                        ? "border-sky-400/80 bg-[#1f2d33] text-sky-300 shadow-[0_0_0_1px_rgba(56,189,248,0.32),0_10px_24px_rgba(0,0,0,0.18)]"
+                        : "text-slate-400 hover:bg-slate-50 hover:text-slate-600 dark:text-slate-500 dark:hover:bg-slate-900/50 dark:hover:text-slate-300",
+                      isLocked && "cursor-not-allowed opacity-70 hover:bg-transparent hover:text-slate-400 dark:hover:text-slate-500"
+                    )}
+                  >
+                    <div className="relative">
+                      <LeagueShield
+                        leagueId={league.id}
+                        size={52}
+                        locked={isLocked}
+                        className={cn(
+                          "drop-shadow-sm transition-transform",
+                          isActive && "scale-110 drop-shadow-md",
+                          !isActive && !isLocked && "group-hover:scale-105"
+                        )}
+                      />
+                      {isUserActual && (
+                        <span
+                          className="absolute -right-1 -top-1 flex h-4 w-4 items-center justify-center rounded-full border-2 border-white bg-rose-500 text-[8px] font-extrabold text-white ring-1 ring-rose-300 dark:border-slate-950"
+                          title="Giải đấu của bạn"
+                        >
+                          ★
+                        </span>
                       )}
-                    />
+                    </div>
                     <span className={cn(
-                      "mt-1.5 text-[10px] font-black tracking-tighter truncate w-14 text-center leading-none",
-                      isActive ? "text-sky-600 dark:text-sky-400 font-extrabold" : "text-slate-400 dark:text-slate-500"
+                      "mt-2 block w-full truncate px-1 pb-0.5 text-center text-[11px] font-black leading-tight",
+                      isActive ? "text-sky-600 dark:text-sky-300" : "text-current"
                     )}>
                       {league.name}
                     </span>
-                    {isUserActual && (
-                      <span
-                        className="absolute -top-1 -right-1 flex h-4 w-4 items-center justify-center rounded-full bg-rose-500 text-[8px] font-extrabold text-white border-2 border-white dark:border-slate-950 ring-1 ring-rose-300"
-                        title="Giải đấu của bạn"
-                      >
-                        ★
-                      </span>
-                    )}
-                  </div>
+                  </button>
                 );
               })}
             </div>
@@ -722,7 +661,7 @@ export const LeaderboardClient: React.FC<LeaderboardClientProps> = ({
                   <p className="mt-1 text-xs font-bold text-slate-400 dark:text-slate-500">
                     Bạn cần thăng hạng lên {activeLeagueDetails.name} để tranh tài ở đây.
                   </p>
-                  <p className="mt-3 text-xs font-black text-sky-500 uppercase tracking-wider">Đang hiển thị danh sách giả lập</p>
+                  <p className="mt-3 text-xs font-black text-sky-500 uppercase tracking-wider">Chưa mở danh sách giải đấu này</p>
                 </div>
               )}
 
@@ -822,7 +761,7 @@ export const LeaderboardClient: React.FC<LeaderboardClientProps> = ({
 
                       {/* Avatar */}
                       <div className="relative h-12 w-12 shrink-0 mx-0.5">
-                        {competitor.avatarUrl && !competitor.isMock ? (
+                        {competitor.avatarUrl ? (
                           <div className={cn(
                             "h-12 w-12 rounded-full overflow-hidden border-2 bg-slate-100 dark:bg-slate-900 relative shadow-inner",
                             isUser ? "border-sky-300 dark:border-sky-800" :
@@ -853,7 +792,7 @@ export const LeaderboardClient: React.FC<LeaderboardClientProps> = ({
                         )}
 
                         {/* Online dot */}
-                        {!competitor.isMock && (
+                        {competitor.avatarUrl && (
                           <span className="absolute bottom-0 right-0 block h-3 w-3 rounded-full bg-green-500 border-2 border-white dark:border-slate-900 ring-1 ring-green-300" />
                         )}
 
@@ -885,7 +824,6 @@ export const LeaderboardClient: React.FC<LeaderboardClientProps> = ({
                         )}>
                           {competitor.name}
                           {isUser && <span className="text-[10px] font-black text-sky-500 uppercase ml-1">(Bạn)</span>}
-                          {competitor.isMock && <span className="text-[10px] font-bold text-slate-300 dark:text-slate-600 ml-1">·</span>}
                         </span>
                         <span className="mt-0.5 block truncate text-[11px] font-black uppercase tracking-wide text-slate-400 dark:text-slate-500">
                           Lv {competitor.level ?? 1}

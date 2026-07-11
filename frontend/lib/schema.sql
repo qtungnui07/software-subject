@@ -162,6 +162,24 @@ CREATE INDEX IF NOT EXISTS course_progress_user_idx
 ON course_progress (user_id);
 
 ALTER TABLE course_progress
+ADD COLUMN IF NOT EXISTS course_id TEXT NOT NULL DEFAULT 'english';
+
+ALTER TABLE course_progress
+ADD COLUMN IF NOT EXISTS current_section_id TEXT NOT NULL DEFAULT 'english-section-1';
+
+ALTER TABLE course_progress
+ADD COLUMN IF NOT EXISTS unlocked_section_ids TEXT NOT NULL DEFAULT '["english-section-1"]';
+
+ALTER TABLE course_progress
+ADD COLUMN IF NOT EXISTS completed_node_ids TEXT NOT NULL DEFAULT '[]';
+
+ALTER TABLE course_progress
+ADD COLUMN IF NOT EXISTS claimed_reward_node_ids TEXT NOT NULL DEFAULT '[]';
+
+ALTER TABLE course_progress
+ADD COLUMN IF NOT EXISTS checkpoint_scores TEXT NOT NULL DEFAULT '{}';
+
+ALTER TABLE course_progress
 ADD COLUMN IF NOT EXISTS onboarding_status TEXT;
 
 ALTER TABLE course_progress

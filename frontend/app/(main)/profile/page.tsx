@@ -30,7 +30,10 @@ const ProfilePage = async () => {
 
   const [genericCourseProgress, xpSummary] = await Promise.all([
     getCourseProgressForUser(user.id).catch((error) => {
-      console.error("Failed to load generic course progress:", error);
+      console.warn(
+        "Falling back to default course progress. Check that the local database schema is up to date.",
+        error instanceof Error ? error.message : error
+      );
       return createDefaultCourseProgress();
     }),
     getUserXpSummary({ userId: user.id }).catch(() => null),
