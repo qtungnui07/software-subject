@@ -446,8 +446,8 @@ export const LessonPath = ({ todayMinutes, progressState, onClaimChest }: Props)
         </svg>
 
         <div className="absolute left-[8%] top-[238px] z-10 hidden md:block">
-          <div className="relative h-24 w-24 rounded-[28px] bg-white/90 dark:bg-slate-800/90 p-2 shadow-[0_16px_34px_rgba(15,23,42,0.13)] ring-2 ring-sky-100 dark:ring-[#202f36]">
-            <Image src="/robot-neutral-v4.png" alt="Robogo" fill className="p-2 rounded-[20px]" sizes="96px" />
+          <div className="relative h-24 w-24 rounded-full bg-white/90 dark:bg-slate-800/90 p-2 shadow-[0_16px_34px_rgba(15,23,42,0.13)] ring-2 ring-sky-100 dark:ring-[#202f36]">
+            <Image src="/logo.png" alt="Robogo" fill className="p-2 rounded-full object-contain" sizes="96px" />
           </div>
         </div>
 

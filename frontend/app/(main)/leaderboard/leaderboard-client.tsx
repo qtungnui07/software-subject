@@ -454,7 +454,7 @@ export const LeaderboardClient: React.FC<LeaderboardClientProps> = ({
                       "group relative flex min-w-[82px] snap-start flex-col items-center rounded-2xl border border-transparent px-3 py-2.5 transition-all",
                       "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sky-400 focus-visible:ring-offset-2 dark:focus-visible:ring-offset-slate-950",
                       isActive
-                        ? "border-sky-400/80 bg-[#1f2d33] text-sky-300 shadow-[0_0_0_1px_rgba(56,189,248,0.32),0_10px_24px_rgba(0,0,0,0.18)]"
+                        ? "border-sky-300 bg-sky-50 text-sky-600 shadow-[0_0_0_1px_rgba(56,189,248,0.22),0_10px_24px_rgba(56,189,248,0.08)] dark:border-sky-400/80 dark:bg-[#1f2d33] dark:text-sky-300 dark:shadow-[0_0_0_1px_rgba(56,189,248,0.32),0_10px_24px_rgba(0,0,0,0.18)]"
                         : "text-slate-400 hover:bg-slate-50 hover:text-slate-600 dark:text-slate-500 dark:hover:bg-slate-900/50 dark:hover:text-slate-300",
                       isLocked && "cursor-not-allowed opacity-70 hover:bg-transparent hover:text-slate-400 dark:hover:text-slate-500"
                     )}
