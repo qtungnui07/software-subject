@@ -176,7 +176,7 @@ const createTransitionOverlay = (
   label.className = "learn-transition-logo-card";
 
   const logo = document.createElement("img");
-  logo.src = "/Robogo.svg";
+  logo.src = "/logo.png";
   logo.alt = "Robogo";
   logo.className = "learn-transition-logo-card__image";
   logo.draggable = false;
@@ -194,7 +194,7 @@ const createTransitionOverlay = (
     width: "clamp(92px, 12vw, 142px)",
     aspectRatio: "1",
     padding: "12px",
-    borderRadius: "30%",
+    borderRadius: "50%",
     border: palette.labelBorder,
     background: palette.labelBg,
     color: palette.labelColor,
