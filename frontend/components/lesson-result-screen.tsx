@@ -72,11 +72,11 @@ export const LessonResultScreen = ({
     <div className="flex min-h-screen flex-col items-center justify-center bg-white dark:bg-[#182226] px-4 py-10 text-center text-slate-800 dark:text-slate-100">
       <div className="relative mx-auto mb-6 flex size-36 items-center justify-center">
         <Image
-          src="/mascot.svg"
+          src={passed ? "/robot-happy-v4.png" : "/robot-sad-v4.png"}
           alt="Mascot"
           width={128}
           height={128}
-          className={passed ? "object-contain" : "object-contain grayscale opacity-90"}
+          className={passed ? "object-contain animate-robot-bounce" : "object-contain grayscale opacity-90 animate-robot-sad"}
         />
         <div className={`absolute -bottom-2 -right-2 flex size-12 items-center justify-center rounded-full shadow-lg ring-4 ring-white dark:ring-[#182226] ${badgeClasses}`}>
           {passed ? <Trophy className="size-6 stroke-[2.5]" /> : <XCircle className="size-6 stroke-[2.5]" />}

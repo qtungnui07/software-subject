@@ -33,7 +33,7 @@ export const MobileSidebar = ({ isLoggedIn = false }: { isLoggedIn?: boolean }) 
       <SheetTrigger asChild>
         <button
           type="button"
-          className="flex size-10 items-center justify-center rounded-2xl border-2 border-[#d6ecfb] bg-[#e8f5ff] text-[#1486CC] transition hover:bg-[#d8efff]"
+          className="flex size-10 items-center justify-center rounded-2xl border-2 border-[#d6ecfb] dark:border-[#202f36] bg-[#e8f5ff] dark:bg-[#1c3547] text-[#1486CC] dark:text-[#38bdf8] transition hover:bg-[#d8efff] dark:hover:bg-[#254256]"
           aria-label="Mở menu điều hướng"
         >
           <Menu className="size-6" />

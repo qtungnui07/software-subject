@@ -33,6 +33,23 @@ export const LeagueShield: React.FC<LeagueShieldProps> = ({
   onClick,
 }) => {
   const league = LEAGUES.find((l) => l.id === leagueId) || LEAGUES[0];
+  const uniqueId = React.useId();
+  const uId = uniqueId.replace(/:/g, ""); // strip colons to ensure standard XML id compliance
+
+  const bronzeGradId = `bronzeGrad-${uId}`;
+  const bronzeInnerId = `bronzeInner-${uId}`;
+  const silverGradId = `silverGrad-${uId}`;
+  const silverInnerId = `silverInner-${uId}`;
+  const goldGradId = `goldGrad-${uId}`;
+  const goldInnerId = `goldInner-${uId}`;
+  const sapphireGradId = `sapphireGrad-${uId}`;
+  const rubyGradId = `rubyGrad-${uId}`;
+  const emeraldGradId = `emeraldGrad-${uId}`;
+  const amethystGradId = `amethystGrad-${uId}`;
+  const pearlGradId = `pearlGrad-${uId}`;
+  const pearlSphereId = `pearlSphere-${uId}`;
+  const obsGradId = `obsGrad-${uId}`;
+  const diaGradId = `diaGrad-${uId}`;
 
   const renderShieldContent = () => {
     if (locked) {
@@ -80,25 +97,25 @@ export const LeagueShield: React.FC<LeagueShieldProps> = ({
         return (
           <svg width="100%" height="100%" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
             <defs>
-              <linearGradient id="bronzeGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+              <linearGradient id={bronzeGradId} x1="0%" y1="0%" x2="100%" y2="100%">
                 <stop offset="0%" stopColor="#f59e0b" />
                 <stop offset="50%" stopColor="#d97706" />
                 <stop offset="100%" stopColor="#b45309" />
               </linearGradient>
-              <linearGradient id="bronzeInner" x1="0%" y1="0%" x2="0%" y2="100%">
+              <linearGradient id={bronzeInnerId} x1="0%" y1="0%" x2="0%" y2="100%">
                 <stop offset="0%" stopColor="#fed7aa" />
                 <stop offset="100%" stopColor="#ffedd5" />
               </linearGradient>
             </defs>
             <path
               d="M50 5C25 5 15 25 15 50C15 75 35 90 50 95C65 90 85 75 85 50C85 25 75 5 50 5Z"
-              fill="url(#bronzeGrad)"
+              fill={`url(#${bronzeGradId})`}
               stroke="#78350f"
               strokeWidth="6"
             />
             <path
               d="M50 12C30 12 22 28 22 50C22 70 38 83 50 87C62 83 78 70 78 50C78 28 70 12 50 12Z"
-              fill="url(#bronzeInner)"
+              fill={`url(#${bronzeInnerId})`}
             />
             {/* Feather details */}
             <path
@@ -131,25 +148,25 @@ export const LeagueShield: React.FC<LeagueShieldProps> = ({
         return (
           <svg width="100%" height="100%" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
             <defs>
-              <linearGradient id="silverGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+              <linearGradient id={silverGradId} x1="0%" y1="0%" x2="100%" y2="100%">
                 <stop offset="0%" stopColor="#cbd5e1" />
                 <stop offset="50%" stopColor="#94a3b8" />
                 <stop offset="100%" stopColor="#475569" />
               </linearGradient>
-              <linearGradient id="silverInner" x1="0%" y1="0%" x2="0%" y2="100%">
+              <linearGradient id={silverInnerId} x1="0%" y1="0%" x2="0%" y2="100%">
                 <stop offset="0%" stopColor="#f1f5f9" />
                 <stop offset="100%" stopColor="#cbd5e1" />
               </linearGradient>
             </defs>
             <path
               d="M50 5C25 5 15 25 15 50C15 75 35 90 50 95C65 90 85 75 85 50C85 25 75 5 50 5Z"
-              fill="url(#silverGrad)"
+              fill={`url(#${silverGradId})`}
               stroke="#334155"
               strokeWidth="6"
             />
             <path
               d="M50 12C30 12 22 28 22 50C22 70 38 83 50 87C62 83 78 70 78 50C78 28 70 12 50 12Z"
-              fill="url(#silverInner)"
+              fill={`url(#${silverInnerId})`}
             />
             <path
               d="M50 20V80"
@@ -170,25 +187,25 @@ export const LeagueShield: React.FC<LeagueShieldProps> = ({
         return (
           <svg width="100%" height="100%" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
             <defs>
-              <linearGradient id="goldGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+              <linearGradient id={goldGradId} x1="0%" y1="0%" x2="100%" y2="100%">
                 <stop offset="0%" stopColor="#fef08a" />
                 <stop offset="55%" stopColor="#eab308" />
                 <stop offset="100%" stopColor="#a16207" />
               </linearGradient>
-              <linearGradient id="goldInner" x1="0%" y1="0%" x2="0%" y2="100%">
+              <linearGradient id={goldInnerId} x1="0%" y1="0%" x2="0%" y2="100%">
                 <stop offset="0%" stopColor="#fef9c3" />
                 <stop offset="100%" stopColor="#fef08a" />
               </linearGradient>
             </defs>
             <path
               d="M50 5C25 5 15 25 15 50C15 75 35 90 50 95C65 90 85 75 85 50C85 25 75 5 50 5Z"
-              fill="url(#goldGrad)"
+              fill={`url(#${goldGradId})`}
               stroke="#713f12"
               strokeWidth="6"
             />
             <path
               d="M50 12C30 12 22 28 22 50C22 70 38 83 50 87C62 83 78 70 78 50C78 28 70 12 50 12Z"
-              fill="url(#goldInner)"
+              fill={`url(#${goldInnerId})`}
             />
             {/* Star */}
             <path
@@ -203,7 +220,7 @@ export const LeagueShield: React.FC<LeagueShieldProps> = ({
         return (
           <svg width="100%" height="100%" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
             <defs>
-              <linearGradient id="sapphireGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+              <linearGradient id={sapphireGradId} x1="0%" y1="0%" x2="100%" y2="100%">
                 <stop offset="0%" stopColor="#60a5fa" />
                 <stop offset="50%" stopColor="#2563eb" />
                 <stop offset="100%" stopColor="#1e3a8a" />
@@ -211,7 +228,7 @@ export const LeagueShield: React.FC<LeagueShieldProps> = ({
             </defs>
             <path
               d="M50 5C25 5 15 25 15 50C15 75 35 90 50 95C65 90 85 75 85 50C85 25 75 5 50 5Z"
-              fill="url(#sapphireGrad)"
+              fill={`url(#${sapphireGradId})`}
               stroke="#1e293b"
               strokeWidth="6"
             />
@@ -228,7 +245,7 @@ export const LeagueShield: React.FC<LeagueShieldProps> = ({
         return (
           <svg width="100%" height="100%" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
             <defs>
-              <linearGradient id="rubyGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+              <linearGradient id={rubyGradId} x1="0%" y1="0%" x2="100%" y2="100%">
                 <stop offset="0%" stopColor="#f87171" />
                 <stop offset="50%" stopColor="#dc2626" />
                 <stop offset="100%" stopColor="#7f1d1d" />
@@ -236,7 +253,7 @@ export const LeagueShield: React.FC<LeagueShieldProps> = ({
             </defs>
             <path
               d="M50 5C25 5 15 25 15 50C15 75 35 90 50 95C65 90 85 75 85 50C85 25 75 5 50 5Z"
-              fill="url(#rubyGrad)"
+              fill={`url(#${rubyGradId})`}
               stroke="#450a0a"
               strokeWidth="6"
             />
@@ -252,7 +269,7 @@ export const LeagueShield: React.FC<LeagueShieldProps> = ({
         return (
           <svg width="100%" height="100%" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
             <defs>
-              <linearGradient id="emeraldGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+              <linearGradient id={emeraldGradId} x1="0%" y1="0%" x2="100%" y2="100%">
                 <stop offset="0%" stopColor="#34d399" />
                 <stop offset="50%" stopColor="#059669" />
                 <stop offset="100%" stopColor="#064e3b" />
@@ -260,7 +277,7 @@ export const LeagueShield: React.FC<LeagueShieldProps> = ({
             </defs>
             <path
               d="M50 5C25 5 15 25 15 50C15 75 35 90 50 95C65 90 85 75 85 50C85 25 75 5 50 5Z"
-              fill="url(#emeraldGrad)"
+              fill={`url(#${emeraldGradId})`}
               stroke="#022c22"
               strokeWidth="6"
             />
@@ -278,7 +295,7 @@ export const LeagueShield: React.FC<LeagueShieldProps> = ({
         return (
           <svg width="100%" height="100%" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
             <defs>
-              <linearGradient id="amethystGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+              <linearGradient id={amethystGradId} x1="0%" y1="0%" x2="100%" y2="100%">
                 <stop offset="0%" stopColor="#a78bfa" />
                 <stop offset="50%" stopColor="#7c3aed" />
                 <stop offset="100%" stopColor="#4c1d95" />
@@ -286,7 +303,7 @@ export const LeagueShield: React.FC<LeagueShieldProps> = ({
             </defs>
             <path
               d="M50 5C25 5 15 25 15 50C15 75 35 90 50 95C65 90 85 75 85 50C85 25 75 5 50 5Z"
-              fill="url(#amethystGrad)"
+              fill={`url(#${amethystGradId})`}
               stroke="#2e1065"
               strokeWidth="6"
             />
@@ -306,12 +323,12 @@ export const LeagueShield: React.FC<LeagueShieldProps> = ({
         return (
           <svg width="100%" height="100%" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
             <defs>
-              <linearGradient id="pearlGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+              <linearGradient id={pearlGradId} x1="0%" y1="0%" x2="100%" y2="100%">
                 <stop offset="0%" stopColor="#f472b6" />
                 <stop offset="50%" stopColor="#db2777" />
                 <stop offset="100%" stopColor="#831843" />
               </linearGradient>
-              <radialGradient id="pearlSphere" cx="35%" cy="35%" r="65%">
+              <radialGradient id={pearlSphereId} cx="35%" cy="35%" r="65%">
                 <stop offset="0%" stopColor="#ffffff" />
                 <stop offset="30%" stopColor="#fce7f3" />
                 <stop offset="70%" stopColor="#f472b6" />
@@ -320,7 +337,7 @@ export const LeagueShield: React.FC<LeagueShieldProps> = ({
             </defs>
             <path
               d="M50 5C25 5 15 25 15 50C15 75 35 90 50 95C65 90 85 75 85 50C85 25 75 5 50 5Z"
-              fill="url(#pearlGrad)"
+              fill={`url(#${pearlGradId})`}
               stroke="#500724"
               strokeWidth="6"
             />
@@ -331,7 +348,7 @@ export const LeagueShield: React.FC<LeagueShieldProps> = ({
               opacity="0.25"
             />
             {/* Pearl Sphere */}
-            <circle cx="50" cy="50" r="22" fill="url(#pearlSphere)" stroke="#db2777" strokeWidth="2.5" />
+            <circle cx="50" cy="50" r="22" fill={`url(#${pearlSphereId})`} stroke="#db2777" strokeWidth="2.5" />
             <circle cx="43" cy="43" r="4" fill="#ffffff" opacity="0.8" />
           </svg>
         );
@@ -339,7 +356,7 @@ export const LeagueShield: React.FC<LeagueShieldProps> = ({
         return (
           <svg width="100%" height="100%" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
             <defs>
-              <linearGradient id="obsGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+              <linearGradient id={obsGradId} x1="0%" y1="0%" x2="100%" y2="100%">
                 <stop offset="0%" stopColor="#374151" />
                 <stop offset="50%" stopColor="#1f2937" />
                 <stop offset="100%" stopColor="#111827" />
@@ -347,7 +364,7 @@ export const LeagueShield: React.FC<LeagueShieldProps> = ({
             </defs>
             <path
               d="M50 5C25 5 15 25 15 50C15 75 35 90 50 95C65 90 85 75 85 50C85 25 75 5 50 5Z"
-              fill="url(#obsGrad)"
+              fill={`url(#${obsGradId})`}
               stroke="#030712"
               strokeWidth="6"
             />
@@ -375,7 +392,7 @@ export const LeagueShield: React.FC<LeagueShieldProps> = ({
         return (
           <svg width="100%" height="100%" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
             <defs>
-              <linearGradient id="diaGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+              <linearGradient id={diaGradId} x1="0%" y1="0%" x2="100%" y2="100%">
                 <stop offset="0%" stopColor="#a5f3fc" />
                 <stop offset="50%" stopColor="#06b6d4" />
                 <stop offset="100%" stopColor="#083344" />
@@ -383,7 +400,7 @@ export const LeagueShield: React.FC<LeagueShieldProps> = ({
             </defs>
             <path
               d="M50 5C25 5 15 25 15 50C15 75 35 90 50 95C65 90 85 75 85 50C85 25 75 5 50 5Z"
-              fill="url(#diaGrad)"
+              fill={`url(#${diaGradId})`}
               stroke="#0f172a"
               strokeWidth="6"
             />

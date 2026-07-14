@@ -348,17 +348,9 @@ const LessonNodeButton = ({
 
       <div
         className={cn(
-          "relative rounded-full p-1.5 transition duration-200",
-          isCurrent && "p-2",
+          "relative rounded-full transition duration-200",
           selected ? "-translate-y-1" : "hover:-translate-y-1 active:translate-y-0"
         )}
-        style={
-          isCurrent
-            ? {
-                background: `conic-gradient(#1486CC ${progress * 3.6}deg, #dbeafe 0deg)`,
-              }
-            : undefined
-        }
       >
         <button
           type="button"
@@ -455,7 +447,7 @@ export const LessonPath = ({ todayMinutes, progressState, onClaimChest }: Props)
 
         <div className="absolute left-[8%] top-[238px] z-10 hidden md:block">
           <div className="relative h-24 w-24 rounded-[28px] bg-white/90 dark:bg-slate-800/90 p-2 shadow-[0_16px_34px_rgba(15,23,42,0.13)] ring-2 ring-sky-100 dark:ring-[#202f36]">
-            <Image src="/logo.webp" alt="Robogo" fill className="p-2 rounded-[20px]" sizes="96px" />
+            <Image src="/robot-neutral-v4.png" alt="Robogo" fill className="p-2 rounded-[20px]" sizes="96px" />
           </div>
         </div>
 

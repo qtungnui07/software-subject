@@ -415,11 +415,11 @@ const LessonContent = () => {
       <div className="flex min-h-screen flex-col items-center justify-center bg-white dark:bg-[#182226] px-4 text-center">
         <div className="relative mx-auto mb-6 flex size-32 items-center justify-center">
           <Image
-            src="/mascot.svg"
+            src="/robot-sad-v4.png"
             alt="Mascot"
             width={120}
             height={120}
-            className="object-contain grayscale opacity-80"
+            className="object-contain grayscale opacity-80 animate-robot-sad"
           />
           <div className="absolute -bottom-1 -right-1 flex size-10 items-center justify-center rounded-full bg-rose-500 text-white shadow-md ring-4 ring-white dark:ring-[#182226] animate-bounce">
             <Heart className="size-5 fill-current stroke-[2.5]" />
@@ -487,6 +487,18 @@ const LessonContent = () => {
     );
   }
 
+  const mascotImageSrc = !isAnswered
+    ? "/robot-neutral-v4.png"
+    : isCorrect
+      ? "/robot-happy-v4.png"
+      : "/robot-sad-v4.png";
+
+  const mascotAnimationClass = !isAnswered
+    ? "animate-robot-float"
+    : isCorrect
+      ? "animate-robot-bounce"
+      : "animate-robot-sad";
+
   return (
     <div className="flex min-h-screen flex-col bg-white dark:bg-[#182226] text-slate-800 dark:text-slate-100">
       {/* Header bài học */}
@@ -504,10 +516,10 @@ const LessonContent = () => {
           <div className="flex items-start gap-4">
             <div className="relative size-16 shrink-0 md:size-20">
               <Image
-                src="/mascot.svg"
+                src={mascotImageSrc}
                 alt="Mascot"
                 fill
-                className="object-contain"
+                className={`object-contain ${mascotAnimationClass}`}
               />
             </div>
             <div className="relative rounded-2xl border-2 border-slate-200 dark:border-[#202f36] bg-white dark:bg-[#141f23] px-4 py-3 shadow-sm md:px-5 md:py-4">
