@@ -711,3 +711,50 @@ body,
 ::view-transition-new(root) {
   z-index: 9999;
 }
+
+/* Custom Animations for 2D Robot Mascot */
+@keyframes robot-float {
+  0%, 100% {
+    transform: translateY(0) rotate(0deg) scale(1);
+  }
+  50% {
+    transform: translateY(-6px) rotate(1deg) scale(1.015);
+  }
+}
+
+.animate-robot-float {
+  animation: robot-float 4s ease-in-out infinite;
+}
+
+@keyframes robot-bounce {
+  0%, 100% {
+    transform: translateY(0) scale(1) rotate(0deg);
+  }
+  30% {
+    transform: translateY(-4px) scale(0.995) rotate(0.8deg);
+  }
+  50% {
+    transform: translateY(0) scale(1.015) rotate(-0.8deg);
+  }
+  70% {
+    transform: translateY(-2px) scale(0.998) rotate(0.3deg);
+  }
+}
+
+.animate-robot-bounce {
+  animation: robot-bounce 2s ease-in-out infinite;
+}
+
+@keyframes robot-sad {
+  0%, 100% {
+    transform: translateY(0) scale(1) rotate(0deg);
+  }
+  50% {
+    transform: translateY(3px) scale(0.97, 0.95) rotate(-1.2deg);
+  }
+}
+
+.animate-robot-sad {
+  animation: robot-sad 5s ease-in-out infinite;
+}
+

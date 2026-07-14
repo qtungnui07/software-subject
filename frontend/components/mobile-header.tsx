@@ -17,10 +17,10 @@ type Props = {
 };
 
 const tierStyles = {
-  none: "border-slate-200 bg-slate-50 text-slate-500",
-  bronze: "border-orange-200 bg-orange-50 text-orange-700",
-  silver: "border-slate-200 bg-slate-50 text-slate-600",
-  gold: "border-amber-200 bg-amber-50 text-amber-700",
+  none: "border-slate-200 dark:border-[#202f36] bg-slate-50 dark:bg-[#1f2d33] text-slate-500 dark:text-slate-400",
+  bronze: "border-orange-200 dark:border-orange-950/40 bg-orange-50 dark:bg-orange-950/20 text-orange-700 dark:text-orange-400",
+  silver: "border-slate-200 dark:border-[#202f36] bg-slate-50 dark:bg-[#1f2d33] text-slate-600 dark:text-slate-300",
+  gold: "border-amber-200 dark:border-amber-950/40 bg-amber-50 dark:bg-amber-950/20 text-amber-700 dark:text-amber-400",
 };
 
 export const MobileHeader = ({ isLoggedIn = false, hearts = 5 }: Props) => {
@@ -28,7 +28,7 @@ export const MobileHeader = ({ isLoggedIn = false, hearts = 5 }: Props) => {
   const studyTier = getStudyTier(todayMinutes);
 
   return (
-    <nav className="fixed top-0 z-50 flex h-[56px] w-full items-center border-b-2 border-[#e4edf5] bg-white/95 px-3 shadow-[0_8px_24px_rgba(15,23,42,0.04)] backdrop-blur sm:px-4 lg:hidden">
+    <nav className="fixed top-0 z-50 flex h-[56px] w-full items-center border-b-2 border-[#e4edf5] dark:border-[#202f36] bg-white/95 dark:bg-[#141f23]/95 px-3 shadow-[0_8px_24px_rgba(15,23,42,0.04)] dark:shadow-[0_8px_24px_rgba(0,0,0,0.2)] backdrop-blur sm:px-4 lg:hidden">
       <div className="flex w-full items-center justify-between gap-1.5 sm:gap-2">
         <MobileSidebar isLoggedIn={isLoggedIn} />
 
@@ -68,7 +68,7 @@ export const MobileHeader = ({ isLoggedIn = false, hearts = 5 }: Props) => {
             <StreakWidget className="h-9 text-xs" />
           )}
 
-          <div className="flex h-9 items-center gap-x-1 rounded-2xl border-2 border-rose-100 bg-rose-50 px-1.5 text-xs font-black text-rose-500 shadow-sm min-[380px]:px-2">
+          <div className="flex h-9 items-center gap-x-1 rounded-2xl border-2 border-rose-100 dark:border-rose-950/40 bg-rose-50 dark:bg-rose-950/20 px-1.5 text-xs font-black text-rose-500 dark:text-rose-400 shadow-sm min-[380px]:px-2">
             <Image src="/heart.svg" height={18} width={18} alt="Tim" />
             <span>{hearts}</span>
           </div>

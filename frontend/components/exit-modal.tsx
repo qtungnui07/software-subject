@@ -28,11 +28,11 @@ export const ExitModal = ({ isOpen, onClose, onConfirm }: Props) => {
       >
         <div className="relative mx-auto mb-4 flex size-24 items-center justify-center">
           <Image
-            src="/mascot.svg"
+            src="/robot-sad-v4.png"
             alt="Mascot"
             width={84}
             height={84}
-            className="object-contain"
+            className="object-contain animate-robot-sad"
           />
           <div className="absolute -bottom-1 -right-1 flex size-8 items-center justify-center rounded-full bg-rose-500 text-white shadow-md ring-4 ring-white dark:ring-[#182226]">
             <AlertTriangle className="size-4 stroke-[3]" />
