@@ -526,7 +526,7 @@ const QuestAction = ({
       <Button
         type="button"
         variant="primary-outline"
-        className="h-10 w-full justify-center rounded-2xl border-2 border-emerald-500/60 bg-slate-900 px-5 font-black text-emerald-300 disabled:opacity-100 dark:border-emerald-700 dark:bg-[#0d171b] dark:text-emerald-300 sm:h-11 sm:w-auto"
+        className="h-10 w-full justify-center rounded-2xl border-2 border-emerald-200 bg-emerald-50 px-5 font-black text-emerald-600 disabled:opacity-100 dark:border-emerald-700 dark:bg-[#0d171b] dark:text-emerald-300 sm:h-11 sm:w-auto"
         disabled
       >
         <Check className="mr-2 size-4" strokeWidth={3} />
