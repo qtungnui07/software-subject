@@ -6,7 +6,7 @@ import { useState } from "react";
 import { useClerk } from "@clerk/nextjs";
 import { usePathname } from "next/navigation";
 import { toast } from "sonner";
-import { CircleUser } from "lucide-react";
+
 
 import { SidebarItem } from "./sidebar-item";
 import { Button } from "@/components/ui/button";
@@ -39,7 +39,7 @@ const routes = [
   {
     label: "Hồ sơ",
     href: "/profile",
-    icon: CircleUser,
+    iconSrc: "/profile.svg",
   },
 ];
 
