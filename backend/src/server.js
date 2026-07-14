@@ -226,7 +226,6 @@ const syncUser = async (payload) => {
         set
           name = ${name},
           email = ${email},
-          image_src = ${imageSrc},
           updated_at = now()
         where clerk_user_id = ${clerkUserId}
         returning id, clerk_user_id, email, name, image_src, created_at, updated_at
@@ -248,7 +247,6 @@ const syncUser = async (payload) => {
         set
           clerk_user_id = ${clerkUserId},
           name = ${name},
-          image_src = ${imageSrc},
           updated_at = now()
         where email = ${email}
         returning id, clerk_user_id, email, name, image_src, created_at, updated_at

@@ -69,6 +69,9 @@ type StreakUpdateResult = {
   missedDays?: number;
   usedStreakFreezes?: number;
   earnedXpToday?: number;
+  studyMinutesToday?: number;
+  requiredStudyMinutes?: number;
+  message?: string;
 };
 
 type LessonXpApiResult = {
@@ -132,6 +135,7 @@ const LessonContent = () => {
   const [streakResult, setStreakResult] = useState<StreakNotificationInput | null>(null);
   const [completionBlockedMessage, setCompletionBlockedMessage] = useState<string | null>(null);
   const hasHandledCompletionRef = useRef(false);
+  const lessonStartedAtRef = useRef(0);
 
   const currentQuestion = MOCK_QUESTIONS[currentQuestionIndex];
   const progress = (currentQuestionIndex / MOCK_QUESTIONS.length) * 100;
@@ -142,6 +146,10 @@ const LessonContent = () => {
   const isCheckpoint = lessonNode.type === "checkpoint";
   const xpLessonId = lessonNode.nodeId;
 
+  useEffect(() => {
+    lessonStartedAtRef.current = Date.now();
+  }, [xpLessonId]);
+
   // Apply pass/fail rules once when the result screen is shown.
   // Progress is localStorage-first, while XP/streak APIs are best-effort extras.
   useEffect(() => {
@@ -150,6 +158,7 @@ const LessonContent = () => {
     hasHandledCompletionRef.current = true;
 
     if (!passed) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setXpResult(null);
       setXpError(null);
       setIsClaimingXp(false);
@@ -183,6 +192,11 @@ const LessonContent = () => {
 
     const completeLesson = async () => {
       let xpForStreak = 0;
+      const lessonStartedAt = lessonStartedAtRef.current || Date.now();
+      const studyMinutes = Math.max(
+        1,
+        Math.ceil((Date.now() - lessonStartedAt) / (1000 * 60))
+      );
 
       try {
         setIsClaimingXp(true);
@@ -218,6 +232,7 @@ const LessonContent = () => {
           body: JSON.stringify({
             lessonId: xpLessonId,
             earnedXp: xpForStreak,
+            studyMinutes,
           }),
         });
 
@@ -300,6 +315,7 @@ const LessonContent = () => {
     setStreakResult(null);
     setCompletionBlockedMessage(null);
     hasHandledCompletionRef.current = false;
+    lessonStartedAtRef.current = Date.now();
   };
 
   // Redirect to learn page
