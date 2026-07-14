@@ -105,27 +105,109 @@ const statusViewMap: Record<QuestStatus, StatusView> = {
   },
 };
 
-const robotMoodView: Record<RobotMood, { emoji: string; title: string; description: string; tone: string }> = {
+const SleepyMascot = ({ className }: { className?: string }) => (
+  <svg viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg" className={cn("animate-robot-sad", className)}>
+    <rect x="23" y="10" width="2" height="4" fill="#94a3b8" rx="1"/>
+    <circle cx="24" cy="9" r="2" fill="#ff4d4f"/>
+    <rect x="8" y="20" width="3" height="8" fill="#1486cc" rx="1.5"/>
+    <rect x="37" y="20" width="3" height="8" fill="#1486cc" rx="1.5"/>
+    <rect x="11" y="14" width="26" height="20" rx="6" fill="#1486CC"/>
+    <rect x="12" y="15" width="24" height="18" rx="5" fill="#38bdf8"/>
+    <rect x="15" y="18" width="18" height="12" rx="3" fill="#0f172a"/>
+    <path d="M18 24h3M27 24h3" stroke="#50e2ff" strokeWidth="2" strokeLinecap="round"/>
+    <path d="M35 12h3l-3 4h3" stroke="#38bdf8" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+    <path d="M38 6h4l-4 5h4" stroke="#38bdf8" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+  </svg>
+);
+
+const AwakeMascot = ({ className }: { className?: string }) => (
+  <svg viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg" className={cn("animate-robot-float", className)}>
+    <rect x="23" y="10" width="2" height="4" fill="#94a3b8" rx="1"/>
+    <circle cx="24" cy="9" r="2" fill="#ff4d4f"/>
+    <rect x="8" y="20" width="3" height="8" fill="#1486cc" rx="1.5"/>
+    <rect x="37" y="20" width="3" height="8" fill="#1486cc" rx="1.5"/>
+    <rect x="11" y="14" width="26" height="20" rx="6" fill="#1486CC"/>
+    <rect x="12" y="15" width="24" height="18" rx="5" fill="#38bdf8"/>
+    <rect x="15" y="18" width="18" height="12" rx="3" fill="#0f172a"/>
+    <circle cx="20" cy="23" r="2.5" fill="#50e2ff"/>
+    <circle cx="20" cy="23" r="1" fill="#ffffff"/>
+    <circle cx="28" cy="23" r="2.5" fill="#50e2ff"/>
+    <circle cx="28" cy="23" r="1" fill="#ffffff"/>
+    <path d="M22 27c1 1 3 1 4 0" stroke="#50e2ff" strokeWidth="1.5" strokeLinecap="round"/>
+    <path d="M38 12l1 2 2 1-2 1-1 2-1-2-2-1 2-1 1-2z" fill="#ffc53d"/>
+    <path d="M7 13l0.8 1.6 1.6 0.8-1.6 0.8-0.8 1.6-0.8-1.6-1.6-0.8 1.6-0.8 0.8-1.6z" fill="#ffc53d"/>
+  </svg>
+);
+
+const ExcitedMascot = ({ className }: { className?: string }) => (
+  <svg viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg" className={cn("animate-robot-bounce", className)}>
+    <rect x="23" y="12" width="2" height="4" fill="#94a3b8" rx="1"/>
+    <circle cx="24" cy="11" r="2" fill="#ff4d4f"/>
+    <rect x="8" y="22" width="3" height="8" fill="#1486cc" rx="1.5"/>
+    <rect x="37" y="22" width="3" height="8" fill="#1486cc" rx="1.5"/>
+    <rect x="11" y="16" width="26" height="20" rx="6" fill="#1486CC"/>
+    <rect x="12" y="17" width="24" height="18" rx="5" fill="#38bdf8"/>
+    <rect x="15" y="20" width="18" height="12" rx="3" fill="#0f172a"/>
+    <circle cx="20" cy="25" r="2.5" fill="#50e2ff"/>
+    <circle cx="20" cy="25" r="1" fill="#ffffff"/>
+    <circle cx="28" cy="25" r="2.5" fill="#50e2ff"/>
+    <circle cx="28" cy="25" r="1" fill="#ffffff"/>
+    <path d="M22 28.5c1 1.5 3 1.5 4 0" fill="#50e2ff" stroke="#50e2ff" strokeWidth="1" strokeLinecap="round"/>
+    <g transform="translate(28, -2) rotate(15)">
+      <path d="M8 20c-1 1-1 3-1 3s1.5 0 2.5-1 0.5-2.5 0.5-2.5-1 0-2 1z" fill="#ff9c6e"/>
+      <path d="M8 3C4 7 4 16 4 19h8c0-3 0-12-4-16z" fill="#f8fafc" stroke="#cbd5e1" strokeWidth="0.5"/>
+      <path d="M8 3c-2 2-2.5 5-2.5 7h5c0-2-.5-5-2.5-7z" fill="#ff4d4f"/>
+      <path d="M4 16c-2 0-3 2-3 4v1h3v-5z" fill="#1486cc"/>
+      <path d="M12 16c2 0 3 2 3 4v1h-3v-5z" fill="#1486cc"/>
+      <circle cx="8" cy="12" r="1.5" fill="#38bdf8" />
+    </g>
+  </svg>
+);
+
+const CelebratingMascot = ({ className }: { className?: string }) => (
+  <svg viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg" className={cn("animate-robot-bounce", className)}>
+    <rect x="23" y="10" width="2" height="4" fill="#94a3b8" rx="1"/>
+    <circle cx="24" cy="9" r="2" fill="#ff4d4f"/>
+    <rect x="8" y="20" width="3" height="8" fill="#1486cc" rx="1.5"/>
+    <rect x="37" y="20" width="3" height="8" fill="#1486cc" rx="1.5"/>
+    <rect x="11" y="14" width="26" height="20" rx="6" fill="#1486CC"/>
+    <rect x="12" y="15" width="24" height="18" rx="5" fill="#38bdf8"/>
+    <rect x="15" y="18" width="18" height="12" rx="3" fill="#0f172a"/>
+    <path d="M18 24.5c.5-.7 1.5-.7 2 0M26 24.5c.5-.7 1.5-.7 2 0" stroke="#50e2ff" strokeWidth="2" strokeLinecap="round"/>
+    <path d="M21 27c1 1.2 3 1.2 4 0" fill="#50e2ff" stroke="#50e2ff" strokeWidth="0.8" strokeLinecap="round"/>
+    <g transform="translate(10, 4) rotate(-15)">
+      <polygon points="12,0 6,12 18,12" fill="#ff4d4f" />
+      <polygon points="12,0 9,12 15,12" fill="#ffc53d" />
+      <circle cx="12" cy="0" r="1.5" fill="#ffc53d" />
+    </g>
+    <rect x="36" y="8" width="2" height="4" rx="0.5" fill="#52c41a" transform="rotate(30 36 8)"/>
+    <rect x="6" y="9" width="2" height="4" rx="0.5" fill="#ff4d4f" transform="rotate(-45 6 9)"/>
+    <circle cx="39" cy="20" r="1.5" fill="#ffc53d" />
+    <circle cx="7" cy="22" r="1.2" fill="#1890ff" />
+  </svg>
+);
+
+const robotMoodView: Record<RobotMood, { mascot: React.ReactNode; title: string; description: string; tone: string }> = {
   sleepy: {
-    emoji: "🤖💤",
+    mascot: <SleepyMascot className="size-16 sm:size-18" />,
     title: "Robo đang chờ bạn khởi động",
     description: "Hoàn thành nhiệm vụ đầu tiên để đánh thức nhịp học hôm nay.",
     tone: "border-slate-200 bg-slate-50 dark:border-slate-800 dark:bg-slate-900/50",
   },
   awake: {
-    emoji: "🤖✨",
+    mascot: <AwakeMascot className="size-16 sm:size-18" />,
     title: "Robo đã tỉnh dậy",
     description: "Bạn đã có nhịp học tốt. Tiếp tục để mở phần thưởng lớn hơn.",
     tone: "border-sky-200 bg-sky-50 dark:border-sky-900/60 dark:bg-sky-950/40",
   },
   excited: {
-    emoji: "🚀🤖",
+    mascot: <ExcitedMascot className="size-16 sm:size-18" />,
     title: "Robo đang rất hào hứng",
     description: "Chỉ còn 1 nhiệm vụ nữa để mở Ngày hoàn hảo.",
     tone: "border-[#bfe3fb] bg-[#f1f9ff] dark:border-[#234455] dark:bg-[#132a38]",
   },
   celebrating: {
-    emoji: "🎉🤖",
+    mascot: <CelebratingMascot className="size-16 sm:size-18" />,
     title: "Ngày hoàn hảo đã mở",
     description: "Bạn đã hoàn thành toàn bộ nhiệm vụ hôm nay. Rất đáng giữ chuỗi này.",
     tone: "border-emerald-200 bg-emerald-50 dark:border-emerald-900/60 dark:bg-emerald-950/40",
@@ -874,8 +956,8 @@ const QuestsHero = ({
         </div>
 
         <div className={cn("rounded-[28px] border-2 p-4 text-center shadow-[0_16px_34px_rgba(20,134,204,0.11)] transition-transform duration-300 hover:-translate-y-1 dark:shadow-none", mood.tone)}>
-          <div className="quest-robot-idle mx-auto flex size-20 items-center justify-center rounded-[24px] bg-white text-5xl shadow-[0_12px_26px_rgba(20,134,204,0.12)] dark:bg-[#10191d] sm:size-22">
-            {mood.emoji}
+          <div className="quest-robot-idle mx-auto flex size-20 items-center justify-center rounded-[24px] bg-white shadow-[0_12px_26px_rgba(20,134,204,0.12)] dark:bg-[#10191d] sm:size-22">
+            {mood.mascot}
           </div>
           <h2 className="mt-3 text-lg font-black text-slate-900 dark:text-white">
             {mood.title}
