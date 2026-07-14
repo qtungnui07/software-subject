@@ -46,13 +46,6 @@ const ProfilePage = async () => {
 
   const quickStats = [
     {
-      label: "Hearts",
-      value: `${profile?.hearts ?? 5} ❤️`,
-      description: "Mạng còn lại",
-      icon: "❤️",
-      tone: "border-rose-100 bg-rose-50 text-rose-600 dark:border-rose-950/40 dark:bg-rose-950/20 dark:text-rose-400",
-    },
-    {
       label: "Points",
       value: `${xpSummary?.totalXp ?? profile?.points ?? 0} XP`,
       description: "Điểm kinh nghiệm",

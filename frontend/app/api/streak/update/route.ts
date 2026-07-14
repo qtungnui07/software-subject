@@ -11,6 +11,7 @@ let didLogDeprecation = false;
 type UpdateStreakRequestBody = {
   lessonId?: unknown;
   earnedXp?: unknown;
+  studyMinutes?: unknown;
 };
 
 const parseUpdateStreakBody = (body: UpdateStreakRequestBody) => {
@@ -28,11 +29,16 @@ const parseUpdateStreakBody = (body: UpdateStreakRequestBody) => {
     typeof body.earnedXp === "number" && Number.isFinite(body.earnedXp)
       ? body.earnedXp
       : 10;
+  const studyMinutes =
+    typeof body.studyMinutes === "number" && Number.isFinite(body.studyMinutes)
+      ? Math.max(0, Math.trunc(body.studyMinutes))
+      : 0;
 
   return {
     error: null,
     lessonId,
     earnedXp,
+    studyMinutes,
   };
 };
 
@@ -63,6 +69,7 @@ export async function POST(request: Request) {
       nodeId: parsedBody.lessonId,
       earnedXp: parsedBody.earnedXp,
       completedLessons: 1,
+      studyMinutes: parsedBody.studyMinutes,
     });
 
     return NextResponse.json({

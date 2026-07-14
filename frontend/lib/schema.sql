@@ -25,9 +25,13 @@ CREATE TABLE IF NOT EXISTS daily_streak_logs (
   study_date         DATE NOT NULL,
   completed_lessons  INTEGER NOT NULL DEFAULT 0,
   earned_xp          INTEGER NOT NULL DEFAULT 0,
+  study_minutes      INTEGER NOT NULL DEFAULT 0,
   created_at         TIMESTAMPTZ NOT NULL DEFAULT NOW(),
   updated_at         TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
+
+ALTER TABLE daily_streak_logs
+ADD COLUMN IF NOT EXISTS study_minutes INTEGER NOT NULL DEFAULT 0;
 
 CREATE UNIQUE INDEX IF NOT EXISTS daily_streak_logs_user_date_idx
 ON daily_streak_logs (user_id, study_date);

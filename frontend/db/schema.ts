@@ -80,6 +80,7 @@ export const dailyStreakLogs = pgTable(
         studyDate: date("study_date").notNull(),
         completedLessons: integer("completed_lessons").notNull().default(0),
         earnedXp: integer("earned_xp").notNull().default(0),
+        studyMinutes: integer("study_minutes").notNull().default(0),
         createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
         updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
     },

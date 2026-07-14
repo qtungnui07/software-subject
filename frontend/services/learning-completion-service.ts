@@ -252,6 +252,10 @@ const completeLearningNodeOnce = async (
         nodeId: node.id,
         earnedXp: gamificationPlan.xpDelta,
         completedLessons: completedLessonsDelta,
+        studyMinutes: Math.max(
+          1,
+          Math.ceil(normalizeCompletionDurationSeconds(input.durationSeconds) / 60),
+        ),
       });
 
       streak = {

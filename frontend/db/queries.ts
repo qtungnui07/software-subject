@@ -1,6 +1,12 @@
 import { cache } from "react";
 
-import { courses, dailyStreakLogs, userProgress, userStreaks } from "@/db/schema";
+import {
+    courses,
+    dailyStreakLogs,
+    userProgress,
+    userStreaks,
+    type DailyStreakLog,
+} from "@/db/schema";
 
 import db from "@/db/drizzle";
 import { eq, sql, desc } from "drizzle-orm";
@@ -52,11 +58,20 @@ export const getRecentStreakLogs = async (userId: string, limit = 7) => {
         limit,
     });
 
-    return data.map((log: any) => ({
+    return data.map((log: DailyStreakLog) => ({
         studyDate: log.studyDate,
         completedLessons: log.completedLessons,
         earnedXp: log.earnedXp,
+        studyMinutes: log.studyMinutes ?? 0,
     }));
+};
+
+export const getDailyStreakLog = async (userId: string, studyDate: string) => {
+    const data = await db.query.dailyStreakLogs.findFirst({
+        where: sql`${dailyStreakLogs.userId} = ${userId} and ${dailyStreakLogs.studyDate} = ${studyDate}`,
+    });
+
+    return data ?? null;
 };
 
 export type UpdateUserStreakInput = {
@@ -103,6 +118,7 @@ export type UpsertDailyStreakLogInput = {
     studyDate: string;
     completedLessons: number;
     earnedXp: number;
+    studyMinutes?: number;
 };
 
 export const upsertDailyStreakLog = async ({
@@ -110,6 +126,7 @@ export const upsertDailyStreakLog = async ({
     studyDate,
     completedLessons,
     earnedXp,
+    studyMinutes = 0,
 }: UpsertDailyStreakLogInput) => {
     const [data] = await db
         .insert(dailyStreakLogs)
@@ -118,12 +135,14 @@ export const upsertDailyStreakLog = async ({
             studyDate,
             completedLessons,
             earnedXp,
+            studyMinutes,
         })
         .onConflictDoUpdate({
             target: [dailyStreakLogs.userId, dailyStreakLogs.studyDate],
             set: {
                 completedLessons: sql`${dailyStreakLogs.completedLessons} + ${completedLessons}`,
                 earnedXp: sql`${dailyStreakLogs.earnedXp} + ${earnedXp}`,
+                studyMinutes: sql`${dailyStreakLogs.studyMinutes} + ${studyMinutes}`,
                 updatedAt: new Date(),
             },
         })
