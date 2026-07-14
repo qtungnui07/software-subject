@@ -202,12 +202,9 @@ export const getCurrentNodeIdForSection = (
   if (!section || section.courseId !== state.courseId) return null;
 
   for (const node of [...section.chapter.nodes].sort((a, b) => a.order - b.order)) {
-    const isComplete =
-      node.type === "chest"
-        ? state.claimedRewardNodeIds.includes(node.id)
-        : state.completedNodeIds.includes(node.id);
+    if (node.type === "chest") continue;
 
-    if (!isComplete) return node.id;
+    if (!state.completedNodeIds.includes(node.id)) return node.id;
   }
 
   return section.chapter.nodes.at(-1)?.id ?? null;

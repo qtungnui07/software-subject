@@ -80,6 +80,7 @@ const adaptiveRoutes = [
   "app/api/progress/course/select-section/route.ts",
   "app/api/progress/course/complete-node/route.ts",
   "app/api/progress/course/checkpoint/route.ts",
+  "app/api/progress/course/claim-reward/route.ts",
 ];
 for (const relativePath of adaptiveRoutes) {
   const source = readFileSync(resolve(process.cwd(), relativePath), "utf8");

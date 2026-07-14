@@ -7,7 +7,6 @@ import { useRouter } from "next/navigation";
 
 import { Header } from "@/app/(main)/learn/header";
 import { FeedWrapper } from "@/components/feed-wrapper";
-import { LessonPath } from "@/components/lesson-path";
 import { LockedSectionPanel } from "@/components/learn/locked-section-panel";
 import { SectionLearningPath } from "@/components/learn/section-learning-path";
 import { SectionSwitcher } from "@/components/learn/section-switcher";
@@ -22,7 +21,6 @@ import { chapterOneDemoScope, chapterOneNodes } from "@/constants/chapter-one";
 import { englishCourse } from "@/data/courses/english-course";
 import type { ProgressLesson, ProgressUnit } from "@/data/progress-data";
 import {
-  claimChapterOneChest,
   getChapterOneNodeStatus,
   getChapterOneProgress,
   saveChapterOneProgress,
@@ -32,6 +30,10 @@ import {
   type ChapterOneProgressState,
 } from "@/lib/chapter-one-progress";
 import { canAccessCourseNode } from "@/lib/courses/course-unlock-policy";
+import {
+  migrateChapterOneProgressToCourseProgress,
+  projectCourseProgressToChapterOne,
+} from "@/lib/courses/chapter-one-adapter";
 import { buildCourseSectionViewModels } from "@/lib/courses/course-view-model";
 import type { CourseProgressState } from "@/lib/courses/course-progress";
 import { getCourseProgressSummary } from "@/lib/progress-utils";
@@ -44,7 +46,8 @@ const learnPopupSeenStorageKey = "robogo-learn-popup-seen";
 const sidebarCards = [
   {
     title: "Mở khóa Bảng xếp hạng",
-    description: "Hoàn thành thêm 3 bài học để bắt đầu thi đua với người học khác.",
+    description:
+      "Hoàn thành thêm 3 bài học để bắt đầu thi đua với người học khác.",
     iconSrc: "/leaderboard.svg",
   },
   {
@@ -74,13 +77,15 @@ type Props = {
 
 const getLegacyLessonStatus = (
   nodeId: string,
-  state: ChapterOneProgressState
+  state: ChapterOneProgressState,
 ): ProgressLesson["status"] => {
   const status: ChapterOneNodeStatus = getChapterOneNodeStatus(nodeId, state);
   return status === "available" ? "available" : status;
 };
 
-const buildLegacyProgressUnits = (state: ChapterOneProgressState): ProgressUnit[] => [
+const buildLegacyProgressUnits = (
+  state: ChapterOneProgressState,
+): ProgressUnit[] => [
   {
     id: 1,
     title: `${chapterOneDemoScope.unitTitle}: ${chapterOneDemoScope.chapterTitle}`,
@@ -104,7 +109,7 @@ const buildLegacyProgressUnits = (state: ChapterOneProgressState): ProgressUnit[
 
 const buildGenericProgressUnits = (
   sectionId: string,
-  state: CourseProgressState
+  state: CourseProgressState,
 ): ProgressUnit[] => {
   const section = englishCourse.sections.find((item) => item.id === sectionId);
   if (!section) return [];
@@ -151,21 +156,22 @@ export const CourseLearnClient = ({
   const router = useRouter();
   const shellRef = useRef<HTMLDivElement>(null);
   const [legacyProgress, setLegacyProgress] = useState<ChapterOneProgressState>(
-    initialLegacyProgressState
+    initialLegacyProgressState,
   );
   const [courseProgress, setCourseProgress] = useState<CourseProgressState>(
-    initialCourseProgressState
+    initialCourseProgressState,
   );
   const [selectedSectionId, setSelectedSectionId] = useState(
-    initialSelectedSectionId
+    initialSelectedSectionId,
   );
   const [todayStudySeconds, setTodayStudySeconds] = useState(
-    initialStudyTimeSummary?.todaySeconds ?? 0
+    initialStudyTimeSummary?.todaySeconds ?? 0,
   );
 
   useEffect(() => {
     const shell = shellRef.current;
-    if (!shell || localStorage.getItem(learnPopupSeenStorageKey) === "true") return;
+    if (!shell || localStorage.getItem(learnPopupSeenStorageKey) === "true")
+      return;
 
     localStorage.setItem(learnPopupSeenStorageKey, "true");
     const isAfterHomeTransition =
@@ -178,7 +184,7 @@ export const CourseLearnClient = ({
     }, delay);
     const cleanupTimer = window.setTimeout(
       () => shell.classList.remove("learn-page-shell-enter"),
-      delay + 1200
+      delay + 1200,
     );
 
     return () => {
@@ -197,21 +203,35 @@ export const CourseLearnClient = ({
 
   const sectionViews = useMemo(
     () => buildCourseSectionViewModels(courseProgress, recommendedSectionId),
-    [courseProgress, recommendedSectionId]
+    [courseProgress, recommendedSectionId],
   );
-  const selectedSection = englishCourse.sections.find(
-    (section) => section.id === selectedSectionId
-  ) ?? englishCourse.sections[0];
-  const selectedView = sectionViews.find((section) => section.id === selectedSection.id);
+  const selectedSection =
+    englishCourse.sections.find(
+      (section) => section.id === selectedSectionId,
+    ) ?? englishCourse.sections[0];
+  const selectedView = sectionViews.find(
+    (section) => section.id === selectedSection.id,
+  );
+  const selectedRoadmapProgress = useMemo(
+    () =>
+      selectedSection.id === "english-section-1"
+        ? migrateChapterOneProgressToCourseProgress(
+            legacyProgress,
+            courseProgress,
+          )
+        : courseProgress,
+    [courseProgress, legacyProgress, selectedSection.id],
+  );
   const progressUnits = useMemo(
-    () => selectedSection.id === "english-section-1"
-      ? buildLegacyProgressUnits(legacyProgress)
-      : buildGenericProgressUnits(selectedSection.id, courseProgress),
-    [courseProgress, legacyProgress, selectedSection.id]
+    () =>
+      selectedSection.id === "english-section-1"
+        ? buildLegacyProgressUnits(legacyProgress)
+        : buildGenericProgressUnits(selectedSection.id, courseProgress),
+    [courseProgress, legacyProgress, selectedSection.id],
   );
   const progressSummary = useMemo(
     () => getCourseProgressSummary(progressUnits),
-    [progressUnits]
+    [progressUnits],
   );
   const todayMinutes = Math.floor(todayStudySeconds / 60);
 
@@ -225,7 +245,10 @@ export const CourseLearnClient = ({
     setSelectedSectionId(sectionId);
     updateUrl(sectionId);
 
-    if (!courseProgress.unlockedSectionIds.includes(sectionId) || !progressOwnerId) {
+    if (
+      !courseProgress.unlockedSectionIds.includes(sectionId) ||
+      !progressOwnerId
+    ) {
       return;
     }
 
@@ -240,29 +263,31 @@ export const CourseLearnClient = ({
     }
   };
 
-  const handleClaimChest = (chestId: string) => {
-    const nextLegacyState = claimChapterOneChest(chestId);
-    setLegacyProgress(nextLegacyState);
-
-    void fetch("/api/progress/chapter-one", {
-      method: "PATCH",
+  const handleClaimReward = async (nodeId: string) => {
+    const response = await fetch("/api/progress/course/claim-reward", {
+      method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ progress: nextLegacyState }),
-    })
-      .then(() => fetch("/api/progress/course", { cache: "no-store" }))
-      .then(async (response) => {
-        if (!response.ok) return;
-        const data = (await response.json()) as { progress: CourseProgressState };
-        setCourseProgress(data.progress);
-      })
-      .catch((error) => {
-        console.warn("Could not sync Chapter 1 chest progress:", error);
-      });
+      body: JSON.stringify({ nodeId }),
+    });
+
+    const data = (await response.json().catch(() => null)) as {
+      progress?: CourseProgressState;
+      message?: string;
+    } | null;
+
+    if (!response.ok || !data?.progress) {
+      throw new Error(data?.message ?? "Không thể nhận Freeze lúc này.");
+    }
+
+    setCourseProgress(data.progress);
+    const nextLegacyProgress = projectCourseProgressToChapterOne(data.progress);
+    saveChapterOneProgress(nextLegacyProgress);
+    setLegacyProgress(nextLegacyProgress);
   };
 
   const currentSectionId = courseProgress.currentSectionId;
   const previousSection = englishCourse.sections.find(
-    (section) => section.order === selectedSection.order - 1
+    (section) => section.order === selectedSection.order - 1,
   );
 
   return (
@@ -298,18 +323,12 @@ export const CourseLearnClient = ({
                 <UnitProgressList units={progressUnits} />
               </div>
               <div className="px-4 pb-7 pt-2 sm:px-6 sm:pb-9">
-                {selectedSection.id === "english-section-1" ? (
-                  <LessonPath
-                    todayMinutes={todayMinutes}
-                    progressState={legacyProgress}
-                    onClaimChest={handleClaimChest}
-                  />
-                ) : (
-                  <SectionLearningPath
-                    section={selectedSection}
-                    progress={courseProgress}
-                  />
-                )}
+                <SectionLearningPath
+                  section={selectedSection}
+                  progress={selectedRoadmapProgress}
+                  todayMinutes={todayMinutes}
+                  onClaimReward={handleClaimReward}
+                />
               </div>
             </>
           ) : (
@@ -325,7 +344,10 @@ export const CourseLearnClient = ({
       <StickyWrapper>
         <div className="rounded-[24px] border-2 border-sky-100 bg-white p-4 shadow-sm dark:border-[#202f36] dark:bg-[#182226]">
           <UserProgress
-            activeCourse={{ title: activeCourse.title, imageSrc: activeCourse.imageSrc }}
+            activeCourse={{
+              title: activeCourse.title,
+              imageSrc: activeCourse.imageSrc,
+            }}
             hearts={hearts}
             points={points}
           />
@@ -347,14 +369,21 @@ export const CourseLearnClient = ({
         <UnitProgressList className="hidden xl:block" units={progressUnits} />
 
         {sidebarCards.map((card) => (
-          <div key={card.title} className="rounded-[24px] border-2 border-slate-200 bg-white p-5 shadow-sm dark:border-[#202f36] dark:bg-[#182226]">
+          <div
+            key={card.title}
+            className="rounded-[24px] border-2 border-slate-200 bg-white p-5 shadow-sm dark:border-[#202f36] dark:bg-[#182226]"
+          >
             <div className="flex items-start gap-4">
               <div className="flex h-16 w-16 shrink-0 items-center justify-center rounded-2xl bg-sky-50 dark:bg-slate-800">
                 <Image src={card.iconSrc} alt="" width={42} height={42} />
               </div>
               <div>
-                <h3 className="text-lg font-black text-slate-700 dark:text-slate-100">{card.title}</h3>
-                <p className="mt-2 text-sm font-bold leading-6 text-slate-500 dark:text-slate-400">{card.description}</p>
+                <h3 className="text-lg font-black text-slate-700 dark:text-slate-100">
+                  {card.title}
+                </h3>
+                <p className="mt-2 text-sm font-bold leading-6 text-slate-500 dark:text-slate-400">
+                  {card.description}
+                </p>
               </div>
             </div>
           </div>
@@ -362,11 +391,23 @@ export const CourseLearnClient = ({
 
         {showAuthCard ? (
           <div className="rounded-[24px] border-2 border-slate-200 bg-white p-5 shadow-sm dark:border-[#202f36] dark:bg-[#182226]">
-            <h3 className="text-lg font-black text-slate-700 dark:text-slate-100">Tạo hồ sơ</h3>
-            <p className="mt-2 text-sm font-bold leading-6 text-slate-500 dark:text-slate-400">Lưu tiến độ và phần được mở trên mọi thiết bị.</p>
+            <h3 className="text-lg font-black text-slate-700 dark:text-slate-100">
+              Tạo hồ sơ
+            </h3>
+            <p className="mt-2 text-sm font-bold leading-6 text-slate-500 dark:text-slate-400">
+              Lưu tiến độ và phần được mở trên mọi thiết bị.
+            </p>
             <div className="mt-5 grid gap-3">
-              <Button asChild variant="primary" className="h-12 rounded-2xl"><Link href="/sign-up">Tạo hồ sơ</Link></Button>
-              <Button asChild variant="primary-outline" className="h-12 rounded-2xl"><Link href="/sign-in">Đăng nhập</Link></Button>
+              <Button asChild variant="primary" className="h-12 rounded-2xl">
+                <Link href="/sign-up">Tạo hồ sơ</Link>
+              </Button>
+              <Button
+                asChild
+                variant="primary-outline"
+                className="h-12 rounded-2xl"
+              >
+                <Link href="/sign-in">Đăng nhập</Link>
+              </Button>
             </div>
           </div>
         ) : null}

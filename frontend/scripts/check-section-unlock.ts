@@ -49,20 +49,17 @@ for (const lessonId of [
   "lesson-1",
   "lesson-2",
   "lesson-3",
+  "lesson-4",
+  "lesson-5",
+  "lesson-6",
 ]) {
   const result = completeCourseNode(sectionOneProgress, lessonId);
-  assert.equal(result.reason, "updated", `${lessonId} should complete in order.`);
+  assert.equal(
+    result.reason,
+    "updated",
+    `${lessonId} should complete in order without requiring the optional chest.`
+  );
   sectionOneProgress = result.progress;
-}
-sectionOneProgress = {
-  ...sectionOneProgress,
-  claimedRewardNodeIds: ["chest-1"],
-};
-for (const lessonId of ["lesson-4", "lesson-5", "lesson-6"]) {
-  sectionOneProgress = completeCourseNode(
-    sectionOneProgress,
-    lessonId
-  ).progress;
 }
 
 const score69 = recordCheckpointScore(
