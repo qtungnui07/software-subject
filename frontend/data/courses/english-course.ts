@@ -1,4 +1,5 @@
 import { chapterOneDemoScope } from "@/constants/chapter-one";
+import { STREAK_FREEZE_REWARD } from "@/constants/course-rewards";
 import { getAdaptedChapterOneNodes } from "@/lib/courses/chapter-one-adapter";
 import type {
   CourseDefinition,
@@ -16,6 +17,7 @@ const createReadySectionNodes = (
   const lessonNodes = lessonTitles.map<LearningNodeDefinition>((title, index) => {
     const lessonNumber = index + 1;
     const id = `en-s${sectionNumber}-c1-lesson-${lessonNumber}`;
+    const order = lessonNumber >= 4 ? lessonNumber + 1 : lessonNumber;
 
     return {
       id,
@@ -23,7 +25,7 @@ const createReadySectionNodes = (
       title: `Bài ${lessonNumber}: ${title}`,
       shortTitle: title,
       description: lessonDescriptions[index] ?? title,
-      order: lessonNumber,
+      order,
       unlockAfterId:
         lessonNumber === 1
           ? null
@@ -35,17 +37,33 @@ const createReadySectionNodes = (
     };
   });
 
+  const chestId = `en-s${sectionNumber}-c1-chest-1`;
   const checkpointId = `en-s${sectionNumber}-c1-checkpoint`;
 
   return [
-    ...lessonNodes,
+    ...lessonNodes.slice(0, 3),
+    {
+      id: chestId,
+      type: "chest",
+      title: "Rương Freeze",
+      shortTitle: "Rương",
+      description: `Nhận +1 Streak Freeze sau khi hoàn thành 3 bài học đầu tiên của Phần ${sectionNumber}.`,
+      order: 4,
+      unlockAfterId: `en-s${sectionNumber}-c1-lesson-3`,
+      href: null,
+      xp: 0,
+      countsTowardProgress: false,
+      contentStatus: "ready",
+      rewards: [STREAK_FREEZE_REWARD],
+    },
+    ...lessonNodes.slice(3),
     {
       id: checkpointId,
       type: "checkpoint",
       title: checkpointTitle,
       shortTitle: "Kiểm tra",
       description: checkpointDescription,
-      order: lessonNodes.length + 1,
+      order: lessonNodes.length + 2,
       unlockAfterId: lessonNodes.at(-1)?.id ?? null,
       href: `/lesson?id=${checkpointId}`,
       xp: sectionNumber === 2 ? 70 : 80,

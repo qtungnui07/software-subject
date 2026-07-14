@@ -6,6 +6,18 @@ export type CourseContentStatus = "ready" | "placeholder";
 
 export type LearningNodeType = "lesson" | "chest" | "checkpoint";
 
+export type CourseRewardType = "streak_freeze";
+
+export type CourseRewardIcon = "freeze";
+
+export type CourseRewardDefinition = {
+  type: CourseRewardType;
+  amount: number;
+  label: string;
+  description: string;
+  icon: CourseRewardIcon;
+};
+
 export type RoadmapPosition = {
   x: number;
   y: number;
@@ -24,6 +36,7 @@ export type LearningNodeDefinition = {
   xp: number;
   countsTowardProgress: boolean;
   contentStatus: CourseContentStatus;
+  rewards?: CourseRewardDefinition[];
   roadmapPosition?: RoadmapPosition;
 };
 

@@ -109,6 +109,22 @@ const isCheckpointCompleted = (node: ChapterOneNode, state: ChapterOneProgressSt
   return node.type === "checkpoint" && state.completedCheckpoint;
 };
 
+const isChapterOneDependencySatisfied = (
+  node: ChapterOneNode,
+  state: ChapterOneProgressState
+) => {
+  if (!node.unlockAfterId) return true;
+
+  const prerequisite = getChapterOneNodeById(node.unlockAfterId);
+  if (!prerequisite) return false;
+
+  return (
+    isLessonCompleted(prerequisite, state) ||
+    isChestClaimed(prerequisite, state) ||
+    isCheckpointCompleted(prerequisite, state)
+  );
+};
+
 const inferCurrentChapterOneNodeId = (state: Pick<ChapterOneProgressState, "completedLessons" | "claimedChests" | "completedCheckpoint">) => {
   const safeState: ChapterOneProgressState = {
     completedLessons: uniqueValidIds(state.completedLessons, chapterOneLessonIds),
@@ -119,11 +135,9 @@ const inferCurrentChapterOneNodeId = (state: Pick<ChapterOneProgressState, "comp
   };
 
   for (const node of chapterOneNodes) {
-    if (node.type === "lesson" && !isLessonCompleted(node, safeState)) {
-      return node.id;
-    }
+    if (node.type === "chest") continue;
 
-    if (node.type === "chest" && !isChestClaimed(node, safeState)) {
+    if (node.type === "lesson" && !isLessonCompleted(node, safeState)) {
       return node.id;
     }
 
@@ -363,8 +377,12 @@ export const getChapterOneNodeStatus = (
     return "completed";
   }
 
+  if (node.type === "chest") {
+    return isChapterOneDependencySatisfied(node, state) ? "available" : "locked";
+  }
+
   if (node.id === state.currentNodeId) {
-    return node.type === "chest" ? "available" : "current";
+    return "current";
   }
 
   return "locked";

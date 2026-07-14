@@ -27,6 +27,7 @@ export const adaptChapterOneNode = (
   xp: node.xp,
   countsTowardProgress: node.countsTowardProgress,
   contentStatus: "ready",
+  rewards: node.rewards,
   roadmapPosition: {
     x: node.x,
     y: node.y,
