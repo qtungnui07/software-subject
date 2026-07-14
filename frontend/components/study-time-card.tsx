@@ -8,9 +8,9 @@ import { cn } from "@/lib/utils";
 import type { StudyTimeSummary } from "@/services/study-time-service";
 
 const DAILY_MILESTONES = [
-  { label: "15M ĐỒNG", seconds: 15 * 60, dotClass: "bg-orange-300" },
-  { label: "30M BẠC", seconds: 30 * 60, dotClass: "bg-slate-200" },
-  { label: "1H VÀNG", seconds: 60 * 60, dotClass: "bg-amber-300" },
+  { label: "15M ĐỒNG", seconds: 15 * 60, dotClass: "bg-gradient-to-br from-[#d97706] to-[#b45309] shadow-[0_0_6px_rgba(217,119,6,0.4)]" },
+  { label: "30M BẠC", seconds: 30 * 60, dotClass: "bg-gradient-to-br from-[#94a3b8] to-[#64748b] shadow-[0_0_6px_rgba(148,163,184,0.4)]" },
+  { label: "1H VÀNG", seconds: 60 * 60, dotClass: "bg-gradient-to-br from-[#f59e0b] to-[#d97706] shadow-[0_0_8px_rgba(245,158,11,0.5)]" },
 ];
 
 type Props = {

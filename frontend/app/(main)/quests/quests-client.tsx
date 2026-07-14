@@ -429,53 +429,150 @@ const StatusBadge = ({ status }: { status: QuestStatus }) => {
   );
 };
 
+const BookOpenIcon = ({ className }: { className?: string }) => (
+  <svg viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg" className={className}>
+    <path d="M4 6c0-1.1.9-2 2-2h8v22H6c-1.1 0-2-.9-2-2V6z" fill="#ff7875" />
+    <path d="M28 6c0-1.1-.9-2-2-2h-8v22h8c1.1 0 2-.9 2-2V6z" fill="#ff4d4f" />
+    <path d="M6 5c0-.6.4-1 1-1h7v21H7c-.6 0-1-.4-1-1V5z" fill="#f8fafc" />
+    <path d="M26 5c0-.6-.4-1-1-1h-7v21h7c.6 0 1-.4 1-1V5z" fill="#f1f5f9" />
+    <line x1="8" y1="8" x2="12" y2="8" stroke="#cbd5e1" strokeWidth="1.5" strokeLinecap="round"/>
+    <line x1="8" y1="12" x2="12" y2="12" stroke="#cbd5e1" strokeWidth="1.5" strokeLinecap="round"/>
+    <line x1="8" y1="16" x2="12" y2="16" stroke="#cbd5e1" strokeWidth="1.5" strokeLinecap="round"/>
+    <line x1="20" y1="8" x2="24" y2="8" stroke="#94a3b8" strokeWidth="1.5" strokeLinecap="round"/>
+    <line x1="20" y1="12" x2="24" y2="12" stroke="#94a3b8" strokeWidth="1.5" strokeLinecap="round"/>
+    <line x1="20" y1="16" x2="24" y2="16" stroke="#94a3b8" strokeWidth="1.5" strokeLinecap="round"/>
+  </svg>
+);
+
+const TargetIcon = ({ className }: { className?: string }) => (
+  <svg viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg" className={className}>
+    <circle cx="16" cy="16" r="13" fill="#ff4d4f"/>
+    <circle cx="16" cy="16" r="10" fill="#ffffff"/>
+    <circle cx="16" cy="16" r="7" fill="#ff4d4f"/>
+    <circle cx="16" cy="16" r="4" fill="#ffffff"/>
+    <circle cx="16" cy="16" r="1.5" fill="#ffc53d"/>
+  </svg>
+);
+
+const ClockIcon = ({ className }: { className?: string }) => (
+  <svg viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg" className={className}>
+    <circle cx="16" cy="17" r="12" fill="#1486cc" />
+    <circle cx="16" cy="17" r="10" fill="#38bdf8" />
+    <circle cx="16" cy="17" r="8" fill="#f8fafc" />
+    <rect x="14" y="2" width="4" height="3" fill="#94a3b8" rx="1" />
+    <circle cx="25" cy="8" r="1.5" fill="#ff4d4f" />
+    <path d="M16 17v-5" stroke="#0f172a" strokeWidth="1.5" strokeLinecap="round"/>
+    <path d="M16 17l4 3" stroke="#0f172a" strokeWidth="1.5" strokeLinecap="round"/>
+    <circle cx="16" cy="17" r="1.5" fill="#0f172a" />
+  </svg>
+);
+
+const SparklesIcon = ({ className }: { className?: string }) => (
+  <svg viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg" className={className}>
+    <path d="M16 3l3.5 8.5L28 15l-8.5 3.5L16 27l-3.5-8.5L4 15l8.5-3.5L16 3z" fill="#ffc53d"/>
+    <path d="M26 6l1.2 2.8L30 10l-2.8 1.2L26 14l-1.2-2.8L22 10l2.8-1.2L26 6z" fill="#ff9c6e"/>
+    <path d="M6 22l1.2 2.8L10 26l-2.8 1.2L6 30l-1.2-2.8L2 26l2.8-1.2L6 22z" fill="#ff9c6e"/>
+  </svg>
+);
+
+const RocketIcon = ({ className }: { className?: string }) => (
+  <svg viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg" className={className}>
+    <path d="M16 24c-2 2-2 5-2 5s3 0 5-2 1-5 1-5-2 0-4 2z" fill="#ff9c6e"/>
+    <path d="M16 24c-1 1.5-1 3.5-1 3.5s2 0 3.5-1.5.7-3.5.7-3.5-1.2 0-3.2 1.5z" fill="#ff4d4f"/>
+    <path d="M16 3C11 9 11 20 11 23h10c0-3 0-14-5-20z" fill="#f1f5f9"/>
+    <path d="M16 3c-2.5 3-3 7-3 9h6c0-2-.5-6-3-9z" fill="#ff4d4f"/>
+    <path d="M11 20c-3 0-5 3-5 5v1h5v-6z" fill="#1486cc"/>
+    <path d="M21 20c3 0 5 3 5 5v1h-5v-6z" fill="#1486cc"/>
+    <circle cx="16" cy="14" r="3" fill="#38bdf8" stroke="#cbd5e1" strokeWidth="1.5"/>
+    <circle cx="15.5" cy="13.5" r="1.5" fill="#ffffff" opacity="0.6"/>
+  </svg>
+);
+
+const TrophyIcon = ({ className }: { className?: string }) => (
+  <svg viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg" className={className}>
+    <rect x="11" y="25" width="10" height="3" fill="#1e293b" rx="1" />
+    <path d="M13 22h6v3h-6z" fill="#475569" />
+    <path d="M7 6h18v10c0 4.4-3.6 8-8 8h-2c-4.4 0-8-3.6-8-8V6z" fill="#ffc53d" />
+    <path d="M8 7v9c0 3.9 3.1 7 7 7h1c3.9 0 7-3.1 7-7V7H8z" fill="#ffb81c" />
+    <path d="M7 9H4v5c0 2 1.5 3.5 3.5 3.5h.5V16c-1 0-2-1-2-3V9zM25 9h3v5c0 2-1.5 3.5-3.5 3.5h-.5V16c1 0 2-1 2-3V9z" fill="#d97706" />
+    <path d="M16 11l1 2h2l-1.5 1 .5 2-1.5-1-1.5 1 .5-2-1.5-1h2z" fill="#ffffff" />
+  </svg>
+);
+
+const ZapIcon = ({ className }: { className?: string }) => (
+  <svg viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg" className={className}>
+    <path d="M19 3L7 17h8l-3 12 13-14h-8l3-12z" fill="#ffc53d" stroke="#d97706" strokeWidth="1.5" strokeLinejoin="round"/>
+  </svg>
+);
+
+const ChestIcon = ({ className }: { className?: string }) => (
+  <svg viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg" className={className}>
+    <path d="M4 16v10c0 1.1.9 2 2 2h20c1.1 0 2-.9 2-2V16H4z" fill="#8d5b4c" />
+    <path d="M5 16v9c0 .6.4 1 1 1h20c.6 0 1-.4 1-1v-9H5z" fill="#a16a5e" />
+    <path d="M4 16h24v-4c0-2.8-2.2-5-5-5H9c-2.8 0-5 2.2-5 5v4z" fill="#8d5b4c" />
+    <path d="M5 15h22v-3c0-2.2-1.8-4-4-4H9c-2.2 0-4 1.8-4 4v3z" fill="#a16a5e" />
+    <rect x="7" y="7" width="3" height="21" fill="#ffc53d" />
+    <rect x="22" y="7" width="3" height="21" fill="#ffc53d" />
+    <rect x="13" y="13" width="6" height="6" rx="1" fill="#ffc53d" stroke="#d97706" strokeWidth="1" />
+    <circle cx="16" cy="16" r="1" fill="#0f172a" />
+  </svg>
+);
+
+const MedalIcon = ({ className }: { className?: string }) => (
+  <svg viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg" className={className}>
+    <path d="M11 6l3 9h-6z" fill="#ff4d4f" />
+    <path d="M21 6l-3 9h6z" fill="#ff4d4f" />
+    <path d="M16 6l2 9h-4z" fill="#e8f5ff" />
+    <circle cx="16" cy="18" r="9" fill="#ffc53d" />
+    <circle cx="16" cy="18" r="7" fill="#d97706" />
+    <circle cx="16" cy="18" r="5" fill="#ffc53d" />
+    <path d="M16 15l.6 1.2 1.4.1-1 .9.3 1.3-1.3-.7-1.3.7.3-1.3-1-.9 1.4-.1z" fill="#ffffff" />
+  </svg>
+);
+
 const QuestIcon = ({
   icon,
   className,
-  strokeWidth = 2.6,
+  strokeWidth,
 }: {
   icon: string;
   className?: string;
   strokeWidth?: number;
 }) => {
-  const iconProps = { className, strokeWidth };
-
   switch (icon) {
     case "book-open":
-      return <BookOpen {...iconProps} />;
+      return <BookOpenIcon className={className} />;
     case "target":
-      return <Target {...iconProps} />;
+      return <TargetIcon className={className} />;
     case "clock":
-      return <Clock {...iconProps} />;
+      return <ClockIcon className={className} />;
     case "sparkles":
-      return <Sparkles {...iconProps} />;
+      return <SparklesIcon className={className} />;
     case "rocket":
-      return <Rocket {...iconProps} />;
+      return <RocketIcon className={className} />;
     case "trophy":
-      return <Trophy {...iconProps} />;
+      return <TrophyIcon className={className} />;
     default:
-      return <CircleDot {...iconProps} />;
+      return <TargetIcon className={className} />;
   }
 };
 
 const RewardTypeIcon = ({
   type,
   className,
-  strokeWidth = 3,
+  strokeWidth,
 }: {
   type: ResolvedQuest["reward"]["type"];
   className?: string;
   strokeWidth?: number;
 }) => {
-  const iconProps = { className, strokeWidth };
-
   switch (type) {
     case "chest":
-      return <PackageOpen {...iconProps} />;
+      return <ChestIcon className={className} />;
     case "badge":
-      return <Trophy {...iconProps} />;
+      return <MedalIcon className={className} />;
     default:
-      return <Zap {...iconProps} />;
+      return <ZapIcon className={className} />;
   }
 };
 
