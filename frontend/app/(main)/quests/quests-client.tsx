@@ -994,6 +994,71 @@ const PerfectDayStep = ({ index, active }: { index: number; active: boolean }) =
   );
 };
 
+const PerfectDayRewardIcon = ({ className }: { className?: string }) => (
+  <svg viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg" className={className}>
+    <path d="M4 22l2-14 6 5 4-8 4 8 6-5 2 14H4z" fill="#ffc53d" />
+    <path d="M6 21l1.5-10.5 4.5 3.75 4-6 4 6 4.5-3.75L26 21H6z" fill="#ffb81c" />
+    <circle cx="4" cy="8" r="1.5" fill="#ff4d4f" />
+    <circle cx="12" cy="13" r="1.5" fill="#1890ff" />
+    <circle cx="16" cy="5" r="1.5" fill="#52c41a" />
+    <circle cx="20" cy="13" r="1.5" fill="#1890ff" />
+    <circle cx="28" cy="8" r="1.5" fill="#ff4d4f" />
+    <rect x="3" y="22" width="26" height="3" rx="1.5" fill="#d97706" />
+    <rect x="5" y="23" width="22" height="1" rx="0.5" fill="#ffc53d" />
+  </svg>
+);
+
+const CustomChestIcon = ({ tone, className }: { tone: "gold" | "silver" | "blue"; className?: string }) => {
+  const metalColor = tone === "gold" ? "#ffc53d" : tone === "silver" ? "#cbd5e1" : "#d97706";
+  const metalShadow = tone === "gold" ? "#d97706" : tone === "silver" ? "#94a3b8" : "#78350f";
+
+  return (
+    <svg viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg" className={className}>
+      <path d="M4 16v10c0 1.1.9 2 2 2h20c1.1 0 2-.9 2-2V16H4z" fill="#8d5b4c" />
+      <path d="M5 16v9c0 .6.4 1 1 1h20c.6 0 1-.4 1-1v-9H5z" fill="#a16a5e" />
+      <path d="M4 16h24v-4c0-2.8-2.2-5-5-5H9c-2.8 0-5 2.2-5 5v4z" fill="#8d5b4c" />
+      <path d="M5 15h22v-3c0-2.2-1.8-4-4-4H9c-2.2 0-4 1.8-4 4v3z" fill="#a16a5e" />
+      <rect x="7" y="7" width="3" height="21" fill={metalColor} />
+      <rect x="22" y="7" width="3" height="21" fill={metalColor} />
+      <rect x="13" y="13" width="6" height="6" rx="1" fill={metalColor} stroke={metalShadow} strokeWidth="1" />
+      <circle cx="16" cy="16" r="1" fill="#0f172a" />
+    </svg>
+  );
+};
+
+const CustomCalendarIcon = ({ className }: { className?: string }) => (
+  <svg viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg" className={className}>
+    <rect x="4" y="6" width="24" height="22" rx="4" fill="#cbd5e1" />
+    <rect x="5" y="7" width="22" height="20" rx="3" fill="#ffffff" />
+    <path d="M5 12h22V9c0-1.1-.9-2-2-2H7c-1.1 0-2 .9-2 2v3z" fill="#ff4d4f" />
+    <rect x="8" y="3" width="3" height="6" rx="1.5" fill="#64748b" />
+    <rect x="21" y="3" width="3" height="6" rx="1.5" fill="#64748b" />
+    <path d="M16 23.3s-4.5-2.7-4.5-4.5c0-1.4 1-2.3 2.3-2.3.8 0 1.6.5 2.2 1 .6-.5 1.4-1 2.2-1 1.3 0 2.3.9 2.3 2.3 0 1.8-4.5 4.5-4.5 4.5z" fill="#ff4d4f" />
+  </svg>
+);
+
+const CustomTipsIcon = ({ className }: { className?: string }) => (
+  <svg viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg" className={className}>
+    <circle cx="16" cy="14" r="10" fill="#fef08a" opacity="0.5" />
+    <path d="M16 4C10.5 4 8 8 8 13.5c0 3.3 2 6 3.5 7.5v2c0 .6.4 1 1 1h7c.6 0 1-.4 1-1v-2c1.5-1.5 3.5-4.2 3.5-7.5C24 8 21.5 4 16 4z" fill="#fde047" />
+    <path d="M16 5c-4.4 0-6.5 3.2-6.5 7.5c0 2.5 1.5 4.6 2.8 5.8v2.2c0 .3.2.5.5.5h6.4c.3 0 .5-.2.5-.5v-2.2c1.3-1.2 2.8-3.3 2.8-5.8C22.5 8.2 20.4 5 16 5z" fill="#fef08a" />
+    <rect x="12" y="24" width="8" height="3" rx="1" fill="#94a3b8" />
+    <rect x="13.5" y="27" width="5" height="2" rx="1" fill="#64748b" />
+    <path d="M13 14l2-3 2 3" stroke="#eab308" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+    <line x1="16" y1="1" x2="16" y2="3" stroke="#eab308" strokeWidth="2" strokeLinecap="round" />
+    <line x1="6.5" y1="4.5" x2="8.5" y2="6.5" stroke="#eab308" strokeWidth="2" strokeLinecap="round" />
+    <line x1="25.5" y1="4.5" x2="23.5" y2="6.5" stroke="#eab308" strokeWidth="2" strokeLinecap="round" />
+  </svg>
+);
+
+const CustomFlameIcon = ({ className }: { className?: string }) => (
+  <svg viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg" className={className}>
+    <path d="M16 2C16 2 25 9 25 18c0 5-4 9-9 9s-9-4-9-9c0-9 9-18 9-18z" fill="#ff763b" />
+    <path d="M16 8C16 8 21 13 21 18c0 3-2.5 5.5-5 5.5s-5-2.5-5-5.5c0-5 5-10 5-10z" fill="#ffba00" />
+    <path d="M16 13c0 0 2.5 2.5 2.5 5 0 1.5-1.2 2.5-2.5 2.5S13.5 19.5 13.5 18c0-2.5 2.5-5 2.5-5z" fill="#ffffff" />
+  </svg>
+);
+
 const PerfectDayCard = ({ quest, data }: { quest?: ResolvedQuest; data: QuestsPageData }) => {
   if (!quest) return null;
 
@@ -1009,8 +1074,8 @@ const PerfectDayCard = ({ quest, data }: { quest?: ResolvedQuest; data: QuestsPa
       <div className="relative space-y-5">
         <div className="flex flex-col gap-5 lg:flex-row lg:items-start lg:justify-between">
           <div className="flex gap-3 sm:gap-4">
-            <div className="flex size-16 shrink-0 items-center justify-center rounded-[22px] border-2 border-indigo-100 bg-white text-indigo-500 shadow-[0_12px_24px_rgba(99,102,241,0.12)] dark:border-indigo-900/60 dark:bg-[#10191d] dark:text-indigo-300">
-              <Sparkles className="size-8" strokeWidth={2.6} />
+            <div className="flex size-16 shrink-0 items-center justify-center rounded-[22px] border-2 border-indigo-100 bg-white shadow-[0_12px_24px_rgba(99,102,241,0.12)] dark:border-indigo-900/60 dark:bg-[#10191d]">
+              <PerfectDayRewardIcon className="size-8" />
             </div>
             <div>
               <p className="text-xs font-black uppercase tracking-[0.22em] text-indigo-500 dark:text-indigo-300">
@@ -1102,8 +1167,8 @@ const SummaryCard = ({ data }: { data: QuestsPageData }) => {
   return (
     <CardShell className="p-4">
       <div className="flex items-center gap-3">
-        <div className="flex size-12 items-center justify-center rounded-2xl bg-[#e8f5ff] text-[#1486CC] dark:bg-[#1c3547] dark:text-sky-300">
-          <Flame className="size-6" strokeWidth={2.8} />
+        <div className="flex size-12 items-center justify-center rounded-2xl bg-[#e8f5ff] dark:bg-[#1c3547]">
+          <CustomFlameIcon className="size-7" />
         </div>
         <div>
           <h2 className="text-lg font-black text-slate-900 dark:text-white">Tiến độ hôm nay</h2>
@@ -1153,7 +1218,7 @@ const RewardChestCard = ({ data }: { data: QuestsPageData }) => {
     <CardShell className={cn("p-4", chestView.status === "available" ? "border-amber-200 shadow-[0_18px_44px_rgba(245,158,11,0.14)] dark:border-amber-900/60" : null)}>
       <div className="flex items-start gap-4">
         <div className={cn("flex size-14 shrink-0 items-center justify-center rounded-2xl border-2 transition-transform duration-300", toneClass, chestView.status === "available" ? "quest-chest-ready" : null)}>
-          <Gift className="size-7" strokeWidth={2.8} />
+          <CustomChestIcon tone={chestView.tone} className="size-8" />
         </div>
         <div>
           <p className="text-xs font-black uppercase tracking-[0.18em] text-amber-500 dark:text-amber-300">
@@ -1178,8 +1243,8 @@ const WeekActivityCard = ({ data }: { data: QuestsPageData }) => {
   return (
     <CardShell className="p-4">
       <div className="mb-4 flex items-center gap-3">
-        <div className="flex size-11 items-center justify-center rounded-2xl bg-[#e8f5ff] text-[#1486CC] dark:bg-[#1c3547] dark:text-sky-300">
-          <CalendarDays className="size-5" strokeWidth={2.8} />
+        <div className="flex size-11 items-center justify-center rounded-2xl bg-[#e8f5ff] dark:bg-[#1c3547]">
+          <CustomCalendarIcon className="size-6" />
         </div>
         <div>
           <h2 className="text-lg font-black text-slate-900 dark:text-white">Lịch 7 ngày</h2>
@@ -1212,8 +1277,8 @@ const TipCard = () => {
   return (
     <CardShell className="p-4">
       <div className="flex items-start gap-4">
-        <div className="flex size-12 shrink-0 items-center justify-center rounded-2xl bg-emerald-50 text-emerald-500 dark:bg-emerald-950/30 dark:text-emerald-300">
-          <Lightbulb className="size-6" strokeWidth={2.8} />
+        <div className="flex size-12 shrink-0 items-center justify-center rounded-2xl bg-emerald-50 dark:bg-emerald-950/30">
+          <CustomTipsIcon className="size-7" />
         </div>
         <div>
           <h2 className="text-lg font-black text-slate-900 dark:text-white">Mẹo hôm nay</h2>
