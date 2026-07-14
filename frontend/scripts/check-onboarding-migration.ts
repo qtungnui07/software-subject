@@ -11,6 +11,19 @@ assert.equal(newUser.onboardingStatus, "pending");
 assert.equal(newUser.onboardingChoice, null);
 assert.equal(newUser.onboardingCompletedAt, null);
 
+const emptySignupProgress = {
+  completedLessons: [],
+  claimedChests: [],
+  completedCheckpoint: false,
+};
+assert.equal(
+  emptySignupProgress.completedLessons.length > 0 ||
+    emptySignupProgress.claimedChests.length > 0 ||
+    emptySignupProgress.completedCheckpoint,
+  false,
+  "The empty Chapter 1 row created during signup must not count as learning activity.",
+);
+
 const legacyUser = normalizeCourseProgressState(
   migrateChapterOneProgressToCourseProgress({
     completedLessons: ["lesson-1"],

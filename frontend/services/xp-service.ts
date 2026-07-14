@@ -1,4 +1,5 @@
 import "server-only";
+import { isRemoteApiMode, remoteApiRequest } from "@/lib/remote-api";
 
 import { and, eq } from "drizzle-orm";
 
@@ -534,6 +535,10 @@ export const getXpLeaderboard = async (
 export const getUserXpSummary = async (
   input: GetUserXpSummaryInput
 ): Promise<UserXpProfileSummary> => {
+  if (isRemoteApiMode()) {
+    return remoteApiRequest<UserXpProfileSummary>("/api/xp/summary");
+  }
+
   return getUserXpSummaryInDatabase(input);
 };
 

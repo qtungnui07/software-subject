@@ -1,4 +1,5 @@
 import "server-only";
+import { isRemoteApiMode, remoteApiRequest } from "@/lib/remote-api";
 
 import { and, eq } from "drizzle-orm";
 
@@ -247,6 +248,13 @@ export const getCourseProgressForUser = async (
   userId: string,
   courseId: CourseId = "english"
 ) => {
+  if (isRemoteApiMode()) {
+    const response = await remoteApiRequest<{ progress: CourseProgressState }>(
+      "/api/progress/course",
+    );
+    return response.progress;
+  }
+
   if (!process.env.DATABASE_URL) {
     return cloneState(
       offlineProgressStore.get(getOfflineKey(userId, courseId)) ??
@@ -267,7 +275,14 @@ export const getCourseProgressForUser = async (
   }
 
   const legacyProgress = await getLegacyChapterOneProgress(userId);
-  if (!legacyProgress) {
+  const hasLegacyProgress = Boolean(
+    legacyProgress &&
+      (legacyProgress.completedLessons.length > 0 ||
+        legacyProgress.claimedChests.length > 0 ||
+        legacyProgress.completedCheckpoint),
+  );
+
+  if (!legacyProgress || !hasLegacyProgress) {
     return existingState ?? createDefaultCourseProgress(courseId);
   }
 

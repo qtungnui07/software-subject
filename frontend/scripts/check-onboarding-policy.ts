@@ -5,6 +5,7 @@ import {
   completePlacementOnboarding,
   createPendingOnboardingState,
   migrateLegacyOnboardingState,
+  repairSpuriousLegacyCompletion,
   startPlacementOnboarding,
 } from "@/lib/onboarding/onboarding-policy";
 
@@ -42,6 +43,22 @@ assert.equal(migrated.choice, null);
 
 const untouchedNewUser = migrateLegacyOnboardingState(pending, false);
 assert.equal(untouchedNewUser.status, "pending");
+
+const incorrectlyCompletedNewUser = completeBasicOnboarding(pending);
+incorrectlyCompletedNewUser.choice = null;
+const repairedNewUser = repairSpuriousLegacyCompletion(
+  incorrectlyCompletedNewUser,
+  false,
+);
+assert.equal(repairedNewUser.status, "pending");
+assert.equal(repairedNewUser.choice, null);
+assert.equal(repairedNewUser.completedAt, null);
+
+const preservedLegacyUser = repairSpuriousLegacyCompletion(
+  incorrectlyCompletedNewUser,
+  true,
+);
+assert.equal(preservedLegacyUser.status, "completed");
 
 const completedNeverRegresses = migrateLegacyOnboardingState(
   completedPlacement,

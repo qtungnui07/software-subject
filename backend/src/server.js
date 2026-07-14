@@ -29,6 +29,9 @@ loadEnvFile(path.resolve(__dirname, "..", "..", "frontend", ".env.local"));
 const port = Number(process.env.PORT || 4000);
 const databaseUrl = process.env.DATABASE_URL;
 const apiKey = process.env.BACKEND_API_KEY;
+const frontendInternalUrl = String(
+  process.env.FRONTEND_INTERNAL_URL || "http://frontend:3000"
+).replace(/\/$/, "");
 
 const sql = databaseUrl ? postgres(databaseUrl, { max: 5 }) : null;
 const VIETNAM_TIME_ZONE = "Asia/Ho_Chi_Minh";
@@ -76,6 +79,44 @@ const readJson = (req) =>
       }
     });
   });
+
+const readBody = (req) =>
+  new Promise((resolve, reject) => {
+    const chunks = [];
+    let size = 0;
+    req.on("data", (chunk) => {
+      size += chunk.length;
+      if (size > 1024 * 1024) {
+        reject(Object.assign(new Error("Payload too large"), { status: 413 }));
+        req.destroy();
+        return;
+      }
+      chunks.push(chunk);
+    });
+    req.on("end", () => resolve(Buffer.concat(chunks)));
+    req.on("error", reject);
+  });
+
+const proxyFrontendApi = async (req, res, url) => {
+  const targetPath = url.pathname.slice("/frontend-api".length) + url.search;
+  const body = req.method === "GET" || req.method === "HEAD" ? undefined : await readBody(req);
+  const headers = { ...req.headers };
+  delete headers.host;
+  delete headers.connection;
+  delete headers["content-length"];
+
+  const response = await fetch(`${frontendInternalUrl}${targetPath}`, {
+    method: req.method,
+    headers,
+    body,
+    redirect: "manual",
+  });
+  const responseBody = Buffer.from(await response.arrayBuffer());
+  const responseHeaders = Object.fromEntries(response.headers.entries());
+  responseHeaders["content-length"] = String(responseBody.length);
+  res.writeHead(response.status, responseHeaders);
+  res.end(responseBody);
+};
 
 const requireDatabase = () => {
   if (!sql) {
@@ -708,6 +749,12 @@ const updateProfile = async (userId, payload) => {
 const server = http.createServer(async (req, res) => {
   try {
     const url = new URL(req.url || "/", `http://${req.headers.host || "localhost"}`);
+
+    if (url.pathname.startsWith("/frontend-api/api/")) {
+      await proxyFrontendApi(req, res, url);
+      logRequest(req, 200, "proxied_to=frontend");
+      return;
+    }
 
     if (req.method === "GET" && url.pathname === "/health") {
       logRequest(req, 200);

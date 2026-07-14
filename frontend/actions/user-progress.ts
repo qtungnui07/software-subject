@@ -11,8 +11,20 @@ import { redirect } from 'next/navigation';
 
 
 import { auth } from "@/auth";
+import { isRemoteApiMode, remoteApiRequest } from "@/lib/remote-api";
 
 export const upsertUserProgress = async (courseId: number) => {
+    if (isRemoteApiMode()) {
+        await remoteApiRequest("/api/remote/user-progress", {
+            method: "POST",
+            headers: { "content-type": "application/json" },
+            body: JSON.stringify({ operation: "select-course", courseId }),
+        });
+        revalidatePath("/courses");
+        revalidatePath("/learn");
+        redirect("/learn");
+    }
+
     const session = await auth();
     const user = session?.user;
     const userId = user?.id;
@@ -60,6 +72,16 @@ export const upsertUserProgress = async (courseId: number) => {
 };
 
 export const updateUserLeague = async (league: number) => {
+    if (isRemoteApiMode()) {
+        await remoteApiRequest("/api/remote/user-progress", {
+            method: "POST",
+            headers: { "content-type": "application/json" },
+            body: JSON.stringify({ operation: "league", league }),
+        });
+        revalidatePath("/leaderboard");
+        return;
+    }
+
     const session = await auth();
     const userId = session?.user?.id;
 
@@ -85,6 +107,16 @@ export const updateUserLeague = async (league: number) => {
 };
 
 export const updateUserStatusEmoji = async (statusEmoji: string | null) => {
+    if (isRemoteApiMode()) {
+        await remoteApiRequest("/api/remote/user-progress", {
+            method: "POST",
+            headers: { "content-type": "application/json" },
+            body: JSON.stringify({ operation: "status-emoji", statusEmoji }),
+        });
+        revalidatePath("/leaderboard");
+        return;
+    }
+
     const session = await auth();
     const userId = session?.user?.id;
 

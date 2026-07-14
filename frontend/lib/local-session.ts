@@ -24,7 +24,6 @@ export type CreatedLocalSessionToken = {
 const getSecret = () =>
   process.env.LOCAL_AUTH_SECRET ||
   process.env.CLERK_SECRET_KEY ||
-  process.env.DATABASE_URL ||
   "robogo-local-dev-secret";
 
 const encode = (value: unknown) => Buffer.from(JSON.stringify(value)).toString("base64url");

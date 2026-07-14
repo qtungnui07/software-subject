@@ -4,6 +4,7 @@ import { cookies } from "next/headers";
 import { LOCAL_SESSION_COOKIE } from "@/lib/local-session";
 import { syncClerkUser } from "@/services/auth-service";
 import { getValidLocalSessionUser } from "@/services/local-session-service";
+import { getRemoteApiUrl } from "@/lib/remote-api";
 
 const syncUserToDatabase = async (user: NonNullable<Awaited<ReturnType<typeof currentUser>>>) => {
   const email = user.emailAddresses[0]?.emailAddress;
@@ -27,6 +28,17 @@ const syncUserToDatabase = async (user: NonNullable<Awaited<ReturnType<typeof cu
 export const auth = async () => {
   try {
     const cookieStore = await cookies();
+    const remoteApiUrl = getRemoteApiUrl();
+
+    if (remoteApiUrl) {
+      const response = await fetch(`${remoteApiUrl}/frontend-api/api/auth/current`, {
+        headers: { cookie: cookieStore.toString() },
+        cache: "no-store",
+      });
+      const data = await response.json().catch(() => null);
+      return response.ok && data?.user ? { user: data.user } : null;
+    }
+
     const localUser = await getValidLocalSessionUser(
       cookieStore.get(LOCAL_SESSION_COOKIE)?.value
     );

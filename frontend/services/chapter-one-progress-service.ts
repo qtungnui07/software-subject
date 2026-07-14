@@ -8,6 +8,7 @@ import {
   normalizeChapterOneProgressState,
   type ChapterOneProgressState,
 } from "@/lib/chapter-one-progress";
+import { isRemoteApiMode, remoteApiRequest } from "@/lib/remote-api";
 
 type StoredChapterOneProgress = {
   completedLessons: string;
@@ -36,6 +37,13 @@ const toProgressState = (row: StoredChapterOneProgress | null): ChapterOneProgre
 };
 
 export const getChapterOneProgressForUser = async (userId: string) => {
+  if (isRemoteApiMode()) {
+    const response = await remoteApiRequest<{ progress: ChapterOneProgressState }>(
+      "/api/progress/chapter-one",
+    );
+    return response.progress;
+  }
+
   const row = await db.query.chapterOneProgress.findFirst({
     where: eq(chapterOneProgress.userId, userId),
   });

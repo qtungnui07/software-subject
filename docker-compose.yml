@@ -23,6 +23,7 @@ services:
     environment:
       - PORT=4000
       - DATABASE_URL=postgresql://qtitpc:21107@db:5432/duolingo
+      - FRONTEND_INTERNAL_URL=http://frontend:3000
     depends_on:
       - db
     restart: unless-stopped

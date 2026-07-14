@@ -93,3 +93,20 @@ export const migrateLegacyOnboardingState = (
     completedAt,
   };
 };
+
+export const repairSpuriousLegacyCompletion = (
+  current: CourseOnboardingState,
+  hasLearningActivity: boolean,
+): CourseOnboardingState => {
+  const normalized = normalizeOnboardingState(current);
+
+  if (
+    normalized.status !== "completed" ||
+    normalized.choice !== null ||
+    hasLearningActivity
+  ) {
+    return normalized;
+  }
+
+  return createPendingOnboardingState();
+};

@@ -7,6 +7,19 @@ import { LearnRouteTransition } from "@/components/learn-route-transition";
 import { SessionResetGuard } from "@/components/session-reset-guard";
 import "./globals.css";
 
+const REMOTE_UI_PUBLISHABLE_KEY = "pk_test_cm9ib2dvLXJlbW90ZS5jbGVyay5hY2NvdW50cy5kZXYk";
+
+const AppAuthProvider = ({ children }: { children: React.ReactNode }) => (
+  <ClerkProvider
+    publishableKey={
+      process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY ||
+      (process.env.REMOTE_API_URL ? REMOTE_UI_PUBLISHABLE_KEY : undefined)
+    }
+  >
+    {children}
+  </ClerkProvider>
+);
+
 export const metadata: Metadata = {
   title: "Robogo - Learn languages every day",
   description:
@@ -162,7 +175,7 @@ export default function RootLayout({
   `;
 
   return (
-    <ClerkProvider>
+    <AppAuthProvider>
       <html lang="vi" className="min-h-screen antialiased" suppressHydrationWarning>
         <head>
           <script
@@ -286,6 +299,6 @@ export default function RootLayout({
           {children}
         </body>
       </html>
-    </ClerkProvider>
+    </AppAuthProvider>
   );
 }

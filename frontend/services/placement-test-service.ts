@@ -1,4 +1,5 @@
 import "server-only";
+import { isRemoteApiMode, remoteApiRequest } from "@/lib/remote-api";
 
 import { and, eq } from "drizzle-orm";
 
@@ -113,6 +114,13 @@ const getDurationSeconds = (
 };
 
 export const getPlacementTestResultForUser = async (userId: string) => {
+  if (isRemoteApiMode()) {
+    const response = await remoteApiRequest<{
+      previousResult: PlacementTestStoredResult | null;
+    }>("/api/placement-test");
+    return response.previousResult;
+  }
+
   if (!process.env.DATABASE_URL) {
     return offlineStore.get(userId);
   }

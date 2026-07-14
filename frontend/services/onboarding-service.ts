@@ -1,4 +1,5 @@
 import "server-only";
+import { isRemoteApiMode, remoteApiRequest } from "@/lib/remote-api";
 
 import { and, eq, gt } from "drizzle-orm";
 
@@ -16,6 +17,7 @@ import {
   completePlacementOnboarding,
   migrateLegacyOnboardingState,
   normalizeOnboardingState,
+  repairSpuriousLegacyCompletion,
   startPlacementOnboarding,
 } from "@/lib/onboarding/onboarding-policy";
 import {
@@ -63,7 +65,14 @@ const hasLegacyLearningActivity = async (userId: string) => {
       }),
     ]);
 
-  return Boolean(chapterProgress || placementResult || lessonClaim || xpSummary);
+  const hasChapterProgress = Boolean(
+    chapterProgress &&
+      (chapterProgress.completedLessons !== "[]" ||
+        chapterProgress.claimedChests !== "[]" ||
+        chapterProgress.completedCheckpoint > 0),
+  );
+
+  return Boolean(hasChapterProgress || placementResult || lessonClaim || xpSummary);
 };
 
 const persistOnboardingState = async (
@@ -115,14 +124,27 @@ export const ensureEnglishActiveCourseForUser = async (userId: string) => {
 };
 
 export const getOnboardingStateForUser = async (userId: string) => {
+  if (isRemoteApiMode()) {
+    const response = await remoteApiRequest<{ onboarding: CourseOnboardingState }>(
+      "/api/onboarding",
+    );
+    return response.onboarding;
+  }
+
   const { progress, onboarding } = await getStateFromProgress(userId);
 
-  if (onboarding.status !== "pending") {
+  if (
+    onboarding.status !== "pending" &&
+    !(onboarding.status === "completed" && onboarding.choice === null)
+  ) {
     return onboarding;
   }
 
   const legacyActivity = await hasLegacyLearningActivity(userId);
-  const migrated = migrateLegacyOnboardingState(onboarding, legacyActivity);
+  const migrated =
+    onboarding.status === "completed"
+      ? repairSpuriousLegacyCompletion(onboarding, legacyActivity)
+      : migrateLegacyOnboardingState(onboarding, legacyActivity);
 
   if (migrated.status === onboarding.status) {
     return onboarding;
