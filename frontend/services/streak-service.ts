@@ -11,6 +11,11 @@ import {
   DEFAULT_STREAK_TIME_ZONE,
   normalizeLessonStreakReward,
 } from "@/lib/streak";
+import {
+  isAfkEligibleForStreak,
+  MIN_STREAK_STUDY_MINUTES,
+  normalizeAfkCount,
+} from "@/lib/study-session-policy";
 
 export type RecordLearningStreakInput = {
   userId: string;
@@ -18,6 +23,7 @@ export type RecordLearningStreakInput = {
   earnedXp: number;
   completedLessons?: number;
   studyMinutes?: number;
+  afkCount?: number;
 };
 
 export type RecordLearningStreakResult = {
@@ -40,14 +46,13 @@ export type RecordLearningStreakResult = {
   requiredStudyMinutes: number;
 };
 
-const MIN_STREAK_STUDY_MINUTES = 15;
-
 export const recordLearningStreak = async ({
   userId,
   nodeId,
   earnedXp,
   completedLessons = 1,
   studyMinutes = 0,
+  afkCount = 0,
 }: RecordLearningStreakInput): Promise<RecordLearningStreakResult> => {
   const reward = normalizeLessonStreakReward({
     completedLessons,
@@ -60,13 +65,37 @@ export const recordLearningStreak = async ({
   const previousDailyLog = await getDailyStreakLog(userId, todayDate);
   const previousStudyMinutes = previousDailyLog?.studyMinutes ?? 0;
   const normalizedStudyMinutes = Math.max(0, Math.trunc(studyMinutes));
+  const normalizedAfkCount = normalizeAfkCount(afkCount);
+  const eligibleForStreak = isAfkEligibleForStreak(normalizedAfkCount);
   const dailyLog = await upsertDailyStreakLog({
     userId,
     studyDate: todayDate,
     completedLessons: reward.completedLessons,
     earnedXp: reward.earnedXp,
-    studyMinutes: normalizedStudyMinutes,
+    studyMinutes: eligibleForStreak ? normalizedStudyMinutes : 0,
   });
+
+  if (!eligibleForStreak) {
+    return {
+      nodeId,
+      status: "already_completed_today",
+      message: "Buổi học AFK quá 3 lần nên không được tính vào streak.",
+      didIncrease: false,
+      didReset: false,
+      wasProtected: false,
+      currentStreak: currentStreak?.currentStreak ?? 0,
+      longestStreak: currentStreak?.longestStreak ?? 0,
+      streakFreezes: currentStreak?.streakFreezes ?? 0,
+      missedDays: 0,
+      usedStreakFreezes: 0,
+      todayDate,
+      lastStudyDate: currentStreak?.lastStudyDate ?? null,
+      completedLessonsToday: dailyLog.completedLessons,
+      earnedXpToday: dailyLog.earnedXp,
+      studyMinutesToday: dailyLog.studyMinutes,
+      requiredStudyMinutes: MIN_STREAK_STUDY_MINUTES,
+    };
+  }
 
   if (dailyLog.studyMinutes < MIN_STREAK_STUDY_MINUTES) {
     return {

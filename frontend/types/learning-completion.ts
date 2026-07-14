@@ -4,6 +4,7 @@ export type LearningCompletionRequest = {
   nodeId: string;
   accuracy: number;
   durationSeconds: number;
+  afkCount: number;
   idempotencyKey: string;
 };
 

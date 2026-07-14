@@ -287,6 +287,7 @@ const LessonContent = () => {
             nodeId: xpLessonId,
             accuracy,
             durationSeconds: studyDurationSecondsRef.current,
+            afkCount: studyTimerRef.current?.getAfkCount() ?? 0,
             idempotencyKey: completionIdempotencyKeyRef.current,
           }),
         });
@@ -493,6 +494,7 @@ const LessonContent = () => {
     hasHandledCompletionRef.current = false;
     completionIdempotencyKeyRef.current = null;
     studyDurationSecondsRef.current = 0;
+    studyTimerRef.current?.reset();
   };
 
   // Redirect to learn page

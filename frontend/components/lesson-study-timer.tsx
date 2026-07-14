@@ -12,8 +12,11 @@ import { TimerReset } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { dispatchStudyTimeUpdate } from "@/components/use-study-time-summary";
+import {
+  getAfkInactivityLimitMs,
+  MAX_STREAK_AFK_COUNT,
+} from "@/lib/study-session-policy";
 
-const AFK_LIMIT_MS = 2 * 60 * 1000;
 const SYNC_EVERY_SECONDS = 15;
 
 type Props = {
@@ -24,6 +27,8 @@ type Props = {
 export type LessonStudyTimerHandle = {
   flush: (options?: { keepalive?: boolean }) => Promise<number>;
   getActiveSeconds: () => number;
+  getAfkCount: () => number;
+  reset: () => void;
 };
 
 export const LessonStudyTimer = forwardRef<LessonStudyTimerHandle, Props>(({
@@ -31,12 +36,14 @@ export const LessonStudyTimer = forwardRef<LessonStudyTimerHandle, Props>(({
   onActiveSecondsChange,
 }, ref) => {
   const [isAfk, setIsAfk] = useState(false);
+  const [afkCount, setAfkCount] = useState(0);
 
   const activeSecondsRef = useRef(0);
   const pendingSecondsRef = useRef(0);
   const lastActivityAtRef = useRef(0);
   const flushInFlightRef = useRef(false);
   const canSyncRef = useRef(true);
+  const afkCountRef = useRef(0);
 
   const notifyActiveSeconds = useCallback(() => {
     onActiveSecondsChange?.(activeSecondsRef.current);
@@ -93,8 +100,18 @@ export const LessonStudyTimer = forwardRef<LessonStudyTimerHandle, Props>(({
     () => ({
       flush: flushStudyTime,
       getActiveSeconds: () => activeSecondsRef.current,
+      getAfkCount: () => afkCountRef.current,
+      reset: () => {
+        activeSecondsRef.current = 0;
+        pendingSecondsRef.current = 0;
+        afkCountRef.current = 0;
+        lastActivityAtRef.current = Date.now();
+        setAfkCount(0);
+        setIsAfk(false);
+        notifyActiveSeconds();
+      },
     }),
-    [flushStudyTime]
+    [flushStudyTime, notifyActiveSeconds]
   );
 
   useEffect(() => {
@@ -143,7 +160,12 @@ export const LessonStudyTimer = forwardRef<LessonStudyTimerHandle, Props>(({
     const intervalId = window.setInterval(() => {
       const now = Date.now();
 
-      if (now - lastActivityAtRef.current > AFK_LIMIT_MS) {
+      if (
+        now - lastActivityAtRef.current >=
+        getAfkInactivityLimitMs(afkCountRef.current)
+      ) {
+        afkCountRef.current += 1;
+        setAfkCount(afkCountRef.current);
         setIsAfk(true);
         void flushStudyTime();
         return;
@@ -206,7 +228,9 @@ export const LessonStudyTimer = forwardRef<LessonStudyTimerHandle, Props>(({
           Bạn đang AFK?
         </h2>
         <p className="mt-2 text-sm font-bold leading-6 text-slate-500 dark:text-slate-300">
-          Hệ thống đã tạm dừng đếm thời gian học sau 2 phút không có tương tác.
+          {afkCount > MAX_STREAK_AFK_COUNT
+            ? "Bạn đã AFK quá 3 lần. Buổi học này không được tính vào streak."
+            : `Lần AFK ${afkCount}/${MAX_STREAK_AFK_COUNT}. Hệ thống đã tạm dừng đếm thời gian học.`}
         </p>
         <Button
           type="button"

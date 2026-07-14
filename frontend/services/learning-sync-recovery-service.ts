@@ -9,6 +9,10 @@ import {
   MAX_LEARNING_SYNC_ATTEMPTS,
 } from "@/lib/learning/sync-retry-policy";
 import { logger } from "@/lib/observability/logger";
+import {
+  getCompletedStudyMinutes,
+  normalizeAfkCount,
+} from "@/lib/study-session-policy";
 import { recordLearningQuestProgress } from "@/services/learning-quest-service";
 import { recordLearningStreak } from "@/services/streak-service";
 import { completeLessonXp } from "@/services/xp-service";
@@ -47,6 +51,7 @@ const serializePayload = (payload: LearningSyncJobPayload) =>
     userImageSrc: payload.userImageSrc ?? null,
     accuracy: Math.max(0, Math.min(100, Math.trunc(payload.accuracy))),
     durationSeconds: Math.max(0, Math.trunc(payload.durationSeconds)),
+    afkCount: normalizeAfkCount(payload.afkCount),
     completedLessons: Math.max(
       0,
       Math.min(1, Math.trunc(payload.completedLessons)),
@@ -68,6 +73,7 @@ const parsePayload = (value: string): LearningSyncJobPayload => {
       0,
       Math.trunc(Number(parsed.durationSeconds) || 0),
     ),
+    afkCount: normalizeAfkCount(parsed.afkCount),
     completedLessons: Math.max(
       0,
       Math.min(1, Math.trunc(Number(parsed.completedLessons) || 0)),
@@ -249,6 +255,8 @@ const processJob = async (job: LearningSyncJobRecord) => {
     nodeId: job.nodeId,
     earnedXp: payload.earnedXp,
     completedLessons: payload.completedLessons,
+    studyMinutes: getCompletedStudyMinutes(payload.durationSeconds),
+    afkCount: payload.afkCount,
   });
 };
 

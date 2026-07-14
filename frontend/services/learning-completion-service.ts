@@ -3,6 +3,7 @@ import "server-only";
 import { getLearningNodeById } from "@/lib/courses/course-catalog";
 import { logger } from "@/lib/observability/logger";
 import { calculateLessonXp } from "@/lib/xp";
+import { getCompletedStudyMinutes } from "@/lib/study-session-policy";
 import {
   createPendingQuestResult,
   createPendingStreakResult,
@@ -37,6 +38,7 @@ export type CompleteLearningNodeInput = {
   nodeId: string;
   accuracy: number;
   durationSeconds?: number;
+  afkCount?: number;
   idempotencyKey: string;
 };
 
@@ -252,10 +254,10 @@ const completeLearningNodeOnce = async (
         nodeId: node.id,
         earnedXp: gamificationPlan.xpDelta,
         completedLessons: completedLessonsDelta,
-        studyMinutes: Math.max(
-          1,
-          Math.ceil(normalizeCompletionDurationSeconds(input.durationSeconds) / 60),
+        studyMinutes: getCompletedStudyMinutes(
+          normalizeCompletionDurationSeconds(input.durationSeconds),
         ),
+        afkCount: input.afkCount,
       });
 
       streak = {
@@ -293,6 +295,7 @@ const completeLearningNodeOnce = async (
     userImageSrc: input.userImageSrc,
     accuracy,
     durationSeconds: normalizeCompletionDurationSeconds(input.durationSeconds),
+    afkCount: input.afkCount ?? 0,
     completedLessons: newlyCompleted ? 1 : 0,
     earnedXp: xp.synced ? xp.earnedXp : expectedFirstCompletionXp,
   };

@@ -12,6 +12,7 @@ import {
   normalizeCompletionDurationSeconds,
 } from "@/lib/learning/completion-policy";
 import { logger } from "@/lib/observability/logger";
+import { normalizeAfkCount } from "@/lib/study-session-policy";
 import {
   getRequestId,
   requestIdHeaders,
@@ -32,6 +33,7 @@ type CompletionRequestBody = {
   nodeId?: unknown;
   accuracy?: unknown;
   durationSeconds?: unknown;
+  afkCount?: unknown;
   idempotencyKey?: unknown;
 };
 
@@ -41,6 +43,7 @@ const parseBody = (body: CompletionRequestBody) => {
   const durationSeconds = normalizeCompletionDurationSeconds(
     body.durationSeconds,
   );
+  const afkCount = normalizeAfkCount(body.afkCount);
   const idempotencyKey = body.idempotencyKey;
 
   if (!nodeId) return { error: "nodeId is required" } as const;
@@ -56,6 +59,7 @@ const parseBody = (body: CompletionRequestBody) => {
     nodeId,
     accuracy,
     durationSeconds,
+    afkCount,
     idempotencyKey,
   } as const;
 };
@@ -142,6 +146,7 @@ export async function POST(request: Request) {
       nodeId: parsed.nodeId,
       accuracy: parsed.accuracy,
       durationSeconds: parsed.durationSeconds,
+      afkCount: parsed.afkCount,
       idempotencyKey: parsed.idempotencyKey,
     });
 

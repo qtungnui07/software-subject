@@ -10,6 +10,7 @@ export type LearningSyncJobPayload = {
   userImageSrc?: string | null;
   accuracy: number;
   durationSeconds: number;
+  afkCount: number;
   completedLessons: number;
   earnedXp: number;
 };
