@@ -52,7 +52,7 @@ export const upsertUserProgress = async (courseId: number) => {
             activeCourseId: courseId,
             userName: user.name || "User",
             userImageSrc: user.image || "/logo.webp",
-        });
+        }).where(eq(userProgress.userId, userId));
             
         revalidatePath("/courses");
         revalidatePath("/learn");
