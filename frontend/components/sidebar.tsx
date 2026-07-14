@@ -51,19 +51,19 @@ const milestones = [
     label: "15m",
     title: "Bronze",
     left: "25%",
-    className: "bg-[#c8843d] ring-[#f4d2ad]",
+    className: "bg-gradient-to-br from-[#d97706] to-[#b45309] ring-[#fed7aa] shadow-[0_0_8px_rgba(217,119,6,0.42)]",
   },
   {
     label: "30m",
     title: "Silver",
     left: "50%",
-    className: "bg-[#9ca3af] ring-[#e5e7eb]",
+    className: "bg-gradient-to-br from-[#94a3b8] to-[#64748b] ring-[#f1f5f9] shadow-[0_0_8px_rgba(148,163,184,0.42)]",
   },
   {
     label: "1h",
     title: "Gold",
     left: "100%",
-    className: "bg-[#f5b828] ring-[#fde68a]",
+    className: "bg-gradient-to-br from-[#f59e0b] to-[#d97706] ring-[#fef9c3] shadow-[0_0_10px_rgba(245,158,11,0.55)]",
   },
 ];
 
