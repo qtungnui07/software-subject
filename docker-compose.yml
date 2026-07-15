@@ -24,6 +24,13 @@ services:
       - PORT=4000
       - DATABASE_URL=postgresql://qtitpc:21107@db:5432/duolingo
       - FRONTEND_INTERNAL_URL=http://frontend:3000
+      - APP_URL=${APP_URL:-https://robogo.qtitpc.dev}
+      - SMTP_HOST=${SMTP_HOST:-smtp.resend.com}
+      - SMTP_PORT=${SMTP_PORT:-465}
+      - SMTP_SECURE=${SMTP_SECURE:-true}
+      - SMTP_USER=${SMTP_USER:-resend}
+      - SMTP_PASS=${SMTP_PASS:-}
+      - MAIL_FROM=${MAIL_FROM:-Robogo <noreply@qtitpc.dev>}
     depends_on:
       - db
     restart: unless-stopped

@@ -17,6 +17,12 @@ type AccountResponse = {
 
 type ThemeMode = "system" | "dark" | "light";
 
+type EmailReminder = {
+  enabled: boolean;
+  reminderTime: string;
+  timeZone: string;
+};
+
 const getErrorMessage = (error: unknown) =>
   error instanceof Error ? error.message : "Đã xảy ra lỗi";
 
@@ -62,6 +68,9 @@ export default function SettingsAccountPage() {
   // Preferences State
   const [soundEffects, setSoundEffects] = useState(true);
   const [motivation, setMotivation] = useState(true);
+  const [emailReminder, setEmailReminder] = useState(false);
+  const [reminderTime, setReminderTime] = useState("19:00");
+  const [isSavingReminder, setIsSavingReminder] = useState(false);
   const [listening, setListening] = useState(true);
   const [themeMode, setThemeMode] = useState<ThemeMode>("system");
 
@@ -102,6 +111,22 @@ export default function SettingsAccountPage() {
         setIsLoading(false);
       });
 
+    fetch("/api/settings/email-reminder", { cache: "no-store" })
+      .then(async (response) => {
+        const data = (await response.json()) as
+          | { reminder: EmailReminder }
+          | { error?: string };
+        if (!response.ok || !("reminder" in data)) {
+          throw new Error("error" in data ? data.error : "Không thể tải lịch nhắc");
+        }
+        return data.reminder;
+      })
+      .then((reminder) => {
+        setEmailReminder(reminder.enabled);
+        setReminderTime(reminder.reminderTime);
+      })
+      .catch((error) => console.error(error));
+
     return () => cancelAnimationFrame(animationFrame);
   }, []);
 
@@ -112,6 +137,30 @@ export default function SettingsAccountPage() {
   ) => {
     setter(value);
     localStorage.setItem(key, String(value));
+  };
+
+  const saveEmailReminder = async (enabled: boolean, time = reminderTime) => {
+    setIsSavingReminder(true);
+    try {
+      const response = await fetch("/api/settings/email-reminder", {
+        method: "PATCH",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ enabled, reminderTime: time }),
+      });
+      const data = (await response.json()) as
+        | { reminder: EmailReminder }
+        | { error?: string };
+      if (!response.ok || !("reminder" in data)) {
+        throw new Error("error" in data && data.error ? data.error : "Không thể lưu lịch nhắc");
+      }
+      setEmailReminder(data.reminder.enabled);
+      setReminderTime(data.reminder.reminderTime);
+      toast.success(data.reminder.enabled ? "Đã bật email nhắc học" : "Đã tắt email nhắc học");
+    } catch (error) {
+      toast.error(getErrorMessage(error));
+    } finally {
+      setIsSavingReminder(false);
+    }
   };
 
   const handleThemeChange = (mode: ThemeMode) => {
@@ -302,6 +351,46 @@ export default function SettingsAccountPage() {
                         handleToggle("setting-motivation", val, setMotivation)
                       }
                     />
+                  </div>
+
+                  <div className="border-b border-slate-100 py-3 dark:border-[#202f36]/40">
+                    <div className="flex items-center justify-between gap-4">
+                      <div className="space-y-1">
+                        <p className="text-sm font-black text-slate-800 dark:text-slate-100 sm:text-base">
+                          Email nhắc học
+                        </p>
+                        <p className="text-xs font-semibold text-slate-400">
+                          RoboGo gửi email nếu bạn chưa hoàn thành mục tiêu học trong ngày.
+                        </p>
+                      </div>
+                      <Switch
+                        checked={emailReminder}
+                        onChange={(value) => void saveEmailReminder(value)}
+                      />
+                    </div>
+                    {emailReminder && (
+                      <div className="mt-4 flex flex-wrap items-center gap-3 rounded-2xl bg-slate-50 p-4 dark:bg-[#101a1e]">
+                        <label htmlFor="email-reminder-time" className="text-xs font-black text-slate-600 dark:text-slate-300">
+                          Giờ nhắc (Việt Nam)
+                        </label>
+                        <input
+                          id="email-reminder-time"
+                          type="time"
+                          value={reminderTime}
+                          disabled={isSavingReminder}
+                          onChange={(event) => setReminderTime(event.target.value)}
+                          className="rounded-xl border-2 border-slate-200 bg-white px-3 py-2 text-sm font-black text-slate-800 outline-none focus:border-[#1486CC] dark:border-[#202f36] dark:bg-[#141f23] dark:text-white"
+                        />
+                        <button
+                          type="button"
+                          disabled={isSavingReminder}
+                          onClick={() => void saveEmailReminder(true)}
+                          className="rounded-xl bg-[#1486CC] px-4 py-2 text-xs font-black text-white disabled:opacity-50"
+                        >
+                          {isSavingReminder ? "Đang lưu..." : "Lưu giờ nhắc"}
+                        </button>
+                      </div>
+                    )}
                   </div>
 
                   <div className="flex items-center justify-between border-b border-slate-100 py-3 dark:border-[#202f36]/40">

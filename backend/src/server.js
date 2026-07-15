@@ -3,6 +3,7 @@ const crypto = require("crypto");
 const fs = require("fs");
 const path = require("path");
 const postgresModule = require("postgres");
+const nodemailer = require("nodemailer");
 const postgres = postgresModule.default || postgresModule;
 
 const loadEnvFile = (filePath) => {
@@ -35,8 +36,28 @@ const frontendInternalUrl = String(
 
 const sql = databaseUrl ? postgres(databaseUrl, { max: 5 }) : null;
 const VIETNAM_TIME_ZONE = "Asia/Ho_Chi_Minh";
+const reminderCheckIntervalMs = Math.max(
+  30_000,
+  Number(process.env.EMAIL_REMINDER_CHECK_INTERVAL_MS || 60_000)
+);
+const appUrl = String(process.env.APP_URL || "https://robogo.qtitpc.dev").replace(/\/$/, "");
+const mailFrom = process.env.MAIL_FROM || "Robogo <noreply@qtitpc.dev>";
+
+const mailTransport = process.env.SMTP_HOST
+  ? nodemailer.createTransport({
+      host: process.env.SMTP_HOST,
+      port: Number(process.env.SMTP_PORT || 587),
+      secure: String(process.env.SMTP_SECURE || "false") === "true",
+      auth:
+        process.env.SMTP_USER && process.env.SMTP_PASS
+          ? { user: process.env.SMTP_USER, pass: process.env.SMTP_PASS }
+          : undefined,
+    })
+  : null;
 
 let studyTimeSchemaReady = false;
+let reminderSchemaReady = false;
+let reminderCheckRunning = false;
 
 const sendJson = (res, status, data) => {
   const body = JSON.stringify(data);
@@ -149,6 +170,24 @@ const ensureStudyTimeSchema = async () => {
   `;
 
   studyTimeSchemaReady = true;
+};
+
+const ensureReminderSchema = async () => {
+  requireDatabase();
+
+  if (reminderSchemaReady) return;
+
+  await sql`
+    create table if not exists email_reminder_settings (
+      user_id text primary key,
+      enabled boolean not null default false,
+      reminder_time time not null default '19:00',
+      last_sent_date date,
+      created_at timestamptz not null default now(),
+      updated_at timestamptz not null default now()
+    )
+  `;
+  reminderSchemaReady = true;
 };
 
 const requireApiKey = (req) => {
@@ -658,6 +697,115 @@ const updateAccount = async (userId, payload) => {
   }
 };
 
+const normalizeReminder = (row) => ({
+  enabled: Boolean(row.enabled),
+  reminderTime: String(row.reminder_time || "19:00").slice(0, 5),
+  timeZone: VIETNAM_TIME_ZONE,
+});
+
+const getEmailReminder = async (userId) => {
+  await ensureReminderSchema();
+  await findAccount(userId);
+  const [setting] = await sql`
+    insert into email_reminder_settings (user_id)
+    values (${userId})
+    on conflict (user_id) do update set user_id = excluded.user_id
+    returning enabled, reminder_time
+  `;
+  return normalizeReminder(setting);
+};
+
+const updateEmailReminder = async (userId, payload) => {
+  await ensureReminderSchema();
+  await findAccount(userId);
+  const enabled = payload.enabled;
+  const reminderTime = String(payload.reminderTime || "");
+
+  if (typeof enabled !== "boolean" || !/^(?:[01]\d|2[0-3]):[0-5]\d$/.test(reminderTime)) {
+    const error = new Error("enabled and a valid reminderTime (HH:mm) are required");
+    error.status = 400;
+    throw error;
+  }
+
+  const [setting] = await sql`
+    insert into email_reminder_settings (user_id, enabled, reminder_time, updated_at)
+    values (${userId}, ${enabled}, ${reminderTime}, now())
+    on conflict (user_id) do update set
+      enabled = excluded.enabled,
+      reminder_time = excluded.reminder_time,
+      updated_at = now()
+    returning enabled, reminder_time
+  `;
+  return normalizeReminder(setting);
+};
+
+const escapeHtml = (value) =>
+  String(value || "")
+    .replaceAll("&", "&amp;")
+    .replaceAll("<", "&lt;")
+    .replaceAll(">", "&gt;")
+    .replaceAll('"', "&quot;")
+    .replaceAll("'", "&#039;");
+
+const sendStudyReminders = async () => {
+  if (!sql || !mailTransport || reminderCheckRunning) return;
+  reminderCheckRunning = true;
+
+  try {
+    await ensureStudyTimeSchema();
+    await ensureReminderSchema();
+    const recipients = await sql`
+      select
+        settings.user_id,
+        users.email,
+        users.name,
+        coalesce(summary.today_seconds, 0)::int as today_seconds,
+        coalesce(summary.daily_goal_seconds, 3600)::int as daily_goal_seconds
+      from email_reminder_settings settings
+      join users on coalesce(users.clerk_user_id, users.id::text) = settings.user_id
+      left join study_time_summary summary on summary.user_id = settings.user_id
+      where settings.enabled = true
+        and to_char(now() at time zone ${VIETNAM_TIME_ZONE}, 'HH24:MI') = to_char(settings.reminder_time, 'HH24:MI')
+        and settings.last_sent_date is distinct from (now() at time zone ${VIETNAM_TIME_ZONE})::date
+        and (
+          summary.user_id is null
+          or summary.current_day <> (now() at time zone ${VIETNAM_TIME_ZONE})::date
+          or summary.today_seconds < summary.daily_goal_seconds
+        )
+    `;
+    const reminderDate = formatDateInTimeZone(new Date(), VIETNAM_TIME_ZONE);
+
+    for (const recipient of recipients) {
+      const studiedMinutes = Math.floor(Number(recipient.today_seconds) / 60);
+      const goalMinutes = Math.ceil(Number(recipient.daily_goal_seconds) / 60);
+      await mailTransport.sendMail({
+        from: mailFrom,
+        to: recipient.email,
+        subject: "Đến giờ học cùng Robogo rồi!",
+        headers: {
+          "Resend-Idempotency-Key": `study-reminder/${reminderDate}/${crypto
+            .createHash("sha256")
+            .update(String(recipient.user_id))
+            .digest("hex")
+            .slice(0, 24)}`,
+        },
+        text: `Chào ${recipient.name}, hôm nay bạn đã học ${studiedMinutes}/${goalMinutes} phút. Vào Robogo để hoàn thành mục tiêu nhé: ${appUrl}/learn`,
+        html: `<div style="font-family:Arial,sans-serif;max-width:560px;margin:auto;color:#243746"><h1 style="color:#1486cc">Đến giờ học rồi!</h1><p>Chào <strong>${escapeHtml(recipient.name)}</strong>,</p><p>Hôm nay bạn đã học <strong>${studiedMinutes}/${goalMinutes} phút</strong>. Chỉ một bài học ngắn nữa để tiến gần mục tiêu hơn.</p><p><a href="${appUrl}/learn" style="display:inline-block;background:#1486cc;color:#fff;text-decoration:none;padding:12px 22px;border-radius:12px;font-weight:700">Học ngay với Robogo</a></p><p style="font-size:12px;color:#718096">Bạn có thể đổi giờ hoặc tắt email này trong Cài đặt riêng.</p></div>`,
+      });
+      await sql`
+        update email_reminder_settings
+        set last_sent_date = (now() at time zone ${VIETNAM_TIME_ZONE})::date, updated_at = now()
+        where user_id = ${recipient.user_id}
+      `;
+      console.log(`${new Date().toISOString()} study reminder sent user_id=${recipient.user_id}`);
+    }
+  } catch (error) {
+    console.error("Study reminder check failed", error);
+  } finally {
+    reminderCheckRunning = false;
+  }
+};
+
 const getProfile = async (userId) => {
   requireDatabase();
 
@@ -801,6 +949,24 @@ const server = http.createServer(async (req, res) => {
       return;
     }
 
+    if (req.method === "GET" && url.pathname === "/settings/email-reminder") {
+      requireApiKey(req);
+      const userId = requireUserId(req);
+      const reminder = await getEmailReminder(userId);
+      logRequest(req, 200, `user_id=${userId}`);
+      sendJson(res, 200, { ok: true, reminder });
+      return;
+    }
+
+    if (req.method === "PATCH" && url.pathname === "/settings/email-reminder") {
+      requireApiKey(req);
+      const userId = requireUserId(req);
+      const reminder = await updateEmailReminder(userId, await readJson(req));
+      logRequest(req, 200, `user_id=${userId}`);
+      sendJson(res, 200, { ok: true, reminder });
+      return;
+    }
+
     if (req.method === "GET" && url.pathname === "/profile") {
       requireApiKey(req);
       const userId = requireUserId(req);
@@ -906,4 +1072,11 @@ process.on("SIGTERM", shutdown);
 
 server.listen(port, "0.0.0.0", () => {
   console.log(`duolingo-backend listening on 0.0.0.0:${port}`);
+  if (mailTransport) {
+    console.log(`study email reminders enabled from=${mailFrom}`);
+    void sendStudyReminders();
+    setInterval(sendStudyReminders, reminderCheckIntervalMs).unref();
+  } else {
+    console.log("study email reminders disabled: SMTP_HOST is not set");
+  }
 });

@@ -1,10 +1,12 @@
 import {
+    boolean,
     date,
     index,
     integer,
     pgTable,
     serial,
     text,
+    time,
     timestamp,
     uniqueIndex,
 } from "drizzle-orm/pg-core";
@@ -118,6 +120,15 @@ export const studyTimeSummary = pgTable(
         currentDayIdx: index("study_time_summary_current_day_idx").on(table.currentDay),
     })
 );
+
+export const emailReminderSettings = pgTable("email_reminder_settings", {
+    userId: text("user_id").primaryKey(),
+    enabled: boolean("enabled").notNull().default(false),
+    reminderTime: time("reminder_time").notNull().default("19:00"),
+    lastSentDate: date("last_sent_date"),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+    updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
+});
 
 export const chapterOneProgress = pgTable("chapter_one_progress", {
     userId: text("user_id").primaryKey(),
