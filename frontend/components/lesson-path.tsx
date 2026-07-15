@@ -25,11 +25,15 @@ type Props = {
   onClaimChest?: (chestId: string) => void;
 };
 
+const HEX_PATH = "polygon(50% 0%, 93% 25%, 93% 75%, 50% 100%, 7% 75%, 7% 25%)";
+
 const statusContent: Record<RoadmapLessonStatus, {
   icon: LucideIcon;
   label: string;
   action: string;
   nodeClass: string;
+  baseClass: string;
+  depthClass: string;
   innerClass: string;
   auraClass: string;
   popoverClass: string;
@@ -39,8 +43,9 @@ const statusContent: Record<RoadmapLessonStatus, {
     icon: Check,
     label: "Đã hoàn thành",
     action: "Ôn tập lại",
-    nodeClass:
-      "border-emerald-500 bg-emerald-400 text-white shadow-[0_10px_0_#059669,0_24px_38px_rgba(16,185,129,0.22)] dark:shadow-[0_10px_0_#047857,0_24px_38px_rgba(16,185,129,0.12)]",
+    nodeClass: "bg-emerald-500 text-white",
+    baseClass: "bg-emerald-600 dark:bg-emerald-800",
+    depthClass: "bg-emerald-800 dark:bg-emerald-950",
     innerClass: "bg-gradient-to-br from-emerald-200 via-emerald-400 to-emerald-500 dark:from-emerald-500 dark:via-emerald-600 dark:to-emerald-700",
     auraClass: "bg-emerald-200/70 dark:bg-emerald-950/20",
     popoverClass: "border-emerald-200 dark:border-emerald-900/30",
@@ -50,8 +55,9 @@ const statusContent: Record<RoadmapLessonStatus, {
     icon: Star,
     label: "Bài hiện tại",
     action: "Tiếp tục học",
-    nodeClass:
-      "border-[#0B6FAE] bg-[#1486CC] text-white shadow-[0_12px_0_#0B6FAE,0_26px_44px_rgba(20,134,204,0.34)] dark:shadow-[0_12px_0_#084c78,0_26px_44px_rgba(20,134,204,0.18)]",
+    nodeClass: "bg-[#0B6FAE] text-white",
+    baseClass: "bg-[#106BA3] dark:bg-[#084c78]",
+    depthClass: "bg-[#084c78] dark:bg-[#062f4a]",
     innerClass: "bg-gradient-to-br from-sky-200 via-[#1D9BF0] to-[#1486CC] dark:from-sky-400 dark:via-[#1486CC] dark:to-[#0B6FAE]",
     auraClass: "bg-sky-200/90 dark:bg-sky-950/20 animate-pulse",
     popoverClass: "border-sky-200 dark:border-sky-900/30",
@@ -61,8 +67,9 @@ const statusContent: Record<RoadmapLessonStatus, {
     icon: Gift,
     label: "Rương sẵn sàng",
     action: "Nhận thưởng",
-    nodeClass:
-      "border-amber-500 bg-amber-400 text-white shadow-[0_10px_0_#d97706,0_24px_38px_rgba(245,158,11,0.24)] dark:shadow-[0_10px_0_#92400e,0_24px_38px_rgba(245,158,11,0.14)]",
+    nodeClass: "bg-amber-500 text-white",
+    baseClass: "bg-amber-600 dark:bg-amber-800",
+    depthClass: "bg-amber-800 dark:bg-amber-950",
     innerClass: "bg-gradient-to-br from-yellow-100 via-amber-300 to-orange-400 dark:from-amber-400 dark:via-orange-500 dark:to-orange-700",
     auraClass: "bg-amber-200/80 dark:bg-amber-950/20 animate-pulse",
     popoverClass: "border-amber-200 dark:border-amber-900/30",
@@ -72,9 +79,10 @@ const statusContent: Record<RoadmapLessonStatus, {
     icon: Lock,
     label: "Đã khóa",
     action: "Hoàn thành bài trước",
-    nodeClass:
-      "border-slate-300 bg-slate-200 text-slate-400 shadow-[0_9px_0_#cbd5e1] dark:border-[#202f36] dark:bg-[#1f2d33] dark:text-slate-500 dark:shadow-[0_9px_0_#141f23]",
-    innerClass: "bg-gradient-to-br from-white to-slate-200 dark:from-[#202f36] dark:to-[#141f23]",
+    nodeClass: "bg-slate-300 text-slate-400 dark:bg-[#141f23] dark:text-slate-500",
+    baseClass: "bg-slate-400 dark:bg-[#1f2d33]",
+    depthClass: "bg-slate-500 dark:bg-[#0d1517]",
+    innerClass: "bg-gradient-to-br from-white to-slate-200 dark:from-[#202f36] dark:to-[#1f2d33]",
     auraClass: "bg-slate-100/90 dark:bg-slate-800/10",
     popoverClass: "border-slate-200 dark:border-[#202f36]",
     buttonClass: "bg-slate-200 text-slate-500 shadow-[0_4px_0_#cbd5e1] dark:bg-[#1f2d33] dark:text-slate-400 dark:shadow-[0_4px_0_#141f23]",
@@ -83,9 +91,10 @@ const statusContent: Record<RoadmapLessonStatus, {
     icon: Gift,
     label: "Rương đã khóa",
     action: "Hoàn thành Bài 3",
-    nodeClass:
-      "border-slate-300 bg-slate-200 text-slate-400 shadow-[0_9px_0_#cbd5e1] dark:border-[#202f36] dark:bg-[#1f2d33] dark:text-slate-500 dark:shadow-[0_9px_0_#141f23]",
-    innerClass: "bg-gradient-to-br from-white to-slate-200 dark:from-[#202f36] dark:to-[#141f23]",
+    nodeClass: "bg-slate-300 text-slate-400 dark:bg-[#141f23] dark:text-slate-500",
+    baseClass: "bg-slate-400 dark:bg-[#1f2d33]",
+    depthClass: "bg-slate-500 dark:bg-[#0d1517]",
+    innerClass: "bg-gradient-to-br from-white to-slate-200 dark:from-[#202f36] dark:to-[#1f2d33]",
     auraClass: "bg-slate-100/90 dark:bg-slate-800/10",
     popoverClass: "border-slate-200 dark:border-[#202f36]",
     buttonClass: "bg-slate-200 text-slate-500 shadow-[0_4px_0_#cbd5e1] dark:bg-[#1f2d33] dark:text-slate-400 dark:shadow-[0_4px_0_#141f23]",
@@ -94,9 +103,10 @@ const statusContent: Record<RoadmapLessonStatus, {
     icon: Trophy,
     label: "Kiểm tra đã khóa",
     action: "Hoàn thành Bài 6",
-    nodeClass:
-      "border-slate-300 bg-slate-200 text-slate-400 shadow-[0_9px_0_#cbd5e1] dark:border-[#202f36] dark:bg-[#1f2d33] dark:text-slate-500 dark:shadow-[0_9px_0_#141f23]",
-    innerClass: "bg-gradient-to-br from-white to-slate-200 dark:from-[#202f36] dark:to-[#141f23]",
+    nodeClass: "bg-slate-300 text-slate-400 dark:bg-[#141f23] dark:text-slate-500",
+    baseClass: "bg-slate-400 dark:bg-[#1f2d33]",
+    depthClass: "bg-slate-500 dark:bg-[#0d1517]",
+    innerClass: "bg-gradient-to-br from-white to-slate-200 dark:from-[#202f36] dark:to-[#1f2d33]",
     auraClass: "bg-slate-100/90 dark:bg-slate-800/10",
     popoverClass: "border-slate-200 dark:border-[#202f36]",
     buttonClass: "bg-slate-200 text-slate-500 shadow-[0_4px_0_#cbd5e1] dark:bg-[#1f2d33] dark:text-slate-400 dark:shadow-[0_4px_0_#141f23]",
@@ -111,7 +121,7 @@ const getMilestoneLabel = (minutes: number) => {
   return "Chưa đạt chuỗi";
 };
 
-const curveBetween = (from: LessonNode, to: LessonNode) => {
+const curveBetween = (from: RoadmapLessonNode, to: RoadmapLessonNode) => {
   const middleY = from.y + (to.y - from.y) / 2;
   const pull = Math.abs(to.x - from.x) < 20 ? 78 : 26;
   const direction = to.x >= from.x ? 1 : -1;
@@ -331,6 +341,7 @@ const LessonNodeButton = ({
         transform: "translate(-50%, -50%)",
       }}
     >
+      {/* Badge "Tiếp tục" / "Nhận thưởng" */}
       {isCurrent || isAvailableChest ? (
         <div className={cn("absolute -top-12 left-1/2 z-30 -translate-x-1/2 whitespace-nowrap rounded-2xl border-2 bg-white dark:bg-[#141f23] px-4 py-1.5 text-sm font-black uppercase tracking-wide shadow-sm", isAvailableChest ? "border-amber-200 text-amber-500 dark:border-amber-900/30 dark:text-amber-300" : "border-sky-200 text-[#1486CC] dark:border-[#202f36] dark:text-[#38bdf8]")}>
           {isAvailableChest ? "Nhận thưởng" : "Tiếp tục"}
@@ -338,49 +349,122 @@ const LessonNodeButton = ({
         </div>
       ) : null}
 
+      {/* Aura glow */}
       <div
         className={cn(
-          "absolute left-1/2 top-1/2 h-[118px] w-[118px] -translate-x-1/2 -translate-y-1/2 rounded-full blur-xl transition duration-300",
+          "absolute left-1/2 top-1/2 h-[130px] w-[130px] -translate-x-1/2 -translate-y-1/2 blur-2xl transition duration-300",
           selected ? "scale-125" : "scale-100",
           content.auraClass
         )}
+        style={{ clipPath: HEX_PATH }}
       />
 
+      {/* ── Container 3D ── */}
       <div
-        className={cn(
-          "relative rounded-full p-1.5 transition duration-200",
-          isCurrent && "p-2",
-          selected ? "-translate-y-1" : "hover:-translate-y-1 active:translate-y-0"
-        )}
-        style={
-          isCurrent
-            ? {
-                background: `conic-gradient(#1486CC ${progress * 3.6}deg, #dbeafe 0deg)`,
-              }
-            : undefined
-        }
+        className="relative group mx-auto"
+        style={{ width: 128, height: 136 }}
       >
-        <button
-          type="button"
-          aria-label={`${content.label}: ${node.title}`}
-          aria-expanded={selected}
-          aria-controls={selected ? `lesson-node-popover-${node.id}` : undefined}
-          onClick={(event) => {
-            event.stopPropagation();
-            onSelect();
-          }}
+        {/* P2 – Thân dưới đậm */}
+        <div
           className={cn(
-            "relative flex h-[84px] w-[84px] items-center justify-center rounded-full border-4 transition duration-200 active:shadow-none sm:h-[98px] sm:w-[98px]",
-            content.nodeClass
+            "absolute left-0 top-[30px] shadow-[0_14px_18px_rgba(15,23,42,0.3)]",
+            content.depthClass
           )}
+          style={{
+            width: 128,
+            height: 104,
+            clipPath: HEX_PATH,
+          }}
+        />
+
+        {/* P2 – Mặt trên rộng hơn P1, lộ ra ở hai bên và cạnh trước */}
+        <div
+          className={cn(
+            "absolute left-0 top-4 shadow-[inset_0_-14px_0_rgba(0,0,0,0.18)]",
+            content.baseClass
+          )}
+          style={{
+            width: 128,
+            height: 104,
+            clipPath: HEX_PATH,
+          }}
+        />
+
+        {/* P1 – Mặt trên */}
+        <div
+          className={cn(
+            "absolute left-2 top-0 transition-transform duration-100",
+            "group-hover:translate-y-1"
+          )}
+          style={{ width: 112, height: 112 }}
         >
-          <span className={cn("absolute inset-2 rounded-full opacity-85", content.innerClass)} />
-          <span className="absolute left-4 top-4 h-5 w-8 rotate-[-24deg] rounded-full bg-white/35 blur-sm" />
-          <Icon className="relative h-9 w-9 stroke-[3.6] sm:h-11 sm:w-11" />
-        </button>
+          {/* Progress ring (chỉ khi isCurrent) */}
+          {isCurrent && (
+            <div
+              className="absolute inset-[-4px]"
+              style={{
+                clipPath: HEX_PATH,
+                background: `conic-gradient(#1486CC ${progress * 3.6}deg, transparent 0deg)`,
+              }}
+            />
+          )}
+
+          {/* Nút chính P1 */}
+          <button
+            type="button"
+            aria-label={`${content.label}: ${node.title}`}
+            aria-expanded={selected}
+            aria-controls={selected ? `lesson-node-popover-${node.id}` : undefined}
+            onClick={(event) => {
+              event.stopPropagation();
+              onSelect();
+            }}
+            className="absolute inset-0"
+          >
+            {/* Gradient bên trong lấp đầy toàn bộ P1 (không còn viền đậm 6 cạnh) */}
+            <span
+              className={cn(
+                "absolute inset-x-0 top-[38px] h-[62px] shadow-[inset_0_-6px_0_rgba(0,0,0,0.16)] transition-opacity duration-100 group-active:opacity-0",
+                selected && "opacity-0",
+                content.depthClass
+              )}
+              style={{ clipPath: HEX_PATH }}
+            />
+            <span
+              className={cn(
+                "absolute inset-x-0 top-0 h-[82px] shadow-[inset_0_-8px_0_rgba(0,0,0,0.12)] transition-transform duration-100 group-active:translate-y-2",
+                selected && "translate-y-2",
+                content.nodeClass
+              )}
+              style={{ clipPath: HEX_PATH }}
+            />
+            <span
+              className={cn(
+                "absolute inset-x-[9px] top-[8px] h-[62px] opacity-80 transition duration-100 group-active:translate-y-2",
+                selected && "translate-y-2",
+                content.innerClass
+              )}
+              style={{ clipPath: HEX_PATH }}
+            />
+            {/* Lấp lánh */}
+            <span
+              className={cn(
+                "absolute left-[26%] top-[16%] h-4 w-7 rotate-[-20deg] rounded-full bg-white/40 blur-sm transition-transform duration-100 group-active:translate-y-2",
+                selected && "translate-y-2"
+              )}
+            />
+            <Icon
+              className={cn(
+                "absolute left-1/2 top-[28px] z-10 h-9 w-9 -translate-x-1/2 -translate-y-1/2 stroke-[3.8] transition-transform duration-100 group-active:translate-y-2 sm:h-11 sm:w-11",
+                selected && "translate-y-2"
+              )}
+            />
+          </button>
+        </div>
       </div>
 
-      <div className="absolute left-1/2 top-[calc(100%+14px)] hidden -translate-x-1/2 whitespace-nowrap rounded-full border-2 border-white dark:border-[#202f36] bg-white/90 dark:bg-slate-800/90 px-3 py-1 text-xs font-black text-slate-500 dark:text-slate-300 shadow-sm sm:block">
+      {/* Label ngắn bên dưới nút */}
+      <div className="absolute left-1/2 top-[calc(100%+10px)] hidden -translate-x-1/2 whitespace-nowrap rounded-full border-2 border-white dark:border-[#202f36] bg-white/90 dark:bg-slate-800/90 px-3 py-1 text-xs font-black text-slate-500 dark:text-slate-300 shadow-sm sm:block">
         {node.shortTitle}
       </div>
 
@@ -421,12 +505,12 @@ export const LessonPath = ({ todayMinutes, progressState, onClaimChest }: Props)
           aria-hidden="true"
         >
           <defs>
-            <linearGradient id="robogoPathActive" x1="0" x2="1" y1="0" y2="1">
-              <stop offset="0%" stopColor="#7dd3fc" />
-              <stop offset="100%" stopColor="#38bdf8" />
+            <linearGradient id="robogoPathActive" x1="0" x2="0" y1="0" y2="1">
+              <stop offset="0%" stopColor="#4ade80" />
+              <stop offset="100%" stopColor="#16a34a" />
             </linearGradient>
             <filter id="pathSoftShadow" x="-20%" y="-20%" width="140%" height="140%">
-              <feDropShadow dx="0" dy="8" stdDeviation="8" floodColor="#0ea5e9" floodOpacity="0.12" />
+              <feDropShadow dx="0" dy="4" stdDeviation="6" floodColor="#16a34a" floodOpacity="0.25" />
             </filter>
           </defs>
 
@@ -435,19 +519,21 @@ export const LessonPath = ({ todayMinutes, progressState, onClaimChest }: Props)
               <path
                 d={segment.d}
                 fill="none"
-                className="stroke-slate-200 dark:stroke-[#202f36]"
+                stroke={segment.active ? "#166534" : "#111827"}
                 strokeLinecap="round"
-                strokeWidth="18"
-                filter="url(#pathSoftShadow)"
+                strokeWidth="16"
+                opacity={0.6}
               />
               <path
                 d={segment.d}
                 fill="none"
                 stroke={segment.active ? "url(#robogoPathActive)" : undefined}
-                className={cn(!segment.active && "stroke-[#c7e9fb] dark:stroke-[#1f2d33]")}
+                className={cn(!segment.active && "stroke-[#374151] dark:stroke-[#1f2937]")}
                 strokeLinecap="round"
-                strokeWidth="11"
-                opacity={segment.active ? 1 : 0.68}
+                strokeWidth={segment.active ? 11 : 8}
+                strokeDasharray={segment.active ? undefined : "14 10"}
+                opacity={segment.active ? 1 : 0.55}
+                filter={segment.active ? "url(#pathSoftShadow)" : undefined}
               />
             </g>
           ))}
