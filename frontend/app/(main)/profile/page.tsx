@@ -21,14 +21,11 @@ const ProfilePage = async () => {
   }
 
   const user = session.user;
-  let profile: Profile | null = null;
-  try {
-    profile = await requireProfile(user.id);
-  } catch (error) {
-    console.error("Failed to load user profile:", error);
-  }
-
-  const [genericCourseProgress, xpSummary] = await Promise.all([
+  const [profile, genericCourseProgress, xpSummary] = await Promise.all([
+    requireProfile(user.id).catch((error): Profile | null => {
+      console.error("Failed to load user profile:", error);
+      return null;
+    }),
     getCourseProgressForUser(user.id).catch((error) => {
       console.warn(
         "Falling back to default course progress. Check that the local database schema is up to date.",
@@ -41,7 +38,7 @@ const ProfilePage = async () => {
   const courseProgress = getLearningProfileStats(genericCourseProgress);
 
   const displayName = profile?.name || user.name || "User";
-  const avatarSrc = profile?.imageSrc || user.image || "/logo.webp";
+  const avatarSrc = profile?.imageSrc || user.image || "/Robogo.svg";
   const email = profile?.email || user.email || "";
 
   const quickStats = [

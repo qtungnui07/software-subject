@@ -2,7 +2,7 @@ import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
   distDir: process.env.NEXT_DIST_DIR || ".next",
-  allowedDevOrigins: ["duolingo.qtitpc.dev", "192.168.1.174"],
+  allowedDevOrigins: ["robogo.qtitpc.dev", "duolingo.qtitpc.dev", "192.168.1.174"],
   compress: true,
   devIndicators: false,
   poweredByHeader: false,
@@ -21,6 +21,19 @@ const nextConfig: NextConfig = {
       afterFiles: [],
       fallback: [],
     };
+  },
+  async redirects() {
+    return [
+      "/logo.png",
+      "/logo.webp",
+      "/logo.svg",
+      "/coddy-logo-icon.png",
+      "/coddy-logo.svg",
+    ].map((source) => ({
+      source,
+      destination: "/Robogo.svg",
+      permanent: true,
+    }));
   },
   images: {
     formats: ["image/avif", "image/webp"],

@@ -27,14 +27,14 @@ export async function POST(request: Request) {
       await db.update(userProgress).set({
         activeCourseId: courseId,
         userName: user.name || "User",
-        userImageSrc: user.image || "/logo.webp",
+        userImageSrc: user.image || "/Robogo.svg",
       }).where(eq(userProgress.userId, user.id));
     } else {
       await db.insert(userProgress).values({
         userId: user.id,
         activeCourseId: courseId,
         userName: user.name || "User",
-        userImageSrc: user.image || "/logo.webp",
+        userImageSrc: user.image || "/Robogo.svg",
       });
     }
     return NextResponse.json({ ok: true });

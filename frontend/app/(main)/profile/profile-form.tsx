@@ -16,7 +16,7 @@ type Props = {
 const showOnlyEnglishAvatars = true;
 
 const ALL_PRESET_AVATARS = [
-  { label: "Mascot", src: "/logo.webp" },
+  { label: "Robogo", src: "/Robogo.svg" },
   { label: "Tiếng Anh", src: "/gb.svg" },
   { label: "Tiếng Nhật", src: "/jp.svg" },
   { label: "Tiếng Pháp", src: "/fr.svg" },
@@ -49,7 +49,7 @@ export const ProfileForm = ({ initialName, initialImageSrc, email }: Props) => {
     if (url.trim()) {
       setSelectedAvatar(url.trim());
     } else {
-      setSelectedAvatar("/logo.webp");
+      setSelectedAvatar("/Robogo.svg");
     }
   };
 
@@ -125,7 +125,7 @@ export const ProfileForm = ({ initialName, initialImageSrc, email }: Props) => {
         <div className="flex items-center gap-x-4 rounded-2xl border-2 border-slate-100 dark:border-[#202f36] bg-slate-50/50 dark:bg-slate-900/30 p-4">
           <div className="relative size-16 shrink-0 rounded-2xl bg-white dark:bg-slate-900 border-2 border-slate-200 dark:border-slate-800 overflow-hidden flex items-center justify-center p-1 shadow-sm">
             <Image
-              src={selectedAvatar || "/logo.webp"}
+              src={selectedAvatar || "/Robogo.svg"}
               alt="Avatar Preview"
               fill
               className="object-contain"

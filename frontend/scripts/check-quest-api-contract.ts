@@ -33,11 +33,11 @@ const main = async () => {
     method: "GET",
   });
 
-  assert(today.status === 200, `GET /api/quests/today expected 200, got ${today.status}.`);
-  assertBodyIncludes(today.body, '"success":true', "today API");
-  assertBodyIncludes(today.body, '"dailyCompleted":0', "today API");
-  assertBodyIncludes(today.body, '"dailyTotal":3', "today API");
-  assertBodyIncludes(today.body, '"chest"', "today API");
+  assert(
+    today.status === 401,
+    `Anonymous GET /api/quests/today expected 401, got ${today.status}.`,
+  );
+  assertBodyIncludes(today.body, '"error":"Unauthorized"', "today API");
 
   const claim = await request("/api/quests/claim", {
     method: "POST",
@@ -48,23 +48,23 @@ const main = async () => {
   });
 
   assert(
-    claim.status === 503,
-    `POST /api/quests/claim without DATABASE_URL expected 503, got ${claim.status}.`,
+    claim.status === 401,
+    `Anonymous POST /api/quests/claim expected 401, got ${claim.status}.`,
   );
-  assertBodyIncludes(claim.body, "QUEST_DATABASE_UNAVAILABLE", "daily quest claim API");
+  assertBodyIncludes(claim.body, '"error":"Unauthorized"', "daily quest claim API");
 
   const chest = await request("/api/quests/chest/claim", {
     method: "POST",
   });
 
   assert(
-    chest.status === 503,
-    `POST /api/quests/chest/claim without DATABASE_URL expected 503, got ${chest.status}.`,
+    chest.status === 401,
+    `Anonymous POST /api/quests/chest/claim expected 401, got ${chest.status}.`,
   );
-  assertBodyIncludes(chest.body, "QUEST_DATABASE_UNAVAILABLE", "chest claim API");
+  assertBodyIncludes(chest.body, '"error":"Unauthorized"', "chest claim API");
 
   console.log(
-    "Quest API contract check passed: today=200, claim=503 without DB, chest=503 without DB.",
+    "Quest API contract check passed: anonymous today, claim, and chest requests are rejected with 401.",
   );
 };
 

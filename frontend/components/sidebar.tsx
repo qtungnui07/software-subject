@@ -111,7 +111,7 @@ export const Sidebar = ({ className, isLoggedIn = false }: Props) => {
       >
         <div className="relative size-[64px] shrink-0 drop-shadow-[0_8px_18px_rgba(20,134,204,0.18)]">
           <Image
-            src="/logo.webp"
+            src="/Robogo.svg"
             alt="Robogo logo"
             fill
             priority

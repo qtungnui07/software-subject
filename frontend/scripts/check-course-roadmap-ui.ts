@@ -49,8 +49,10 @@ assert(
 assert(
   nodeSource.includes("course-roadmap-node__base") &&
     nodeSource.includes("course-roadmap-node__face") &&
-    cssSource.includes("clip-path: polygon(17% 0%"),
-  "Roadmap nodes must use the new Coddy-like 3D base/face shape.",
+    nodeSource.includes("course-roadmap-node__base-depth") &&
+    nodeSource.includes("course-roadmap-node__face-depth") &&
+    cssSource.includes("polygon(50% 0%, 93% 25%"),
+  "Roadmap nodes must use Tuấn Anh's layered hexagonal 3D shape.",
 );
 assert(
   cssSource.includes("course-roadmap-idle") &&

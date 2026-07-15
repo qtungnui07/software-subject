@@ -1,5 +1,6 @@
 import { auth as clerkAuth, currentUser } from "@clerk/nextjs/server";
 import { cookies } from "next/headers";
+import { cache } from "react";
 
 import { LOCAL_SESSION_COOKIE } from "@/lib/local-session";
 import { syncClerkUser } from "@/services/auth-service";
@@ -25,7 +26,7 @@ const syncUserToDatabase = async (user: NonNullable<Awaited<ReturnType<typeof cu
   }
 };
 
-export const auth = async () => {
+export const auth = cache(async () => {
   try {
     const cookieStore = await cookies();
     const remoteApiUrl = getRemoteApiUrl();
@@ -78,4 +79,4 @@ export const auth = async () => {
     console.error("Error in Clerk auth bridge:", error);
     return null;
   }
-};
+});

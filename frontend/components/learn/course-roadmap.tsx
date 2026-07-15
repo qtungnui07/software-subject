@@ -23,9 +23,9 @@ import {
 import { cn } from "@/lib/utils";
 import type { LearningNodeDefinition, SectionDefinition } from "@/types/course";
 
-const nodeGap = 142;
-const topPadding = 92;
-const bottomPadding = 118;
+const nodeGap = 168;
+const topPadding = 108;
+const bottomPadding = 146;
 const desktopOffsetPattern = [0, -8.5, 8.5, -5.5, 7.5, 0, -7, 7];
 const mobileOffsetPattern = [0, -5, 5, -4, 4.5, 0, -4.5, 4.5];
 

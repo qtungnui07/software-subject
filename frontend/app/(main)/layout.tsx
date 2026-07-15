@@ -10,9 +10,11 @@ type Props = {
 };
 
 const MainLayout = async ({ children }: Props) => {
-  const session = await auth();
+  const [session, userProgressData] = await Promise.all([
+    auth(),
+    getUserProgress(),
+  ]);
   const isLoggedIn = !!session?.user;
-  const userProgressData = isLoggedIn ? await getUserProgress() : null;
 
   return (
     <div className="flex flex-1 min-h-screen w-full flex-col bg-[#f6fbff] text-slate-800 transition-colors duration-300 dark:bg-[#131f24] dark:text-slate-100">

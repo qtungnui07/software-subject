@@ -53,12 +53,12 @@ export const RoadmapConnector = ({ nodes, height }: Props) => {
         <linearGradient
           id="courseRoadmapActivePath"
           x1="0"
-          x2="1"
+          x2="0"
           y1="0"
           y2="1"
         >
-          <stop offset="0%" stopColor="#22c55e" />
-          <stop offset="100%" stopColor="#38bdf8" />
+          <stop offset="0%" stopColor="#4ade80" />
+          <stop offset="100%" stopColor="#16a34a" />
         </linearGradient>
         <linearGradient
           id="courseRoadmapCompletedPath"
@@ -79,10 +79,10 @@ export const RoadmapConnector = ({ nodes, height }: Props) => {
         >
           <feDropShadow
             dx="0"
-            dy="7"
-            stdDeviation="7"
-            floodColor="#0ea5e9"
-            floodOpacity="0.12"
+            dy="4"
+            stdDeviation="6"
+            floodColor="#16a34a"
+            floodOpacity="0.25"
           />
         </filter>
       </defs>
@@ -92,10 +92,10 @@ export const RoadmapConnector = ({ nodes, height }: Props) => {
           <path
             d={segment.d}
             fill="none"
-            className="stroke-slate-200 dark:stroke-[#202f36]"
+            stroke={segment.status === "locked" ? "#111827" : "#166534"}
             strokeLinecap="round"
-            strokeWidth="3.8"
-            filter="url(#courseRoadmapPathShadow)"
+            strokeWidth="3.2"
+            opacity="0.6"
           />
           <path
             d={segment.d}
@@ -109,12 +109,13 @@ export const RoadmapConnector = ({ nodes, height }: Props) => {
             }
             className={cn(
               segment.status === "locked" &&
-                "stroke-slate-300 dark:stroke-[#263840]",
+                "stroke-[#374151] dark:stroke-[#1f2937]",
             )}
-            strokeDasharray={segment.status === "locked" ? "0.7 5.5" : undefined}
+            strokeDasharray={segment.status === "locked" ? "1.9 1.4" : undefined}
             strokeLinecap="round"
-            strokeWidth={segment.status === "completed" ? "2.6" : "2.1"}
-            opacity={segment.status === "locked" ? 0.78 : 1}
+            strokeWidth={segment.status === "locked" ? "1.8" : "2.2"}
+            opacity={segment.status === "locked" ? 0.55 : 1}
+            filter={segment.status === "locked" ? undefined : "url(#courseRoadmapPathShadow)"}
           />
         </g>
       ))}

@@ -44,7 +44,7 @@ export const profileData: ProfileData = {
     username: "Dung",
     displayName: "Dung",
     email: "dung.robogo@example.com",
-    avatarSrc: "/logo.svg",
+    avatarSrc: "/Robogo.svg",
     roleLabel: "Người học Robogo",
     rankLabel: "Chuỗi bạc",
     joinedAt: "2026-06-16",

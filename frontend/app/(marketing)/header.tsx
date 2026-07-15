@@ -26,7 +26,7 @@ export const Header = async () => {
             className="flex shrink-0 items-center gap-3 transition-opacity hover:opacity-85"
           >
             <Image
-              src="/logo.webp"
+              src="/Robogo.svg"
               height={58}
               width={58}
               alt="Robogo logo"

@@ -51,7 +51,7 @@ export const upsertUserProgress = async (courseId: number) => {
         await db.update(userProgress).set({
             activeCourseId: courseId,
             userName: user.name || "User",
-            userImageSrc: user.image || "/logo.webp",
+            userImageSrc: user.image || "/Robogo.svg",
         }).where(eq(userProgress.userId, userId));
             
         revalidatePath("/courses");
@@ -63,7 +63,7 @@ export const upsertUserProgress = async (courseId: number) => {
         userId,
         activeCourseId: courseId,
         userName: user.name || "User",
-        userImageSrc: user.image || "/logo.webp",  
+        userImageSrc: user.image || "/Robogo.svg",
     });
 
     revalidatePath("/courses");

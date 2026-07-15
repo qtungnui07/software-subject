@@ -4,14 +4,27 @@ import { LeaderboardClient } from "./leaderboard-client";
 
 export const dynamic = "force-dynamic";
 
+const WEEKDAY_LABELS = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
+
+const getCurrentVietnamWeekdayIndex = () => {
+    const weekday = new Intl.DateTimeFormat("en-US", {
+        timeZone: "Asia/Ho_Chi_Minh",
+        weekday: "short",
+    }).format(new Date());
+
+    const index = WEEKDAY_LABELS.indexOf(weekday);
+    return index >= 0 ? index : 0;
+};
+
 const LeaderboardPage = async () => {
-    const session = await auth();
-    const userProgress = await getUserProgress();
+    const [session, userProgress] = await Promise.all([
+        auth(),
+        getUserProgress(),
+    ]);
     const isLoggedIn = Boolean(session?.user?.id);
 
-    // Safely cast or get properties since TypeScript infers them from schema.ts
-    const userLeague = (userProgress as any)?.league ?? 1;
-    const userStatusEmoji = (userProgress as any)?.statusEmoji ?? null;
+    const userLeague = userProgress?.league ?? 1;
+    const userStatusEmoji = userProgress?.statusEmoji ?? null;
 
     return (
         <LeaderboardClient
@@ -21,6 +34,7 @@ const LeaderboardPage = async () => {
             initialPoints={userProgress?.points ?? 0}
             initialLeague={userLeague}
             initialStatusEmoji={userStatusEmoji}
+            initialCurrentDayIndex={getCurrentVietnamWeekdayIndex()}
             hearts={userProgress?.hearts ?? 5}
             activeCourse={{
                 title: userProgress?.activeCourse?.title || "Tiếng Anh",

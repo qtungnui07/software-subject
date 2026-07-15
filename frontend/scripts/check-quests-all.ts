@@ -1,7 +1,10 @@
 import { execSync } from "node:child_process";
 import process from "node:process";
 
-const API_BASE_URL = process.env.QUEST_API_BASE_URL ?? "http://localhost:3000";
+const API_BASE_URL =
+  process.env.ROBOGO_QUEST_API_BASE_URL ??
+  process.env.QUEST_API_BASE_URL ??
+  "http://localhost:3000";
 const REACT_SERVER_CONDITION = "--conditions react-server";
 
 const withReactServerCondition = (nodeOptions: string | undefined) => {
@@ -23,7 +26,7 @@ const runScript = (
 
   const env = {
     ...process.env,
-    QUEST_API_BASE_URL: API_BASE_URL,
+    ROBOGO_QUEST_API_BASE_URL: API_BASE_URL,
     NODE_OPTIONS: options.reactServer
       ? withReactServerCondition(process.env.NODE_OPTIONS)
       : process.env.NODE_OPTIONS,
@@ -35,7 +38,7 @@ const runScript = (
       env,
       stdio: "inherit",
       windowsHide: true,
-    } as any);
+    });
   } catch (error) {
     console.error(`\n[quests-check] ${label} failed.`);
 

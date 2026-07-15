@@ -1,9 +1,9 @@
 "use client";
 
 import Image from "next/image";
-import Link from "next/link";
+import Link, { useLinkStatus } from "next/link";
 import { usePathname } from "next/navigation";
-import { LucideIcon } from "lucide-react";
+import { LoaderCircle, LucideIcon } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 
@@ -12,6 +12,18 @@ type Props = {
   iconSrc?: string;
   icon?: LucideIcon;
   href: string;
+};
+
+const NavigationStatus = () => {
+  const { pending } = useLinkStatus();
+
+  return (
+    <span className="ml-auto flex size-4 shrink-0 items-center justify-center" aria-hidden="true">
+      <LoaderCircle
+        className={`size-4 transition-opacity ${pending ? "animate-spin opacity-100" : "opacity-0"}`}
+      />
+    </span>
+  );
 };
 
 export const SidebarItem = ({ label, iconSrc, icon: Icon, href }: Props) => {
@@ -24,7 +36,11 @@ export const SidebarItem = ({ label, iconSrc, icon: Icon, href }: Props) => {
       className="h-[58px] justify-start rounded-[18px] px-4 text-[15px]"
       asChild
     >
-      <Link href={href} aria-current={active ? "page" : undefined}>
+      <Link
+        href={href}
+        prefetch
+        aria-current={active ? "page" : undefined}
+      >
         {Icon ? (
           <Icon className="mr-4 size-8 shrink-0" strokeWidth={2.5} />
         ) : iconSrc ? (
@@ -37,8 +53,8 @@ export const SidebarItem = ({ label, iconSrc, icon: Icon, href }: Props) => {
           />
         ) : null}
         <span className="truncate">{label.toUpperCase()}</span>
+        <NavigationStatus />
       </Link>
     </Button>
   );
 };
-

@@ -1,4 +1,3 @@
-version: '3.8'
 services:
   db:
     image: postgres:15
@@ -45,12 +44,12 @@ services:
       - ./frontend:/app
       - /app/.next
     environment:
-      - NODE_ENV=development
+      - NODE_ENV=production
       - BACKEND_URL=http://backend:4000
       - DATABASE_URL=postgresql://qtitpc:21107@db:5432/duolingo
     env_file:
       - ./frontend/.env.local
-    command: npm run dev:turbo -- --hostname 0.0.0.0
+    command: sh -c "npm run build && npm run start -- --hostname 0.0.0.0"
     depends_on:
       - backend
       - db

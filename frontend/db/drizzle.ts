@@ -17,7 +17,7 @@ if (databaseUrl) {
     const mockUserProgress = {
         userId: "mock-user-id",
         userName: "User",
-        userImageSrc: "/logo.webp",
+        userImageSrc: "/Robogo.svg",
         activeCourseId: 1,
         hearts: 5,
         points: 100,

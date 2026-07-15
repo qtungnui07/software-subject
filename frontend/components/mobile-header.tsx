@@ -38,7 +38,7 @@ export const MobileHeader = ({ isLoggedIn = false, hearts = 5 }: Props) => {
           aria-label="Về trang học Robogo"
         >
           <Image
-            src="/logo.webp"
+            src="/Robogo.svg"
             height={34}
             width={34}
             alt="Robogo logo"
