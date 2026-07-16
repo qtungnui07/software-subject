@@ -5,12 +5,11 @@ import { StreakWidget } from "@/components/streak/streak-widget";
 type Props = {
   activeCourse: { imageSrc: string; title: string };
   hearts: number;
-  points: number;
+  points?: number;
 };
 
 export const UserProgress = ({
   activeCourse,
-  points,
   hearts,
 }: Props) => {
   return (

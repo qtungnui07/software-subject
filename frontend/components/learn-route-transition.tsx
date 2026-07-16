@@ -133,9 +133,7 @@ const createTransitionOverlay = (
     zIndex: "0",
     opacity: initialState === "covered" ? "1" : "0",
     background: palette.veil,
-    backdropFilter: "blur(28px) saturate(1.24)",
-    WebkitBackdropFilter: "blur(28px) saturate(1.24)",
-    willChange: "opacity, backdrop-filter",
+    willChange: "opacity",
   });
   overlay.appendChild(veil);
 
@@ -151,7 +149,6 @@ const createTransitionOverlay = (
       borderTop: palette.borderTop,
       borderBottom: palette.borderBottom,
       boxShadow: palette.shadow,
-      backdropFilter: "blur(8px) saturate(1.2)",
       willChange: "transform",
     });
 
@@ -200,7 +197,6 @@ const createTransitionOverlay = (
     color: palette.labelColor,
     boxShadow: palette.labelShadow,
     opacity: initialState === "covered" ? "1" : "0",
-    backdropFilter: "blur(14px)",
     willChange: "opacity, transform",
   });
   overlay.appendChild(label);
@@ -264,8 +260,8 @@ const animateCover = (overlay: HTMLElement) => {
 
   veil?.animate(
     [
-      { opacity: 0, backdropFilter: "blur(0px) saturate(1)" },
-      { opacity: 1, backdropFilter: "blur(28px) saturate(1.24)" },
+      { opacity: 0 },
+      { opacity: 1 },
     ],
     {
       duration: 520,
@@ -308,9 +304,9 @@ const animateReveal = (overlay: HTMLElement, onComplete: () => void) => {
 
   veil?.animate(
     [
-      { opacity: 1, backdropFilter: "blur(28px) saturate(1.24)" },
-      { opacity: 0.78, backdropFilter: "blur(34px) saturate(1.2)", offset: 0.42 },
-      { opacity: 0, backdropFilter: "blur(0px) saturate(1)" },
+      { opacity: 1 },
+      { opacity: 0.78, offset: 0.42 },
+      { opacity: 0 },
     ],
     {
       duration: 940,

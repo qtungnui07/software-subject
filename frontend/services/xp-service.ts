@@ -297,12 +297,10 @@ const upsertDbUserProgressPoints = async ({
   tx,
   input,
   nextTotalXp,
-  earnedXp,
 }: {
   tx: any;
   input: CompleteLessonXpInput;
   nextTotalXp: number;
-  earnedXp: number;
 }) => {
   await tx
     .insert(userProgress)
@@ -393,7 +391,6 @@ const completeLessonXpInDatabase = async (
         tx,
         input,
         nextTotalXp: nextState.totalXp,
-        earnedXp: xpResult.earnedXp,
       });
     }
 

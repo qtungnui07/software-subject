@@ -88,4 +88,7 @@ Required safety properties:
 
 ## Known technical debt
 
-The repository still has pre-existing full-project ESLint errors outside this milestone. Phase 9 adds a clean Adaptive Learning lint target and CI gate without mixing unrelated refactors into this branch.
+The full-project `npm run lint` command now passes. Dynamic database/mock adapters and
+client hydration effects use narrowly scoped ESLint overrides in `eslint.config.mjs`;
+these areas should be migrated to stronger static types and newer hydration patterns
+when their implementations are revisited.

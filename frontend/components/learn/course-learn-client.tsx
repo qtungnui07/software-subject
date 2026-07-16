@@ -137,7 +137,6 @@ const buildGenericProgressUnits = (
 export const CourseLearnClient = ({
   activeCourse,
   hearts,
-  points,
   showAuthCard,
   initialStudyTimeSummary,
   progressOwnerId,
@@ -282,7 +281,6 @@ export const CourseLearnClient = ({
               imageSrc: activeCourse.imageSrc,
             }}
             hearts={hearts}
-            points={points}
           />
         </div>
         <StreakCard />

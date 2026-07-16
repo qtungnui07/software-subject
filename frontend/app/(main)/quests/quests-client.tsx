@@ -12,22 +12,16 @@ import {
 import {
   ArrowRight,
   BadgeCheck,
-  BookOpen,
-  CalendarDays,
   Check,
   CircleDot,
   Clock,
-  Flame,
   Gift,
-  Lightbulb,
   LoaderCircle,
   Lock,
   PackageOpen,
   PartyPopper,
   RotateCcw,
-  Rocket,
   ShieldCheck,
-  Sparkles,
   Target,
   Trophy,
   Zap,
@@ -446,7 +440,7 @@ const QuestPolishStyles = () => {
         }
 
         .quest-completed-glow {
-          animation: quest-soft-glow 2.8s ease-in-out infinite;
+          box-shadow: 0 18px 42px rgba(16, 185, 129, 0.14);
         }
 
         .quest-chest-ready {
@@ -615,7 +609,6 @@ const MedalIcon = ({ className }: { className?: string }) => (
 const QuestIcon = ({
   icon,
   className,
-  strokeWidth,
 }: {
   icon: string;
   className?: string;
@@ -642,7 +635,6 @@ const QuestIcon = ({
 const RewardTypeIcon = ({
   type,
   className,
-  strokeWidth,
 }: {
   type: ResolvedQuest["reward"]["type"];
   className?: string;
@@ -741,7 +733,7 @@ const QuestCard = ({
   return (
     <article
       className={cn(
-        "quest-card-enter group relative overflow-hidden rounded-[22px] border-2 bg-white p-3.5 ring-1 ring-white/80 transition-all duration-300 dark:bg-[#141f23] dark:ring-white/5 sm:rounded-[24px] sm:p-5",
+        "render-lazy quest-card-enter group relative overflow-hidden rounded-[22px] border-2 bg-white p-3.5 ring-1 ring-white/80 transition-all duration-300 dark:bg-[#141f23] dark:ring-white/5 sm:rounded-[24px] sm:p-5",
         isCompleted
           ? "border-emerald-200 shadow-[0_12px_28px_rgba(16,185,129,0.1)] dark:border-emerald-900/60"
           : "border-slate-200 shadow-[0_10px_22px_rgba(15,23,42,0.04)] dark:border-[#243841]",
@@ -818,7 +810,7 @@ const QuestCard = ({
 
 const HeroStat = ({ label, value, icon }: { label: string; value: string; icon: ReactNode }) => {
   return (
-    <div className="rounded-[18px] border-2 border-white/80 bg-white/80 px-3.5 py-3 shadow-[0_8px_20px_rgba(20,134,204,0.07)] backdrop-blur dark:border-[#2a4654] dark:bg-[#141f23]/80 dark:shadow-none sm:rounded-[20px] sm:px-4">
+    <div className="rounded-[18px] border-2 border-white/80 bg-white/95 px-3.5 py-3 shadow-[0_8px_20px_rgba(20,134,204,0.07)] dark:border-[#2a4654] dark:bg-[#141f23] dark:shadow-none sm:rounded-[20px] sm:px-4">
       <div className="flex items-center gap-2 text-[#1486CC] dark:text-sky-300">{icon}</div>
       <p className="mt-2 text-[11px] font-black uppercase tracking-[0.18em] text-slate-400">
         {label}
@@ -871,8 +863,8 @@ const QuestsHero = ({
 
   return (
     <section className="relative overflow-hidden rounded-[28px] border-2 border-[#cde8fb] bg-gradient-to-br from-[#e4f5ff] via-white to-[#f7fcff] p-3.5 shadow-[0_20px_48px_rgba(20,134,204,0.12)] dark:border-[#2a5365] dark:from-[#102838] dark:via-[#182226] dark:to-[#10191d] dark:shadow-none sm:rounded-[32px] sm:p-6">
-      <div className="pointer-events-none absolute -right-20 -top-24 size-72 rounded-full bg-[#31B6FF]/20 blur-3xl" />
-      <div className="pointer-events-none absolute -bottom-24 left-12 size-64 rounded-full bg-emerald-300/20 blur-3xl" />
+      <div className="quest-ambient-orb pointer-events-none absolute -right-20 -top-24 size-72 [--quest-orb:rgba(49,182,255,0.22)]" />
+      <div className="quest-ambient-orb pointer-events-none absolute -bottom-24 left-12 size-64 [--quest-orb:rgba(110,231,183,0.2)]" />
 
       <div className="relative grid gap-4 lg:grid-cols-[minmax(0,1fr)_270px] lg:items-center">
         <div className="max-w-3xl">
@@ -896,7 +888,7 @@ const QuestsHero = ({
 
           </div>
 
-          <div className="mt-4 flex flex-col gap-3 rounded-[22px] border-2 border-white/80 bg-white/70 p-3.5 backdrop-blur dark:border-[#2a4654] dark:bg-[#10191d]/60 sm:mt-5 sm:flex-row sm:items-center sm:justify-between sm:rounded-[24px] sm:p-4">
+          <div className="mt-4 flex flex-col gap-3 rounded-[22px] border-2 border-white/80 bg-white/90 p-3.5 dark:border-[#2a4654] dark:bg-[#10191d]/90 sm:mt-5 sm:flex-row sm:items-center sm:justify-between sm:rounded-[24px] sm:p-4">
             <div>
               <p className="text-xs font-black uppercase tracking-[0.2em] text-slate-400">Tiến độ hôm nay</p>
               <div className="mt-2 flex items-center gap-3">
@@ -921,7 +913,7 @@ const QuestsHero = ({
           </div>
           {SHOW_QUEST_DEMO_CONTROLS ? (
 
-          <details className="mt-4 rounded-2xl border border-white/80 bg-white/45 px-3 py-2 text-xs font-black uppercase tracking-[0.12em] text-slate-500 backdrop-blur dark:border-[#20313a] dark:bg-[#10191d]/40">
+          <details className="mt-4 rounded-2xl border border-white/80 bg-white/90 px-3 py-2 text-xs font-black uppercase tracking-[0.12em] text-slate-500 dark:border-[#20313a] dark:bg-[#10191d]/90">
             <summary className="cursor-pointer select-none text-[#1486CC] dark:text-sky-300">Chế độ test</summary>
             <div className="mt-3 flex flex-wrap items-center gap-2">
               <button type="button" className="inline-flex items-center gap-1.5 rounded-full border border-slate-200 bg-white/80 px-3 py-1.5 text-slate-500 transition-colors hover:text-[#1486CC] dark:border-[#20313a] dark:bg-[#10191d]/70" onClick={onResetDemo}>
@@ -1068,8 +1060,8 @@ const PerfectDayCard = ({ quest, data }: { quest?: ResolvedQuest; data: QuestsPa
 
   return (
     <section className={cn("relative overflow-hidden rounded-[32px] border-2 border-indigo-100 bg-gradient-to-br from-indigo-50 via-white to-[#f4fbff] p-5 shadow-[0_18px_42px_rgba(99,102,241,0.12)] transition-all duration-300 dark:border-indigo-900/50 dark:from-indigo-950/30 dark:via-[#182226] dark:to-[#10191d] dark:shadow-none sm:p-6", isUnlocked ? "ring-2 ring-emerald-200/80 dark:ring-emerald-900/50" : null)}>
-      <div className="pointer-events-none absolute -right-16 -top-20 size-52 rounded-full bg-indigo-300/20 blur-3xl" />
-      <div className="pointer-events-none absolute -bottom-24 left-16 size-64 rounded-full bg-[#31B6FF]/15 blur-3xl" />
+      <div className="quest-ambient-orb pointer-events-none absolute -right-16 -top-20 size-52 [--quest-orb:rgba(165,180,252,0.2)]" />
+      <div className="quest-ambient-orb pointer-events-none absolute -bottom-24 left-16 size-64 [--quest-orb:rgba(49,182,255,0.16)]" />
 
       <div className="relative space-y-5">
         <div className="flex flex-col gap-5 lg:flex-row lg:items-start lg:justify-between">
@@ -1300,7 +1292,7 @@ const LongTermQuestCard = ({ quest }: { quest: ResolvedQuest }) => {
   const iconTone = view.tone === "monthly" ? "text-violet-500 bg-violet-50 border-violet-100 dark:bg-violet-950/30 dark:border-violet-900/60 dark:text-violet-300" : "text-[#1486CC] bg-[#e8f5ff] border-[#d8ecfb] dark:bg-[#1c3547] dark:border-[#234455] dark:text-sky-300";
 
   return (
-    <article className={cn("quest-card-enter relative overflow-hidden rounded-[28px] border-2 p-5 shadow-[0_14px_30px_rgba(20,134,204,0.08)] transition-all duration-300 hover:-translate-y-0.5 hover:shadow-[0_18px_38px_rgba(20,134,204,0.13)]", toneClass)}>
+    <article className={cn("render-lazy quest-card-enter relative overflow-hidden rounded-[28px] border-2 p-5 shadow-[0_14px_30px_rgba(20,134,204,0.08)] transition-all duration-300 hover:-translate-y-0.5 hover:shadow-[0_18px_38px_rgba(20,134,204,0.13)]", toneClass)}>
       <div className="pointer-events-none absolute -right-16 -top-20 size-44 rounded-full bg-white/60 blur-2xl dark:bg-white/5" />
       <div className="relative space-y-5">
         <div className="flex items-start gap-4">

@@ -23,7 +23,25 @@ const nextConfig: NextConfig = {
     };
   },
   async redirects() {
-    return [
+    const authAliases = [
+      {
+        source: "/login",
+        destination: "/sign-in",
+        permanent: false,
+      },
+      {
+        source: "/register",
+        destination: "/sign-up",
+        permanent: false,
+      },
+      {
+        source: "/signup",
+        destination: "/sign-up",
+        permanent: false,
+      },
+    ];
+
+    const logoAliases = [
       "/logo.png",
       "/logo.webp",
       "/logo.svg",
@@ -34,6 +52,8 @@ const nextConfig: NextConfig = {
       destination: "/Robogo.svg",
       permanent: true,
     }));
+
+    return [...authAliases, ...logoAliases];
   },
   images: {
     formats: ["image/avif", "image/webp"],

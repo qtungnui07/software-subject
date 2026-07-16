@@ -71,7 +71,7 @@ if (databaseUrl) {
     const mockQuery = new Proxy({}, {
         get(target, tableName) {
             return {
-                findFirst: async (options?: any) => {
+                findFirst: async () => {
                     console.log(`[Mock DB Query] findFirst on table: ${String(tableName)}`);
                     if (tableName === "userProgress") return mockUserProgress;
                     if (tableName === "courses") return mockCourses[0];
@@ -97,7 +97,7 @@ if (databaseUrl) {
                     }
                     return null;
                 },
-                findMany: async (options?: any) => {
+                findMany: async () => {
                     console.log(`[Mock DB Query] findMany on table: ${String(tableName)}`);
                     if (tableName === "courses") return mockCourses;
                     return [];

@@ -2,6 +2,7 @@ import { MobileHeader } from "@/components/mobile-header";
 import { Sidebar } from "@/components/sidebar";
 import { auth } from "@/auth";
 import { getUserProgress } from "@/db/queries";
+import { redirect } from "next/navigation";
 
 export const dynamic = "force-dynamic";
 
@@ -14,6 +15,11 @@ const MainLayout = async ({ children }: Props) => {
     auth(),
     getUserProgress(),
   ]);
+
+  if (!session?.user?.id) {
+    redirect("/sign-in");
+  }
+
   const isLoggedIn = !!session?.user;
 
   return (

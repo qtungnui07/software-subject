@@ -331,10 +331,6 @@ const canReadQuestRewardClaims = () => {
   return Boolean(process.env.DATABASE_URL);
 };
 
-const canReadQuestRewardClaim = () => {
-  return Boolean(process.env.DATABASE_URL);
-};
-
 export const isQuestPersistenceAvailable = () => {
   return Boolean(process.env.DATABASE_URL);
 };

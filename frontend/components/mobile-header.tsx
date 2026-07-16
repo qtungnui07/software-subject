@@ -28,7 +28,7 @@ export const MobileHeader = ({ isLoggedIn = false, hearts = 5 }: Props) => {
   const studyTier = getStudyTier(todayMinutes);
 
   return (
-    <nav className="fixed top-0 z-50 flex h-[56px] w-full items-center border-b-2 border-[#e4edf5] dark:border-[#202f36] bg-white/95 dark:bg-[#141f23]/95 px-3 shadow-[0_8px_24px_rgba(15,23,42,0.04)] dark:shadow-[0_8px_24px_rgba(0,0,0,0.2)] backdrop-blur sm:px-4 lg:hidden">
+    <nav className="fixed top-0 z-50 flex h-[56px] w-full items-center border-b-2 border-[#e4edf5] bg-white px-3 shadow-[0_8px_24px_rgba(15,23,42,0.04)] dark:border-[#202f36] dark:bg-[#141f23] dark:shadow-[0_8px_24px_rgba(0,0,0,0.2)] sm:px-4 lg:hidden">
       <div className="flex w-full items-center justify-between gap-1.5 sm:gap-2">
         <MobileSidebar isLoggedIn={isLoggedIn} />
 

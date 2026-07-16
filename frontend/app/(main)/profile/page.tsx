@@ -82,7 +82,7 @@ const ProfilePage = async () => {
             </p>
           </div>
 
-          <div className="rounded-[28px] border-2 border-white bg-white/80 p-4 shadow-sm backdrop-blur dark:border-slate-800 dark:bg-slate-900/60">
+          <div className="rounded-[28px] border-2 border-white bg-white/95 p-4 shadow-sm dark:border-slate-800 dark:bg-slate-900/95">
             <div className="flex items-center gap-4 lg:flex-col lg:text-center">
               <div className="relative size-24 shrink-0 overflow-hidden rounded-[28px] border-4 border-sky-100 bg-white p-3 shadow-sm sm:size-28 dark:border-slate-800 dark:bg-slate-950">
                 <Image

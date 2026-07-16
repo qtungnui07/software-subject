@@ -133,6 +133,7 @@ export const RoadmapNode = ({
         <span className="course-roadmap-node__base-depth" aria-hidden="true" />
         <span className="course-roadmap-node__base" aria-hidden="true" />
         <span className="course-roadmap-node__face-depth" aria-hidden="true" />
+        <span className="course-roadmap-node__face-outline" aria-hidden="true" />
         <span className="course-roadmap-node__face" aria-hidden="true">
           <span className="course-roadmap-node__inner" aria-hidden="true" />
           <span className="course-roadmap-node__shine" aria-hidden="true" />

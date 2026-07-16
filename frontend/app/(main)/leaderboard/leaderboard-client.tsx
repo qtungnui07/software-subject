@@ -721,7 +721,7 @@ export const LeaderboardClient: React.FC<LeaderboardClientProps> = ({
 
                     {/* Row */}
                     <div className={cn(
-                      "flex items-center justify-between px-3 py-3 rounded-2xl transition-all duration-200 border-2 my-0.5",
+                      "render-lazy flex items-center justify-between px-3 py-3 rounded-2xl transition-all duration-200 border-2 my-0.5",
                       isUser
                         ? "bg-sky-50/70 border-sky-300 dark:bg-sky-950/20 dark:border-sky-800 shadow-[0_4px_12px_rgba(14,165,233,0.1)] scale-[1.01] z-10"
                         : isPodiumGold
@@ -867,7 +867,6 @@ export const LeaderboardClient: React.FC<LeaderboardClientProps> = ({
           <UserProgress
             activeCourse={activeCourse}
             hearts={hearts}
-            points={userPoints}
           />
         </div>
 
