@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { BookOpen, Clock, Star, Trophy } from "lucide-react";
 
+import { formatStudyDuration } from "@/lib/study-time/study-time-format";
 import { cn } from "@/lib/utils";
 
 type Props = {
@@ -10,7 +11,7 @@ type Props = {
   completedLessons: number;
   completionPercent: number;
   earnedXp: number;
-  completedMinutes: number;
+  totalStudySeconds: number;
   className?: string;
 };
 
@@ -19,27 +20,12 @@ const clampPercent = (value: number) => {
   return Math.min(100, Math.max(0, value));
 };
 
-const formatMinutes = (minutes: number) => {
-  if (minutes < 60) {
-    return `${minutes} phút`;
-  }
-
-  const hours = Math.floor(minutes / 60);
-  const remainingMinutes = minutes % 60;
-
-  if (remainingMinutes === 0) {
-    return `${hours} giờ`;
-  }
-
-  return `${hours} giờ ${remainingMinutes} phút`;
-};
-
 export const ProgressOverview = ({
   totalLessons,
   completedLessons,
   completionPercent,
   earnedXp,
-  completedMinutes,
+  totalStudySeconds,
   className,
 }: Props) => {
   const targetPercent = clampPercent(completionPercent);
@@ -146,7 +132,7 @@ export const ProgressOverview = ({
             <span className="text-xs font-extrabold uppercase">Thời gian học</span>
           </div>
           <p className="mt-2 text-lg font-black text-slate-800 dark:text-slate-100">
-            {formatMinutes(completedMinutes)}
+            {formatStudyDuration(totalStudySeconds)}
           </p>
         </div>
       </div>

@@ -23,7 +23,7 @@ const assert = (condition: unknown, message: string) => {
 
 const roadmapSource = read("components/learn/course-roadmap.tsx");
 const nodeSource = read("components/learn/roadmap-node.tsx");
-const popoverSource = read("components/learn/roadmap-node-popover.tsx");
+const rewardPopoverSource = read("components/learn/roadmap-reward-popover.tsx");
 const modalSource = read("components/learn/reward-claim-modal.tsx");
 const toastSource = read("components/learn/reward-claim-toast.tsx");
 const cssSource = read("app/globals.css");
@@ -49,9 +49,9 @@ assert(
   "RoadmapNode must expose a short claimed-state celebration for the chest node.",
 );
 assert(
-  popoverSource.includes("disabled={claiming}") &&
-    popoverSource.includes("ĐANG NHẬN...") &&
-    popoverSource.includes("error ?"),
+  rewardPopoverSource.includes("disabled={claiming}") &&
+    rewardPopoverSource.includes("ĐANG NHẬN...") &&
+    rewardPopoverSource.includes("error ?"),
   "Reward popover must keep loading/error feedback and prevent double-click claim spam.",
 );
 assert(

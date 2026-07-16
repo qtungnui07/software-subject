@@ -51,9 +51,7 @@ export default function PlacementResultClient({ result }: Props) {
       if (!response.ok) {
         throw new Error("Không thể chọn phần học được đề xuất.");
       }
-      router.push(
-        `/learn?section=${encodeURIComponent(result.latestAssignedSectionId)}`,
-      );
+      router.push("/learn");
     } catch (error) {
       setStartError(
         error instanceof Error ? error.message : "Không thể bắt đầu phần học.",

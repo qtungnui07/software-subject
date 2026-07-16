@@ -3,13 +3,10 @@
 import Image from "next/image";
 import Link from "next/link";
 import { useEffect, useMemo, useRef, useState } from "react";
-import { useRouter } from "next/navigation";
 
 import { Header } from "@/app/(main)/learn/header";
 import { FeedWrapper } from "@/components/feed-wrapper";
-import { LockedSectionPanel } from "@/components/learn/locked-section-panel";
 import { SectionLearningPath } from "@/components/learn/section-learning-path";
-import { SectionSwitcher } from "@/components/learn/section-switcher";
 import { ProgressOverview } from "@/components/progress/progress-overview";
 import { UnitProgressList } from "@/components/progress/unit-progress-list";
 import { StreakCard } from "@/components/streak/streak-card";
@@ -34,11 +31,9 @@ import {
   migrateChapterOneProgressToCourseProgress,
   projectCourseProgressToChapterOne,
 } from "@/lib/courses/chapter-one-adapter";
-import { buildCourseSectionViewModels } from "@/lib/courses/course-view-model";
 import type { CourseProgressState } from "@/lib/courses/course-progress";
 import { getCourseProgressSummary } from "@/lib/progress-utils";
 import type { StudyTimeSummary } from "@/services/study-time-service";
-import type { PlacementSectionId } from "@/types/placement-test";
 
 const learnTransitionStorageKey = "robogo-learn-transition";
 const learnPopupSeenStorageKey = "robogo-learn-popup-seen";
@@ -71,8 +66,6 @@ type Props = {
   progressOwnerId: string | null;
   initialLegacyProgressState: ChapterOneProgressState;
   initialCourseProgressState: CourseProgressState;
-  initialSelectedSectionId: string;
-  recommendedSectionId: PlacementSectionId | null;
 };
 
 const getLegacyLessonStatus = (
@@ -150,10 +143,7 @@ export const CourseLearnClient = ({
   progressOwnerId,
   initialLegacyProgressState,
   initialCourseProgressState,
-  initialSelectedSectionId,
-  recommendedSectionId,
 }: Props) => {
-  const router = useRouter();
   const shellRef = useRef<HTMLDivElement>(null);
   const [legacyProgress, setLegacyProgress] = useState<ChapterOneProgressState>(
     initialLegacyProgressState,
@@ -161,11 +151,8 @@ export const CourseLearnClient = ({
   const [courseProgress, setCourseProgress] = useState<CourseProgressState>(
     initialCourseProgressState,
   );
-  const [selectedSectionId, setSelectedSectionId] = useState(
-    initialSelectedSectionId,
-  );
-  const [todayStudySeconds, setTodayStudySeconds] = useState(
-    initialStudyTimeSummary?.todaySeconds ?? 0,
+  const [studyTimeSummary, setStudyTimeSummary] = useState<StudyTimeSummary | null>(
+    initialStudyTimeSummary,
   );
 
   useEffect(() => {
@@ -201,17 +188,10 @@ export const CourseLearnClient = ({
     return subscribeChapterOneProgress(syncProgress);
   }, [initialLegacyProgressState, progressOwnerId]);
 
-  const sectionViews = useMemo(
-    () => buildCourseSectionViewModels(courseProgress, recommendedSectionId),
-    [courseProgress, recommendedSectionId],
-  );
   const selectedSection =
     englishCourse.sections.find(
-      (section) => section.id === selectedSectionId,
+      (section) => section.id === courseProgress.currentSectionId,
     ) ?? englishCourse.sections[0];
-  const selectedView = sectionViews.find(
-    (section) => section.id === selectedSection.id,
-  );
   const selectedRoadmapProgress = useMemo(
     () =>
       selectedSection.id === "english-section-1"
@@ -233,35 +213,8 @@ export const CourseLearnClient = ({
     () => getCourseProgressSummary(progressUnits),
     [progressUnits],
   );
-  const todayMinutes = Math.floor(todayStudySeconds / 60);
-
-  const updateUrl = (sectionId: string) => {
-    router.replace(`/learn?section=${encodeURIComponent(sectionId)}`, {
-      scroll: false,
-    });
-  };
-
-  const handleSelectSection = async (sectionId: string) => {
-    setSelectedSectionId(sectionId);
-    updateUrl(sectionId);
-
-    if (
-      !courseProgress.unlockedSectionIds.includes(sectionId) ||
-      !progressOwnerId
-    ) {
-      return;
-    }
-
-    const response = await fetch("/api/progress/course/select-section", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ sectionId }),
-    }).catch(() => null);
-    if (response?.ok) {
-      const data = (await response.json()) as { progress: CourseProgressState };
-      setCourseProgress(data.progress);
-    }
-  };
+  const todayMinutes = Math.floor((studyTimeSummary?.todaySeconds ?? 0) / 60);
+  const totalStudySeconds = studyTimeSummary?.totalSeconds ?? 0;
 
   const handleClaimReward = async (nodeId: string) => {
     const response = await fetch("/api/progress/course/claim-reward", {
@@ -285,11 +238,6 @@ export const CourseLearnClient = ({
     setLegacyProgress(nextLegacyProgress);
   };
 
-  const currentSectionId = courseProgress.currentSectionId;
-  const previousSection = englishCourse.sections.find(
-    (section) => section.order === selectedSection.order - 1,
-  );
-
   return (
     <div
       ref={shellRef}
@@ -297,12 +245,7 @@ export const CourseLearnClient = ({
     >
       <FeedWrapper>
         <section className="rounded-[28px] border-2 border-sky-100 bg-white shadow-sm dark:border-[#202f36] dark:bg-[#182226]">
-          <div className="sticky top-[56px] z-40 space-y-3 rounded-t-[26px] bg-white/95 px-4 pb-4 pt-4 backdrop-blur dark:bg-[#182226]/95 sm:px-6 lg:top-0 lg:pt-6">
-            <SectionSwitcher
-              sections={sectionViews}
-              selectedSectionId={selectedSection.id}
-              onSelect={(sectionId) => void handleSelectSection(sectionId)}
-            />
+          <div className="sticky top-[56px] z-40 rounded-t-[26px] bg-white/95 px-4 pb-4 pt-4 backdrop-blur dark:bg-[#182226]/95 sm:px-6 lg:top-0 lg:pt-6">
             <Header
               courseTitle={chapterOneDemoScope.courseTitle}
               sectionLabel={selectedSection.title}
@@ -310,34 +253,24 @@ export const CourseLearnClient = ({
             />
           </div>
 
-          {selectedView?.unlocked ? (
-            <>
-              <div className="space-y-4 px-4 pb-4 pt-2 sm:px-6 xl:hidden">
-                <ProgressOverview
-                  totalLessons={progressSummary.totalLessons}
-                  completedLessons={progressSummary.completedLessons}
-                  completionPercent={progressSummary.completionPercent}
-                  earnedXp={progressSummary.earnedXp}
-                  completedMinutes={progressSummary.completedMinutes}
-                />
-                <UnitProgressList units={progressUnits} />
-              </div>
-              <div className="px-4 pb-7 pt-2 sm:px-6 sm:pb-9">
-                <SectionLearningPath
-                  section={selectedSection}
-                  progress={selectedRoadmapProgress}
-                  todayMinutes={todayMinutes}
-                  onClaimReward={handleClaimReward}
-                />
-              </div>
-            </>
-          ) : (
-            <LockedSectionPanel
-              sectionTitle={selectedSection.title}
-              previousSectionTitle={previousSection?.title}
-              onBack={() => void handleSelectSection(currentSectionId)}
+          <div className="space-y-4 px-4 pb-4 pt-2 sm:px-6 xl:hidden">
+            <ProgressOverview
+              totalLessons={progressSummary.totalLessons}
+              completedLessons={progressSummary.completedLessons}
+              completionPercent={progressSummary.completionPercent}
+              earnedXp={progressSummary.earnedXp}
+              totalStudySeconds={totalStudySeconds}
             />
-          )}
+            <UnitProgressList units={progressUnits} />
+          </div>
+          <div className="px-4 pb-7 pt-2 sm:px-6 sm:pb-9">
+            <SectionLearningPath
+              section={selectedSection}
+              progress={selectedRoadmapProgress}
+              todayMinutes={todayMinutes}
+              onClaimReward={handleClaimReward}
+            />
+          </div>
         </section>
       </FeedWrapper>
 
@@ -356,7 +289,7 @@ export const CourseLearnClient = ({
         <StudyTimeCard
           initialSummary={initialStudyTimeSummary}
           isLoggedIn={!showAuthCard}
-          onTodaySecondsChange={setTodayStudySeconds}
+          onSummaryChange={setStudyTimeSummary}
         />
         <ProgressOverview
           className="hidden xl:block"
@@ -364,7 +297,7 @@ export const CourseLearnClient = ({
           completedLessons={progressSummary.completedLessons}
           completionPercent={progressSummary.completionPercent}
           earnedXp={progressSummary.earnedXp}
-          completedMinutes={progressSummary.completedMinutes}
+          totalStudySeconds={totalStudySeconds}
         />
         <UnitProgressList className="hidden xl:block" units={progressUnits} />
 

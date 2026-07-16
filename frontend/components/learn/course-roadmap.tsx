@@ -11,6 +11,7 @@ import {
   type RoadmapNodeView,
 } from "@/components/learn/roadmap-node";
 import { RoadmapNodePopover } from "@/components/learn/roadmap-node-popover";
+import { RoadmapRewardPopover } from "@/components/learn/roadmap-reward-popover";
 import {
   canAccessCourseNode,
   isNodePrerequisiteSatisfied,
@@ -103,15 +104,55 @@ const getActionLabel = (
   if (node.type === "chest") {
     if (state === "rewardAvailable") return "Nhận Freeze";
     if (state === "rewardClaimed") return "Đã nhận";
-    return "Hoàn thành Bài 3";
+    return "Chưa mở khóa";
   }
 
-  if (state === "completed" || state === "checkpointCompleted") return "Ôn lại";
-  if (state === "current") return "Tiếp tục học";
-  if (state === "available" || state === "checkpointAvailable")
-    return "Học ngay";
+  if (state === "checkpointCompleted") return "Xem kết quả";
+  if (state === "checkpointAvailable") return "Xem checkpoint";
+  if (state === "completed") return "Ôn tập";
+  if (state === "current") return "Tiếp tục";
+  if (state === "available") return "Xem bài học";
 
   return "Chưa mở khóa";
+};
+
+const getDetailHref = (node: LearningNodeDefinition) => {
+  if (node.type === "chest") return null;
+
+  return `/lesson/${encodeURIComponent(node.id)}`;
+};
+
+const getEstimatedMinutes = (
+  node: LearningNodeDefinition,
+  section: SectionDefinition,
+) => {
+  if (node.type === "checkpoint") return 12;
+  if (node.type === "chest") return 0;
+
+  return section.order === 1 ? 7 : 8;
+};
+
+const getLockedReason = (
+  node: LearningNodeDefinition,
+  state: RoadmapNodeState,
+  orderedNodes: LearningNodeDefinition[],
+) => {
+  if (!isDisabled(state)) return null;
+
+  const prerequisite = node.unlockAfterId
+    ? orderedNodes.find((item) => item.id === node.unlockAfterId)
+    : null;
+  const prerequisiteTitle = prerequisite?.title ?? "bài học trước";
+
+  if (node.type === "chest") {
+    return `Hoàn thành “${prerequisiteTitle}” để mở rương Freeze.`;
+  }
+
+  if (node.type === "checkpoint") {
+    return `Hoàn thành “${prerequisiteTitle}” để mở checkpoint.`;
+  }
+
+  return `Hoàn thành “${prerequisiteTitle}” để mở bài học này.`;
 };
 
 const isDisabled = (state: RoadmapNodeState) => {
@@ -151,10 +192,12 @@ const buildRoadmapViews = (
         y: topPadding + index * nodeGap,
         label: getLabel(state),
         actionLabel: getActionLabel(node, state),
-        href: node.href,
+        href: getDetailHref(node),
         disabled: isDisabled(state),
         rewardLabel: getRewardLabel(node),
         checkpointScore,
+        estimatedMinutes: getEstimatedMinutes(node, section),
+        lockedReason: getLockedReason(node, state, orderedNodes),
       } satisfies RoadmapNodeView;
     }),
   };
@@ -202,9 +245,39 @@ export const CourseRoadmap = ({
     const closeOnEscape = (event: KeyboardEvent) => {
       if (event.key === "Escape") setSelectedNodeId(null);
     };
+    const closeOnOutsidePointer = (event: PointerEvent) => {
+      const target = event.target;
+      if (!(target instanceof Node)) return;
+
+      const selectedNodeElement = document.getElementById(
+        `course-roadmap-node-${selectedNodeId}`,
+      );
+      const selectedPopoverElement = document.getElementById(
+        `course-roadmap-popover-${selectedNodeId}`,
+      );
+
+      if (
+        selectedNodeElement?.contains(target) ||
+        selectedPopoverElement?.contains(target)
+      ) {
+        return;
+      }
+
+      setSelectedNodeId(null);
+    };
+    const focusTimer = window.setTimeout(() => {
+      document
+        .getElementById(`course-roadmap-popover-${selectedNodeId}`)
+        ?.focus();
+    }, 0);
 
     window.addEventListener("keydown", closeOnEscape);
-    return () => window.removeEventListener("keydown", closeOnEscape);
+    document.addEventListener("pointerdown", closeOnOutsidePointer);
+    return () => {
+      window.clearTimeout(focusTimer);
+      window.removeEventListener("keydown", closeOnEscape);
+      document.removeEventListener("pointerdown", closeOnOutsidePointer);
+    };
   }, [selectedNodeId]);
 
   const { nodes, height } = useMemo(
@@ -272,21 +345,15 @@ export const CourseRoadmap = ({
       data-course-roadmap="coddy-integration"
       data-course-roadmap-section={section.id}
       className={cn("course-roadmap-shell", className)}
-      onClick={() => setSelectedNodeId(null)}
     >
       <div className="course-roadmap-bg course-roadmap-bg--one" />
       <div className="course-roadmap-bg course-roadmap-bg--two" />
       <div className="course-roadmap-bg course-roadmap-bg--three" />
 
-      <div className="mb-5 flex items-center gap-3 px-1 sm:px-3">
-        <div>
-          <p className="text-xs font-black uppercase tracking-[0.18em] text-[#1486CC] dark:text-sky-300">
-            Lộ trình Coddy-style
-          </p>
-          <h2 className="mt-1 text-xl font-black text-slate-800 dark:text-white">
-            {section.chapter.title}
-          </h2>
-        </div>
+      <div className="mb-4 flex items-center px-1 sm:px-3">
+        <h2 className="text-xl font-black text-slate-800 dark:text-white">
+          {section.chapter.title}
+        </h2>
       </div>
 
       <div className="relative z-10 mx-auto max-w-[720px]" style={{ height }}>
@@ -313,14 +380,21 @@ export const CourseRoadmap = ({
             className="absolute z-[90]"
             style={{ left: `${selectedNode.x}%`, top: selectedNode.y }}
           >
-            <RoadmapNodePopover
-              view={selectedNode}
-              todayMinutes={todayMinutes}
-              claiming={claimingNodeId === selectedNode.node.id}
-              error={claimError}
-              onClose={() => setSelectedNodeId(null)}
-              onClaimReward={handleClaimReward}
-            />
+            {selectedNode.node.type === "chest" ? (
+              <RoadmapRewardPopover
+                view={selectedNode}
+                claiming={claimingNodeId === selectedNode.node.id}
+                error={claimError}
+                onClose={() => setSelectedNodeId(null)}
+                onClaimReward={handleClaimReward}
+              />
+            ) : (
+              <RoadmapNodePopover
+                view={selectedNode}
+                todayMinutes={todayMinutes}
+                onClose={() => setSelectedNodeId(null)}
+              />
+            )}
           </div>
         ) : null}
       </div>

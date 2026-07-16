@@ -269,8 +269,17 @@ export const getCourseProgressForUser = async (
     ),
   })) as StoredCourseProgress | undefined;
   const existingState = row ? toCourseProgressState(row, courseId) : null;
+  const shouldRepairCurrentSection = Boolean(
+    row &&
+      existingState &&
+      row.currentSectionId !== existingState.currentSectionId,
+  );
 
   if (courseId !== "english") {
+    if (existingState && shouldRepairCurrentSection) {
+      return persistCourseProgress(userId, existingState);
+    }
+
     return existingState ?? createDefaultCourseProgress(courseId);
   }
 
@@ -283,6 +292,10 @@ export const getCourseProgressForUser = async (
   );
 
   if (!legacyProgress || !hasLegacyProgress) {
+    if (existingState && shouldRepairCurrentSection) {
+      return persistCourseProgress(userId, existingState);
+    }
+
     return existingState ?? createDefaultCourseProgress(courseId);
   }
 
@@ -293,7 +306,11 @@ export const getCourseProgressForUser = async (
     )
   );
 
-  if (!existingState || !hasSameProgressData(existingState, mergedState)) {
+  if (
+    !existingState ||
+    shouldRepairCurrentSection ||
+    !hasSameProgressData(existingState, mergedState)
+  ) {
     return persistCourseProgress(userId, mergedState);
   }
 

@@ -19,6 +19,8 @@ const buttonVariants = cva(
         link: "text-primary underline-offset-4 hover:underline",
         primary:
           "bg-[#1486CC] text-primary-foreground hover:bg-[#1486CC]/90 border-[#106BA3] border-b-4 active:border-b-0",
+        lessonPrimary:
+          "border-[#106BA3] border-b-4 bg-[#1486CC] text-white hover:bg-[#1178b8] active:border-b-0 focus-visible:border-[#0f6fa8] focus-visible:ring-[#1486CC]/35 disabled:border-[#78b9de] disabled:bg-[#9bd3f1] disabled:text-white disabled:opacity-100 dark:border-[#0e6396] dark:bg-[#1486CC] dark:hover:bg-[#1178b8] dark:disabled:border-[#214b63] dark:disabled:bg-[#285a76] dark:disabled:text-slate-300",
         "primary-outline":
           "bg-white text-[#1486CC] hover:bg-slate-100 border-transparent dark:bg-[#141f23] dark:text-[#38bdf8] dark:hover:bg-[#1f2d33] dark:border-[#202f36] dark:border-2",
         secondary:

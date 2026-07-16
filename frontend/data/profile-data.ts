@@ -1,3 +1,5 @@
+import { DEFAULT_USER_AVATAR } from "@/constants/user-avatar";
+
 export type CourseStatus = "learning" | "completed" | "paused";
 
 export type Achievement = {
@@ -44,7 +46,7 @@ export const profileData: ProfileData = {
     username: "Dung",
     displayName: "Dung",
     email: "dung.robogo@example.com",
-    avatarSrc: "/Robogo.svg",
+    avatarSrc: DEFAULT_USER_AVATAR,
     roleLabel: "Người học Robogo",
     rankLabel: "Chuỗi bạc",
     joinedAt: "2026-06-16",

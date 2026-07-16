@@ -3,6 +3,7 @@ import "server-only";
 import { and, desc, eq, sql } from "drizzle-orm";
 
 import { bonusQuestDefinitions, dailyQuestDefinitions } from "@/constants/quests";
+import { resolveUserAvatar } from "@/constants/user-avatar";
 import db from "@/db/drizzle";
 import {
   questDailyStats,
@@ -815,7 +816,7 @@ const upsertQuestRewardUserProgress = async ({
     .values({
       userId,
       userName: userName?.trim() || "User",
-      userImageSrc: userImageSrc?.trim() || "/mascot.svg",
+      userImageSrc: resolveUserAvatar(userImageSrc),
       points: nextTotalXp,
     })
     .onConflictDoUpdate({
@@ -823,7 +824,7 @@ const upsertQuestRewardUserProgress = async ({
       set: {
         points: nextTotalXp,
         userName: userName?.trim() || "User",
-        userImageSrc: userImageSrc?.trim() || "/mascot.svg",
+        userImageSrc: resolveUserAvatar(userImageSrc),
       },
     });
 };

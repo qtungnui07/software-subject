@@ -5,6 +5,7 @@ import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
+import { DEFAULT_USER_AVATAR, resolveUserAvatar } from "@/constants/user-avatar";
 
 type Props = {
   initialName: string;
@@ -16,7 +17,7 @@ type Props = {
 const showOnlyEnglishAvatars = true;
 
 const ALL_PRESET_AVATARS = [
-  { label: "Robogo", src: "/Robogo.svg" },
+  { label: "Robogo", src: DEFAULT_USER_AVATAR },
   { label: "Tiếng Anh", src: "/gb.svg" },
   { label: "Tiếng Nhật", src: "/jp.svg" },
   { label: "Tiếng Pháp", src: "/fr.svg" },
@@ -25,17 +26,18 @@ const ALL_PRESET_AVATARS = [
 ];
 
 const PRESET_AVATARS = showOnlyEnglishAvatars
-  ? ALL_PRESET_AVATARS.filter((avatar) => avatar.label === "Mascot" || avatar.label === "Tiếng Anh")
+  ? ALL_PRESET_AVATARS.filter((avatar) => avatar.label === "Robogo" || avatar.label === "Tiếng Anh")
   : ALL_PRESET_AVATARS;
 
 export const ProfileForm = ({ initialName, initialImageSrc, email }: Props) => {
   const router = useRouter();
+  const normalizedInitialImageSrc = resolveUserAvatar(initialImageSrc);
   const [name, setName] = useState(initialName);
-  const [selectedAvatar, setSelectedAvatar] = useState(initialImageSrc);
+  const [selectedAvatar, setSelectedAvatar] = useState(normalizedInitialImageSrc);
   const [customAvatarUrl, setCustomAvatarUrl] = useState(
-    PRESET_AVATARS.some((avatar) => avatar.src === initialImageSrc)
+    PRESET_AVATARS.some((avatar) => avatar.src === normalizedInitialImageSrc)
       ? ""
-      : initialImageSrc
+      : normalizedInitialImageSrc
   );
   const [isPending, startTransition] = useTransition();
 
@@ -49,7 +51,7 @@ export const ProfileForm = ({ initialName, initialImageSrc, email }: Props) => {
     if (url.trim()) {
       setSelectedAvatar(url.trim());
     } else {
-      setSelectedAvatar("/Robogo.svg");
+      setSelectedAvatar(DEFAULT_USER_AVATAR);
     }
   };
 
@@ -125,7 +127,7 @@ export const ProfileForm = ({ initialName, initialImageSrc, email }: Props) => {
         <div className="flex items-center gap-x-4 rounded-2xl border-2 border-slate-100 dark:border-[#202f36] bg-slate-50/50 dark:bg-slate-900/30 p-4">
           <div className="relative size-16 shrink-0 rounded-2xl bg-white dark:bg-slate-900 border-2 border-slate-200 dark:border-slate-800 overflow-hidden flex items-center justify-center p-1 shadow-sm">
             <Image
-              src={selectedAvatar || "/Robogo.svg"}
+              src={resolveUserAvatar(selectedAvatar)}
               alt="Avatar Preview"
               fill
               className="object-contain"

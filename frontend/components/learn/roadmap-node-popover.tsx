@@ -3,10 +3,8 @@
 import Link from "next/link";
 import {
   Check,
-  Gift,
+  Clock3,
   Lock,
-  Snowflake,
-  Sparkles,
   Star,
   Trophy,
   X,
@@ -20,27 +18,21 @@ import type {
   RoadmapNodeView,
 } from "@/components/learn/roadmap-node";
 
-const iconByState: Record<RoadmapNodeState, LucideIcon> = {
+const iconByState: Partial<Record<RoadmapNodeState, LucideIcon>> = {
   completed: Check,
   current: Star,
   available: Star,
   locked: Lock,
-  rewardAvailable: Snowflake,
-  rewardClaimed: Check,
-  rewardLocked: Gift,
   checkpointAvailable: Trophy,
   checkpointCompleted: Trophy,
   checkpointLocked: Lock,
 };
 
-const toneByState: Record<RoadmapNodeState, string> = {
+const toneByState: Partial<Record<RoadmapNodeState, string>> = {
   completed: "text-emerald-500 bg-emerald-50 dark:bg-emerald-950/25",
   current: "text-[#1486CC] bg-sky-50 dark:bg-sky-950/25",
   available: "text-[#1486CC] bg-sky-50 dark:bg-sky-950/25",
   locked: "text-slate-400 bg-slate-100 dark:bg-slate-800",
-  rewardAvailable: "text-cyan-500 bg-cyan-50 dark:bg-cyan-950/25",
-  rewardClaimed: "text-emerald-500 bg-emerald-50 dark:bg-emerald-950/25",
-  rewardLocked: "text-slate-400 bg-slate-100 dark:bg-slate-800",
   checkpointAvailable: "text-violet-500 bg-violet-50 dark:bg-violet-950/25",
   checkpointCompleted: "text-violet-500 bg-violet-50 dark:bg-violet-950/25",
   checkpointLocked: "text-slate-400 bg-slate-100 dark:bg-slate-800",
@@ -54,40 +46,20 @@ const getMilestoneLabel = (minutes: number) => {
   return "Chưa đạt chuỗi";
 };
 
-const getLockedMessage = (view: RoadmapNodeView) => {
-  if (view.state === "rewardLocked") {
-    return "Hoàn thành 3 bài học đầu tiên để mở rương Freeze.";
-  }
-
-  if (view.state === "checkpointLocked") {
-    return "Hoàn thành các bài học trước đó để mở checkpoint.";
-  }
-
-  return "Hoàn thành node phía trước để mở khóa phần này.";
-};
-
 type Props = {
   view: RoadmapNodeView;
   todayMinutes: number;
-  claiming: boolean;
-  error: string | null;
   onClose: () => void;
-  onClaimReward?: (nodeId: string) => Promise<void> | void;
 };
 
 export const RoadmapNodePopover = ({
   view,
   todayMinutes,
-  claiming,
-  error,
   onClose,
-  onClaimReward,
 }: Props) => {
-  const Icon = iconByState[view.state];
+  const Icon = iconByState[view.state] ?? Star;
+  const tone = toneByState[view.state] ?? toneByState.available;
   const isLocked = view.disabled;
-  const isReward = view.node.type === "chest";
-  const isRewardAvailable = view.state === "rewardAvailable";
-  const isRewardClaimed = view.state === "rewardClaimed";
   const isCheckpoint = view.node.type === "checkpoint";
 
   return (
@@ -95,8 +67,10 @@ export const RoadmapNodePopover = ({
       id={`course-roadmap-popover-${view.node.id}`}
       role="dialog"
       aria-modal="false"
+      aria-label={`Thông tin ${view.node.title}`}
+      tabIndex={-1}
       data-course-roadmap-popover="coddy-small"
-      aria-label={view.node.title}
+      data-course-roadmap-popover-kind="learning"
       className={cn(
         "course-roadmap-popover",
         view.x >= 52
@@ -110,7 +84,7 @@ export const RoadmapNodePopover = ({
         type="button"
         className="absolute right-3 top-3 flex size-8 items-center justify-center rounded-xl bg-slate-100 text-slate-400 transition hover:bg-slate-200 hover:text-slate-600 dark:bg-slate-800 dark:hover:bg-slate-700 dark:hover:text-slate-200"
         onClick={onClose}
-        aria-label="Đóng thông tin node"
+        aria-label="Đóng thông tin bài học"
       >
         <X className="size-4 stroke-[3]" />
       </button>
@@ -119,7 +93,7 @@ export const RoadmapNodePopover = ({
         <div
           className={cn(
             "flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl",
-            toneByState[view.state],
+            tone,
           )}
         >
           <Icon className="size-6 stroke-[3]" />
@@ -134,79 +108,60 @@ export const RoadmapNodePopover = ({
         </div>
       </div>
 
-      <p className="mt-3 text-sm font-bold leading-6 text-slate-500 dark:text-slate-300">
+      <p className="mt-3 line-clamp-2 text-sm font-bold leading-6 text-slate-500 dark:text-slate-300">
         {view.node.description}
       </p>
 
-      {view.rewardLabel ? (
-        <div className="mt-4 flex items-start gap-3 rounded-2xl bg-cyan-50 p-3 text-sm font-black text-cyan-700 dark:bg-cyan-950/20 dark:text-cyan-200">
-          <Sparkles className="mt-0.5 size-5 shrink-0 stroke-[3]" />
-          <div>
-            <p>{view.rewardLabel}</p>
-            <p className="mt-1 text-xs font-bold leading-5 text-cyan-600/80 dark:text-cyan-200/80">
-              Freeze tự động bảo vệ streak khi bạn bỏ lỡ một ngày.
-            </p>
-          </div>
+      <div className="mt-4 grid grid-cols-2 gap-2">
+        <div className="rounded-2xl bg-sky-50 p-3 dark:bg-sky-950/20">
+          <p className="text-[11px] font-black uppercase tracking-wide text-slate-400 dark:text-slate-500">
+            {isCheckpoint ? "Điểm cao nhất" : "XP thưởng"}
+          </p>
+          <p className="mt-1 text-sm font-black text-[#1486CC] dark:text-sky-300">
+            {isCheckpoint
+              ? `${view.checkpointScore ?? 0}%`
+              : `${view.node.xp} XP`}
+          </p>
         </div>
+        <div className="rounded-2xl bg-slate-50 p-3 dark:bg-slate-900/40">
+          <p className="flex items-center gap-1 text-[11px] font-black uppercase tracking-wide text-slate-400 dark:text-slate-500">
+            <Clock3 className="size-3.5 stroke-[3]" />
+            Ước tính
+          </p>
+          <p className="mt-1 text-sm font-black text-slate-700 dark:text-slate-200">
+            {view.estimatedMinutes} phút
+          </p>
+        </div>
+      </div>
+
+      {!isLocked ? (
+        <p className="mt-3 text-xs font-black text-slate-500 dark:text-slate-400">
+          {todayMinutes}m hôm nay · {getMilestoneLabel(todayMinutes)}
+        </p>
       ) : null}
 
-      {!isReward && !isLocked ? (
-        <div className="mt-4 rounded-2xl bg-sky-50 p-3 dark:bg-sky-950/20">
-          <div className="flex items-center justify-between text-xs font-black uppercase tracking-wide text-[#1486CC] dark:text-sky-300">
-            <span>{isCheckpoint ? "Điểm checkpoint" : "XP thưởng"}</span>
-            <span>
-              {isCheckpoint && view.checkpointScore !== null
-                ? `${view.checkpointScore}%`
-                : `${view.node.xp} XP`}
-            </span>
-          </div>
-          <p className="mt-2 text-xs font-black text-slate-600 dark:text-slate-300">
-            {todayMinutes}m hôm nay · {getMilestoneLabel(todayMinutes)}
-          </p>
-          {isCheckpoint && (view.checkpointScore ?? 0) > 0 ? (
-            <p
-              className={cn(
-                "mt-2 text-xs font-black",
-                (view.checkpointScore ?? 0) >= CHECKPOINT_UNLOCK_THRESHOLD
-                  ? "text-emerald-500"
-                  : "text-amber-500",
-              )}
-            >
-              Điểm cao nhất: {view.checkpointScore}%
-            </p>
-          ) : null}
-        </div>
+      {isCheckpoint && (view.checkpointScore ?? 0) > 0 ? (
+        <p
+          className={cn(
+            "mt-3 text-xs font-black",
+            (view.checkpointScore ?? 0) >= CHECKPOINT_UNLOCK_THRESHOLD
+              ? "text-emerald-500"
+              : "text-amber-500",
+          )}
+        >
+          {(view.checkpointScore ?? 0) >= CHECKPOINT_UNLOCK_THRESHOLD
+            ? "Đã vượt checkpoint"
+            : `Cần đạt ${CHECKPOINT_UNLOCK_THRESHOLD}% để vượt qua`}
+        </p>
       ) : null}
 
       {isLocked ? (
         <div className="mt-4 rounded-2xl bg-slate-50 p-3 text-xs font-bold leading-5 text-slate-500 dark:bg-slate-900/40 dark:text-slate-400">
-          {getLockedMessage(view)}
+          {view.lockedReason ?? "Hoàn thành bài học trước để mở khóa phần này."}
         </div>
       ) : null}
 
-      {isRewardClaimed ? (
-        <div className="mt-4 rounded-2xl bg-emerald-50 p-3 text-xs font-bold leading-5 text-emerald-700 dark:bg-emerald-950/20 dark:text-emerald-300">
-          Bạn đã nhận rương này. Freeze đã được lưu vào streak của bạn.
-        </div>
-      ) : null}
-
-      {error ? (
-        <div className="mt-4 rounded-2xl bg-rose-50 p-3 text-xs font-bold leading-5 text-rose-600 dark:bg-rose-950/20 dark:text-rose-300">
-          {error}
-        </div>
-      ) : null}
-
-      {isRewardAvailable ? (
-        <button
-          type="button"
-          disabled={claiming}
-          aria-busy={claiming}
-          className="course-roadmap-action course-roadmap-action--reward"
-          onClick={() => void onClaimReward?.(view.node.id)}
-        >
-          {claiming ? "ĐANG NHẬN..." : "NHẬN FREEZE"}
-        </button>
-      ) : view.href && !isLocked ? (
+      {view.href && !isLocked ? (
         <Link
           href={view.href}
           className="course-roadmap-action course-roadmap-action--learn"

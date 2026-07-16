@@ -5,6 +5,7 @@ const path = require("path");
 const postgresModule = require("postgres");
 const nodemailer = require("nodemailer");
 const postgres = postgresModule.default || postgresModule;
+const { DEFAULT_USER_AVATAR, resolveUserAvatar } = require("./user-avatar");
 
 const loadEnvFile = (filePath) => {
   if (!fs.existsSync(filePath)) {
@@ -246,7 +247,7 @@ const publicUser = (user) => ({
   id: String(user.id),
   name: user.name,
   email: user.email,
-  image: user.image_src || "/mascot.svg",
+  image: resolveUserAvatar(user.image_src),
 });
 
 const formatDateInTimeZone = (date, timeZone) => {
@@ -287,7 +288,7 @@ const ensureAccountData = async (database, { userId, name, imageSrc }) => {
 
   await database`
     insert into user_progress (user_id, user_name, user_image_src)
-    values (${userId}, ${name || "User"}, ${imageSrc || "/mascot.svg"})
+    values (${userId}, ${name || "User"}, ${resolveUserAvatar(imageSrc)})
     on conflict (user_id) do update set
       user_name = excluded.user_name,
       user_image_src = excluded.user_image_src
@@ -336,7 +337,7 @@ const createLocalUser = async (payload) => {
     const user = await sql.begin(async (transaction) => {
       const [created] = await transaction`
         insert into users (name, email, password_hash, image_src, updated_at)
-        values (${name}, ${email}, ${hashPassword(password)}, '/mascot.svg', now())
+        values (${name}, ${email}, ${hashPassword(password)}, ${DEFAULT_USER_AVATAR}, now())
         returning id, email, name, image_src
       `;
 
@@ -396,7 +397,7 @@ const syncUser = async (payload) => {
   const clerkUserId = String(payload.clerkUserId || "").trim();
   const email = String(payload.email || "").trim().toLowerCase();
   const name = String(payload.name || "User").trim() || "User";
-  const imageSrc = String(payload.imageSrc || "/mascot.svg").trim() || "/mascot.svg";
+  const imageSrc = resolveUserAvatar(payload.imageSrc);
 
   if (!clerkUserId || !email) {
     const error = new Error("clerkUserId and email are required");
@@ -497,7 +498,7 @@ const listUsers = async () => {
     clerkUserId: user.clerk_user_id,
     name: user.name,
     email: user.email,
-    imageSrc: user.image_src || "/mascot.svg",
+    imageSrc: resolveUserAvatar(user.image_src),
     createdAt: user.created_at,
     updatedAt: user.updated_at,
     authProvider: user.clerk_user_id ? "clerk" : "local",
@@ -552,7 +553,7 @@ const findAccount = async (userId, database = sql) => {
 const accountResponse = (user) => ({
   name: user.name,
   email: user.email,
-  imageSrc: user.image_src || "/mascot.svg",
+  imageSrc: resolveUserAvatar(user.image_src),
   isClerk: Boolean(user.clerk_user_id),
 });
 
@@ -828,7 +829,7 @@ const getProfile = async (userId) => {
   return {
     name: progress?.user_name || account.name,
     email: account.email,
-    imageSrc: progress?.user_image_src || account.image_src || "/mascot.svg",
+    imageSrc: resolveUserAvatar(progress?.user_image_src || account.image_src),
     hearts: progress?.hearts ?? 5,
     points: progress?.points ?? 0,
     activeCourse: progress?.course_id
@@ -845,7 +846,7 @@ const updateProfile = async (userId, payload) => {
   requireDatabase();
 
   const name = String(payload.name || "").trim();
-  const imageSrc = String(payload.imageSrc || "").trim();
+  const imageSrc = resolveUserAvatar(payload.imageSrc);
 
   if (!name || !imageSrc) {
     const error = new Error("name and imageSrc are required");

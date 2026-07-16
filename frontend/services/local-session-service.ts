@@ -2,6 +2,7 @@ import "server-only";
 
 import { and, eq, gt, isNull } from "drizzle-orm";
 
+import { resolveUserAvatar } from "@/constants/user-avatar";
 import db from "@/db/drizzle";
 import { localSessions, users } from "@/db/schema";
 import {
@@ -76,6 +77,6 @@ export const getValidLocalSessionUser = async (token?: string) => {
     id: payload.user.id,
     name: user.name,
     email: user.email,
-    image: user.imageSrc || "/mascot.svg",
+    image: resolveUserAvatar(user.imageSrc),
   };
 };
