@@ -24,6 +24,7 @@ const assert = (condition: unknown, message: string) => {
 const componentSource = read("components/learn/course-roadmap.tsx");
 const nodeSource = read("components/learn/roadmap-node.tsx");
 const popoverSource = read("components/learn/roadmap-node-popover.tsx");
+const rewardPopoverSource = read("components/learn/roadmap-reward-popover.tsx");
 const connectorSource = read("components/learn/roadmap-connector.tsx");
 const sectionWrapperSource = read("components/learn/section-learning-path.tsx");
 const legacyWrapperSource = read("components/lesson-path.tsx");
@@ -64,7 +65,8 @@ assert(
   componentSource.includes("rewardAvailable") &&
     componentSource.includes("rewardClaimed") &&
     componentSource.includes("checkpointAvailable") &&
-    popoverSource.includes("NHẬN FREEZE"),
+    popoverSource.includes('data-course-roadmap-popover-kind="learning"') &&
+    rewardPopoverSource.includes("NHẬN FREEZE"),
   "Roadmap must support reward and checkpoint states with a Freeze claim action.",
 );
 assert(
@@ -75,6 +77,19 @@ assert(
 assert(
   packageSource.includes("check:course-roadmap-ui"),
   "package.json must expose check:course-roadmap-ui.",
+);
+assert(
+  !componentSource.includes("Coddy-style") &&
+    !componentSource.includes("Lộ trình Coddy") &&
+    !componentSource.includes("Lộ trình Robogo") &&
+    componentSource.includes("{section.chapter.title}"),
+  "Roadmap UI must remove the old external-brand label while keeping the real chapter title.",
+);
+assert(
+  componentSource.includes(
+    'className="mb-4 flex items-center px-1 sm:px-3"',
+  ),
+  "Roadmap heading spacing must stay compact after the label is removed.",
 );
 
 const progressWithSectionUnlocks: CourseProgressState = {
@@ -134,5 +149,5 @@ for (const section of englishCourse.sections) {
 }
 
 console.log(
-  "Course roadmap UI check passed: all 3 English sections use the shared Coddy-style 3D roadmap, Freeze chests stay optional, and roadmap states/actions are wired.",
+  "Course roadmap UI check passed: all 3 English sections use the shared 3D roadmap without the old Coddy-style label, Freeze chests stay optional, and roadmap states/actions are wired.",
 );

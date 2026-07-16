@@ -55,8 +55,20 @@
     "check:course-reward-contract": "tsx scripts/check-course-reward-contract.ts",
     "check:course-reward-claim": "tsx scripts/check-course-reward-claim.ts",
     "check:course-roadmap-ui": "tsx scripts/check-course-roadmap-ui.ts",
+    "check:roadmap-copy-cleanup": "tsx scripts/check-roadmap-copy-cleanup.ts",
+    "check:robogo-avatar-migration": "tsx scripts/check-robogo-avatar-migration.ts",
+    "migrate:robogo-avatar": "tsx scripts/migrate-robogo-avatar.ts",
     "check:course-roadmap-integration": "tsx scripts/check-course-roadmap-integration.ts",
-    "check:course-reward-polish": "tsx scripts/check-course-reward-polish.ts"
+    "check:course-experience-baseline": "tsx scripts/check-course-experience-baseline.ts",
+    "check:roadmap-node-popover": "tsx scripts/check-roadmap-node-popover.ts",
+    "check:lesson-detail-integration": "tsx scripts/check-lesson-detail-integration.ts",
+    "check:lesson-action-theme": "tsx scripts/check-lesson-action-theme.ts",
+    "check:sections-page": "tsx scripts/check-sections-page.ts",
+    "check:learn-sections-integration": "tsx scripts/check-learn-sections-integration.ts",
+    "check:real-study-time": "tsx scripts/check-real-study-time.ts",
+    "check:course-reward-polish": "tsx scripts/check-course-reward-polish.ts",
+    "check:course-experience-release": "tsx scripts/check-course-experience-release.ts",
+    "smoke:course-experience": "tsx scripts/smoke-course-experience.ts"
   },
   "dependencies": {
     "@clerk/nextjs": "^7.5.2",

@@ -14,6 +14,7 @@ import {
   TrendingUp,
   X,
 } from "lucide-react";
+import { resolveUserAvatar } from "@/constants/user-avatar";
 import { cn } from "@/lib/utils";
 import { FeedWrapper } from "@/components/feed-wrapper";
 import { StickyWrapper } from "@/components/sticky-wrapper";
@@ -910,7 +911,7 @@ export const LeaderboardClient: React.FC<LeaderboardClientProps> = ({
             <div className="relative p-2.5">
               <div className="h-20 w-20 rounded-full border-2 border-dashed border-sky-300 flex items-center justify-center bg-slate-50 dark:border-sky-950 dark:bg-slate-950 relative p-1 shadow-inner select-none">
                 <Image
-                  src={initialUserName === "Bạn" ? "/mascot.svg" : initialUserImageSrc || "/mascot.svg"}
+                  src={resolveUserAvatar(initialUserImageSrc)}
                   alt="Avatar"
                   width={60}
                   height={60}

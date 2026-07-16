@@ -111,8 +111,8 @@ export const ChapterOneLearnClient = ({
   const [progressState, setProgressState] = useState<ChapterOneProgressState>(
     getInitialChapterOneProgress
   );
-  const [todayStudySeconds, setTodayStudySeconds] = useState(
-    initialStudyTimeSummary?.todaySeconds ?? 0
+  const [studyTimeSummary, setStudyTimeSummary] = useState<StudyTimeSummary | null>(
+    initialStudyTimeSummary,
   );
 
   useEffect(() => {
@@ -167,7 +167,8 @@ export const ChapterOneLearnClient = ({
     () => getCourseProgressSummary(progressUnits),
     [progressUnits]
   );
-  const todayMinutes = Math.floor(todayStudySeconds / 60);
+  const todayMinutes = Math.floor((studyTimeSummary?.todaySeconds ?? 0) / 60);
+  const totalStudySeconds = studyTimeSummary?.totalSeconds ?? 0;
 
   const handleClaimChest = (chestId: string) => {
     const nextState = claimChapterOneChest(chestId);
@@ -203,7 +204,7 @@ export const ChapterOneLearnClient = ({
               completedLessons={courseProgress.completedLessons}
               completionPercent={courseProgress.completionPercent}
               earnedXp={courseProgress.earnedXp}
-              completedMinutes={courseProgress.completedMinutes}
+              totalStudySeconds={totalStudySeconds}
             />
 
             <UnitProgressList units={progressUnits} />
@@ -233,7 +234,7 @@ export const ChapterOneLearnClient = ({
         <StudyTimeCard
           initialSummary={initialStudyTimeSummary}
           isLoggedIn={!showAuthCard}
-          onTodaySecondsChange={setTodayStudySeconds}
+          onSummaryChange={setStudyTimeSummary}
         />
 
         <ProgressOverview
@@ -242,7 +243,7 @@ export const ChapterOneLearnClient = ({
           completedLessons={courseProgress.completedLessons}
           completionPercent={courseProgress.completionPercent}
           earnedXp={courseProgress.earnedXp}
-          completedMinutes={courseProgress.completedMinutes}
+          totalStudySeconds={totalStudySeconds}
         />
 
         <UnitProgressList className="hidden xl:block" units={progressUnits} />

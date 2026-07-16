@@ -1,4 +1,5 @@
 import { auth } from "@/auth";
+import { resolveUserAvatar } from "@/constants/user-avatar";
 import { getUserProgress } from "@/db/queries";
 import { LeaderboardClient } from "./leaderboard-client";
 
@@ -30,7 +31,7 @@ const LeaderboardPage = async () => {
         <LeaderboardClient
             userId={userProgress?.userId ?? ""}
             initialUserName={userProgress?.userName ?? session?.user?.name ?? "Khách"}
-            initialUserImageSrc={userProgress?.userImageSrc ?? session?.user?.image ?? "/mascot.svg"}
+            initialUserImageSrc={resolveUserAvatar(userProgress?.userImageSrc ?? session?.user?.image)}
             initialPoints={userProgress?.points ?? 0}
             initialLeague={userLeague}
             initialStatusEmoji={userStatusEmoji}

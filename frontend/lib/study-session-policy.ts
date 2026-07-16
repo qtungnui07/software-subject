@@ -1,4 +1,4 @@
-export const AFK_INACTIVITY_LIMITS_MS = [30_000, 60_000, 120_000] as const;
+export const AFK_INACTIVITY_LIMIT_MS = 60_000;
 export const MAX_STREAK_AFK_COUNT = 3;
 export const MIN_STREAK_STUDY_MINUTES = 15;
 
@@ -8,10 +8,10 @@ export const normalizeAfkCount = (value: unknown) => {
   return Math.max(0, Math.min(100, Math.trunc(count)));
 };
 
-export const getAfkInactivityLimitMs = (afkCount: number) =>
-  AFK_INACTIVITY_LIMITS_MS[
-    Math.min(normalizeAfkCount(afkCount), AFK_INACTIVITY_LIMITS_MS.length - 1)
-  ];
+export const getAfkInactivityLimitMs = (afkCount: number) => {
+  void afkCount;
+  return AFK_INACTIVITY_LIMIT_MS;
+};
 
 export const isAfkEligibleForStreak = (afkCount: number) =>
   normalizeAfkCount(afkCount) <= MAX_STREAK_AFK_COUNT;

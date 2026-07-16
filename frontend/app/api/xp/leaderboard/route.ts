@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 
 import { auth } from "@/auth";
+import { resolveUserAvatar } from "@/constants/user-avatar";
 import { getXpLeaderboard } from "@/services/xp-service";
 
 export const dynamic = "force-dynamic";
@@ -12,7 +13,7 @@ const getCurrentXpUser = async () => {
     return {
       id: session.user.id,
       name: session.user.name || "User",
-      image: session.user.image || "/mascot.svg",
+      image: resolveUserAvatar(session.user.image),
     };
   }
 

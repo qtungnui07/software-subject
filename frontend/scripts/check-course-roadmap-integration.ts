@@ -22,6 +22,7 @@ const clientSource = read("components/learn/course-learn-client.tsx");
 const roadmapSource = read("components/learn/course-roadmap.tsx");
 const nodeSource = read("components/learn/roadmap-node.tsx");
 const popoverSource = read("components/learn/roadmap-node-popover.tsx");
+const rewardPopoverSource = read("components/learn/roadmap-reward-popover.tsx");
 const connectorSource = read("components/learn/roadmap-connector.tsx");
 const sectionWrapperSource = read("components/learn/section-learning-path.tsx");
 const legacyWrapperSource = read("components/lesson-path.tsx");
@@ -56,8 +57,8 @@ assert(
 assert(
   !roadmapSource.includes("await onClaimReward(nodeId);\n      setSelectedNodeId(null);") &&
     roadmapSource.includes("claimingNodeId") &&
-    popoverSource.includes("ĐANG NHẬN...") &&
-    popoverSource.includes("aria-busy={claiming}"),
+    rewardPopoverSource.includes("ĐANG NHẬN...") &&
+    rewardPopoverSource.includes("aria-busy={claiming}"),
   "Reward claim must keep the popup live, show loading, and update to claimed state without closing immediately.",
 );
 assert(
@@ -73,9 +74,10 @@ assert(
   "RoadmapConnector must style completed, active, and locked segments from node state.",
 );
 assert(
-  popoverSource.includes("getLockedMessage") &&
-    popoverSource.includes("data-course-roadmap-popover=\"coddy-small\""),
-  "Roadmap popovers must use the small Coddy-style contract and explain locked reward/checkpoint states.",
+  popoverSource.includes("view.lockedReason") &&
+    popoverSource.includes("data-course-roadmap-popover=\"coddy-small\"") &&
+    rewardPopoverSource.includes("view.lockedReason"),
+  "Roadmap popovers must use the compact contract and explain locked learning, reward, and checkpoint states.",
 );
 assert(
   cssSource.includes(".course-roadmap-node-anchor") &&

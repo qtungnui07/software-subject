@@ -1,6 +1,7 @@
 import { drizzle } from "drizzle-orm/postgres-js";
 import postgres from "postgres";
 
+import { DEFAULT_USER_AVATAR } from "@/constants/user-avatar";
 import * as schema from "./schema";
 import { canUseOfflineDatabaseFallback } from "@/lib/env/env-policy";
 
@@ -17,7 +18,7 @@ if (databaseUrl) {
     const mockUserProgress = {
         userId: "mock-user-id",
         userName: "User",
-        userImageSrc: "/Robogo.svg",
+        userImageSrc: DEFAULT_USER_AVATAR,
         activeCourseId: 1,
         hearts: 5,
         points: 100,

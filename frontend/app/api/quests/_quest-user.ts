@@ -1,4 +1,5 @@
 import { auth } from "@/auth";
+import { resolveUserAvatar } from "@/constants/user-avatar";
 
 export type CurrentQuestApiUser = {
   id: string;
@@ -13,7 +14,7 @@ export const getCurrentQuestApiUser = async (): Promise<CurrentQuestApiUser | nu
     return {
       id: session.user.id,
       name: session.user.name || "User",
-      image: session.user.image || "/mascot.svg",
+      image: resolveUserAvatar(session.user.image),
     };
   }
 

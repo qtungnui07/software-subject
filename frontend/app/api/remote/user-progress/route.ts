@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { eq } from "drizzle-orm";
 
 import { auth } from "@/auth";
+import { resolveUserAvatar } from "@/constants/user-avatar";
 import db from "@/db/drizzle";
 import { courses, userProgress } from "@/db/schema";
 
@@ -27,14 +28,14 @@ export async function POST(request: Request) {
       await db.update(userProgress).set({
         activeCourseId: courseId,
         userName: user.name || "User",
-        userImageSrc: user.image || "/Robogo.svg",
+        userImageSrc: resolveUserAvatar(user.image),
       }).where(eq(userProgress.userId, user.id));
     } else {
       await db.insert(userProgress).values({
         userId: user.id,
         activeCourseId: courseId,
         userName: user.name || "User",
-        userImageSrc: user.image || "/Robogo.svg",
+        userImageSrc: resolveUserAvatar(user.image),
       });
     }
     return NextResponse.json({ ok: true });

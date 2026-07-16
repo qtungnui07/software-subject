@@ -3,6 +3,7 @@ import { isRemoteApiMode, remoteApiRequest } from "@/lib/remote-api";
 
 import { and, eq, gt } from "drizzle-orm";
 
+import { DEFAULT_USER_AVATAR } from "@/constants/user-avatar";
 import db from "@/db/drizzle";
 import {
   chapterOneProgress,
@@ -111,7 +112,7 @@ export const ensureEnglishActiveCourseForUser = async (userId: string) => {
       userId,
       activeCourseId: englishCourse.id,
       userName: "User",
-      userImageSrc: "/mascot.svg",
+      userImageSrc: DEFAULT_USER_AVATAR,
     })
     .onConflictDoUpdate({
       target: userProgress.userId,

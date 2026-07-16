@@ -13,13 +13,15 @@ import {
 
 import { relations } from "drizzle-orm";
 
+import { DEFAULT_USER_AVATAR } from "@/constants/user-avatar";
+
 export const users = pgTable("users", {
     id: serial("id").primaryKey(),
     clerkUserId: text("clerk_user_id").unique(),
     name: text("name").notNull().default("User"),
     email: text("email").notNull().unique(),
     passwordHash: text("password_hash"),
-    imageSrc: text("image_src").notNull().default("/mascot.svg"),
+    imageSrc: text("image_src").notNull().default(DEFAULT_USER_AVATAR),
     createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
     updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
 });
@@ -37,7 +39,7 @@ export const coursesRelations = relations(courses, ({ many }) => ({
 export const userProgress = pgTable("user_progress", {
     userId: text("user_id").primaryKey(),
     userName: text("user_name").notNull().default("User"),
-    userImageSrc: text("user_image_src").notNull().default("/mascot.svg"),
+    userImageSrc: text("user_image_src").notNull().default(DEFAULT_USER_AVATAR),
     activeCourseId: integer("active_course_id").references(() => courses.id, {
         onDelete: "cascade",
     }),

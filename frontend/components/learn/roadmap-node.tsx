@@ -36,6 +36,8 @@ export type RoadmapNodeView = {
   disabled: boolean;
   rewardLabel: string | null;
   checkpointScore: number | null;
+  estimatedMinutes: number;
+  lockedReason: string | null;
 };
 
 const iconByState: Record<RoadmapNodeState, LucideIcon> = {
@@ -110,6 +112,7 @@ export const RoadmapNode = ({
         aria-expanded={selected}
         aria-current={view.state === "current" ? "step" : undefined}
         aria-busy={claiming}
+        aria-disabled={view.disabled}
         aria-controls={
           selected ? `course-roadmap-popover-${view.node.id}` : undefined
         }

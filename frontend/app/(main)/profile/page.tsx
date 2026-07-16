@@ -4,6 +4,7 @@ import { redirect } from "next/navigation";
 
 import { Button } from "@/components/ui/button";
 import { auth } from "@/auth";
+import { resolveUserAvatar } from "@/constants/user-avatar";
 import { ProfileForm } from "./profile-form";
 import { createDefaultCourseProgress } from "@/lib/courses/course-progress";
 import { getLearningProfileStats } from "@/lib/learning/profile-stats";
@@ -38,7 +39,7 @@ const ProfilePage = async () => {
   const courseProgress = getLearningProfileStats(genericCourseProgress);
 
   const displayName = profile?.name || user.name || "User";
-  const avatarSrc = profile?.imageSrc || user.image || "/Robogo.svg";
+  const avatarSrc = resolveUserAvatar(profile?.imageSrc || user.image);
   const email = profile?.email || user.email || "";
 
   const quickStats = [

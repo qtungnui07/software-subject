@@ -82,7 +82,7 @@ export default function OnboardingClient({
     if (!next) return;
 
     sessionStorage.removeItem(getPlacementDraftStorageKey(userId));
-    router.push("/learn?section=english-section-1");
+    router.push("/learn");
     router.refresh();
   };
 

@@ -37,7 +37,6 @@ import { getExercisesForLesson } from "@/lib/exercises/exercise-catalog";
 import { getLearningNodeById } from "@/lib/courses/course-catalog";
 import {
   getCourseNodeAccess,
-  getSectionIdForNode,
 } from "@/lib/courses/course-access";
 import { projectCourseProgressToChapterOne } from "@/lib/courses/chapter-one-adapter";
 import type { CourseProgressState } from "@/lib/courses/course-progress";
@@ -110,7 +109,6 @@ const LessonContent = () => {
   const isChapterOneNode = lessonNodes.some(
     (node) => node.nodeId === lessonNode.nodeId,
   );
-  const lessonSectionId = getSectionIdForNode(lessonNode.nodeId);
 
   useEffect(() => {
     if (shouldRedirectToLearn) {
@@ -225,7 +223,7 @@ const LessonContent = () => {
           if (isMounted) {
             setAccessState("redirecting");
             router.replace(
-              `/learn?locked=${encodeURIComponent(access.sectionId ?? "english-section-1")}`,
+              `/sections?requested=${encodeURIComponent(access.sectionId ?? "english-section-1")}`,
             );
           }
           return;
@@ -499,11 +497,7 @@ const LessonContent = () => {
 
   // Redirect to learn page
   const redirectToLearn = () => {
-    router.push(
-      lessonSectionId
-        ? `/learn?section=${encodeURIComponent(lessonSectionId)}`
-        : "/learn",
-    );
+    router.push("/learn");
   };
 
   if (accessState !== "allowed") {
@@ -731,7 +725,7 @@ const LessonContent = () => {
           <div className="shrink-0">
             {!isAnswered ? (
               <Button
-                variant={answerComplete ? "secondary" : "default"}
+                variant="lessonPrimary"
                 disabled={!answerComplete}
                 onClick={onCheck}
                 className="h-12 w-full rounded-2xl sm:w-40"
@@ -740,7 +734,7 @@ const LessonContent = () => {
               </Button>
             ) : (
               <Button
-                variant={isCorrect ? "secondary" : "danger"}
+                variant="lessonPrimary"
                 onClick={() => void onContinue()}
                 className="h-12 w-full rounded-2xl sm:w-40"
               >
@@ -761,7 +755,12 @@ const LessonContent = () => {
       />
       <LessonStudyTimer
         ref={studyTimerRef}
-        isActive={!isFinished && hearts > 0 && !shouldRedirectToLearn}
+        isActive={
+          !isFinished &&
+          hearts > 0 &&
+          !shouldRedirectToLearn &&
+          !isExitModalOpen
+        }
         onActiveSecondsChange={(seconds) => {
           studyDurationSecondsRef.current = seconds;
         }}
