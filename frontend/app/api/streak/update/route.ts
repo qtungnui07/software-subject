@@ -97,7 +97,7 @@ export async function POST(request: Request) {
         if (!reachedMinimumNow) {
             return NextResponse.json({
                 lessonId: parsedBody.lessonId,
-                status: "already_completed_today",
+                status: "needs_more_time",
                 message: `Cần học đủ ${MIN_STREAK_STUDY_MINUTES} phút trong ngày để tính streak.`,
                 didIncrease: false,
                 didReset: false,

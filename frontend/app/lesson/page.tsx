@@ -18,6 +18,7 @@ import {
 } from "@/lib/chapter-one-progress";
 import { StreakNotification } from "@/components/streak/streak-notification";
 import type { StreakNotificationInput } from "@/components/streak/streak-data";
+import { STREAK_UPDATED_EVENT } from "@/components/streak/use-streak";
 
 // 5 mock questions related to English Communication
 const MOCK_QUESTIONS = [
@@ -239,6 +240,8 @@ const LessonContent = () => {
         if (!streakResponse.ok) return;
 
         const data = (await streakResponse.json()) as StreakUpdateResult;
+
+        window.dispatchEvent(new Event(STREAK_UPDATED_EVENT));
 
         setStreakResult({
           status: data.status,

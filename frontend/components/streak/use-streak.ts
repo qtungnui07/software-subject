@@ -4,6 +4,8 @@ import { useCallback, useEffect, useRef, useState } from "react";
 
 import { DEFAULT_STREAK_DATA, type CurrentStreakData } from "./streak-data";
 
+export const STREAK_UPDATED_EVENT = "robogo-streak-updated";
+
 type UseStreakState = {
     data: CurrentStreakData;
     isLoading: boolean;
@@ -77,6 +79,20 @@ export const useStreak = (): UseStreakState => {
 
         loadStreak();
     }, [tick]);
+
+    useEffect(() => {
+        const refetchStreak = () => {
+            setTick((t) => t + 1);
+        };
+
+        window.addEventListener(STREAK_UPDATED_EVENT, refetchStreak);
+        window.addEventListener("focus", refetchStreak);
+
+        return () => {
+            window.removeEventListener(STREAK_UPDATED_EVENT, refetchStreak);
+            window.removeEventListener("focus", refetchStreak);
+        };
+    }, []);
 
     const refetch = useCallback(() => {
         setState((prev) => ({ ...prev, isLoading: true }));
