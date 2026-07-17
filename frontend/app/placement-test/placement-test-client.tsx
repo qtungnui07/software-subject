@@ -31,7 +31,7 @@ import {
   type PlacementDraft,
 } from "@/lib/placement-test/placement-draft";
 import { getPlacementSectionPresentation } from "@/lib/placement-test/placement-presentation";
-import type { ExerciseAnswer } from "@/types/exercise";
+import type { CoreExerciseAnswer } from "@/types/exercise";
 import type {
   PlacementResultSummary,
   PlacementTestGetResponse,
@@ -173,7 +173,7 @@ export default function PlacementTestClient({
     ? countAnsweredPlacementQuestions(draft.answers, questionIds)
     : 0;
 
-  const updateAnswer = (answer: ExerciseAnswer) => {
+  const updateAnswer = (answer: CoreExerciseAnswer) => {
     if (!draft || !question) return;
     saveDraft({
       ...draft,

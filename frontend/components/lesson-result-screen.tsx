@@ -8,7 +8,9 @@ type LessonResultScreenProps = {
   isCheckpoint: boolean;
   passed: boolean;
   correctAnswers: number;
+  partialAnswers?: number;
   wrongAnswers: number;
+  recoveredAnswers?: number;
   totalQuestions: number;
   accuracy: number;
   passThreshold: number;
@@ -29,7 +31,9 @@ export const LessonResultScreen = ({
   isCheckpoint,
   passed,
   correctAnswers,
+  partialAnswers = 0,
   wrongAnswers,
+  recoveredAnswers = 0,
   totalQuestions,
   accuracy,
   passThreshold,
@@ -76,10 +80,20 @@ export const LessonResultScreen = ({
           alt="Mascot"
           width={128}
           height={128}
-          className={passed ? "object-contain animate-robot-bounce" : "object-contain grayscale opacity-90 animate-robot-sad"}
+          className={
+            passed
+              ? "object-contain animate-robot-bounce"
+              : "object-contain grayscale opacity-90 animate-robot-sad"
+          }
         />
-        <div className={`absolute -bottom-2 -right-2 flex size-12 items-center justify-center rounded-full shadow-lg ring-4 ring-white dark:ring-[#182226] ${badgeClasses}`}>
-          {passed ? <Trophy className="size-6 stroke-[2.5]" /> : <XCircle className="size-6 stroke-[2.5]" />}
+        <div
+          className={`absolute -bottom-2 -right-2 flex size-12 items-center justify-center rounded-full shadow-lg ring-4 ring-white dark:ring-[#182226] ${badgeClasses}`}
+        >
+          {passed ? (
+            <Trophy className="size-6 stroke-[2.5]" />
+          ) : (
+            <XCircle className="size-6 stroke-[2.5]" />
+          )}
         </div>
       </div>
 
@@ -93,28 +107,53 @@ export const LessonResultScreen = ({
         {resultDescription}
       </p>
 
-      <div className="mt-8 grid w-full max-w-[640px] grid-cols-2 gap-4 md:grid-cols-4">
+      <div className="mt-8 grid w-full max-w-[760px] grid-cols-2 gap-4 md:grid-cols-5">
         <div className="flex flex-col items-center rounded-2xl border-2 border-green-200 dark:border-green-950/40 bg-green-50/50 dark:bg-green-950/10 p-4 shadow-sm">
-          <span className="text-xs font-black uppercase tracking-wide text-green-500 dark:text-green-400">Câu đúng</span>
+          <span className="text-xs font-black uppercase tracking-wide text-green-500 dark:text-green-400">
+            Câu đúng
+          </span>
           <span className="mt-1 text-2xl font-black text-green-600 dark:text-green-300">
             {correctAnswers}/{totalQuestions}
           </span>
         </div>
 
+        <div className="flex flex-col items-center rounded-2xl border-2 border-amber-200 bg-amber-50/50 p-4 shadow-sm dark:border-amber-950/40 dark:bg-amber-950/10">
+          <span className="text-xs font-black uppercase tracking-wide text-amber-500 dark:text-amber-400">
+            Gần đúng
+          </span>
+          <span className="mt-1 text-2xl font-black text-amber-600 dark:text-amber-300">
+            {partialAnswers}
+          </span>
+        </div>
+
         <div className="flex flex-col items-center rounded-2xl border-2 border-rose-200 dark:border-rose-950/40 bg-rose-50/50 dark:bg-rose-950/10 p-4 shadow-sm">
-          <span className="text-xs font-black uppercase tracking-wide text-rose-500 dark:text-rose-400">Câu sai</span>
-          <span className="mt-1 text-2xl font-black text-rose-600 dark:text-rose-300">{wrongAnswers}</span>
+          <span className="text-xs font-black uppercase tracking-wide text-rose-500 dark:text-rose-400">
+            Câu sai
+          </span>
+          <span className="mt-1 text-2xl font-black text-rose-600 dark:text-rose-300">
+            {wrongAnswers}
+          </span>
         </div>
 
         <div className="flex flex-col items-center rounded-2xl border-2 border-sky-200 dark:border-sky-950/40 bg-sky-50/50 dark:bg-sky-950/10 p-4 shadow-sm">
-          <span className="text-xs font-black uppercase tracking-wide text-sky-500 dark:text-sky-400">Độ chính xác</span>
-          <span className="mt-1 text-2xl font-black text-sky-600 dark:text-sky-300">{accuracy}%</span>
+          <span className="text-xs font-black uppercase tracking-wide text-sky-500 dark:text-sky-400">
+            Độ chính xác
+          </span>
+          <span className="mt-1 text-2xl font-black text-sky-600 dark:text-sky-300">
+            {accuracy}%
+          </span>
         </div>
 
         <div className="flex flex-col items-center rounded-2xl border-2 border-orange-200 dark:border-orange-950/40 bg-orange-50/50 dark:bg-orange-950/10 p-4 shadow-sm">
-          <span className="text-xs font-black uppercase tracking-wide text-orange-500 dark:text-orange-400">XP</span>
+          <span className="text-xs font-black uppercase tracking-wide text-orange-500 dark:text-orange-400">
+            XP
+          </span>
           <span className="mt-1 text-2xl font-black text-orange-600 dark:text-orange-300">
-            {passed && !completionBlocked ? (isWaitingForXp ? "Đang tính..." : `+${xpEarned} XP`) : "+0 XP"}
+            {passed && !completionBlocked
+              ? isWaitingForXp
+                ? "Đang tính..."
+                : `+${xpEarned} XP`
+              : "+0 XP"}
           </span>
         </div>
       </div>
@@ -122,12 +161,20 @@ export const LessonResultScreen = ({
       {passed && !completionBlocked ? (
         <div className="mt-4 grid w-full max-w-[420px] grid-cols-2 gap-3">
           <div className="rounded-2xl border-2 border-slate-200 dark:border-[#202f36] bg-slate-50 dark:bg-[#141f23] px-4 py-3">
-            <p className="text-xs font-black uppercase tracking-wide text-slate-400 dark:text-slate-500">Tổng XP</p>
-            <p className="mt-1 text-lg font-black text-slate-700 dark:text-slate-200">{totalXp}</p>
+            <p className="text-xs font-black uppercase tracking-wide text-slate-400 dark:text-slate-500">
+              Tổng XP
+            </p>
+            <p className="mt-1 text-lg font-black text-slate-700 dark:text-slate-200">
+              {totalXp}
+            </p>
           </div>
           <div className="rounded-2xl border-2 border-slate-200 dark:border-[#202f36] bg-slate-50 dark:bg-[#141f23] px-4 py-3">
-            <p className="text-xs font-black uppercase tracking-wide text-slate-400 dark:text-slate-500">Level</p>
-            <p className="mt-1 text-lg font-black text-slate-700 dark:text-slate-200">Level {level}</p>
+            <p className="text-xs font-black uppercase tracking-wide text-slate-400 dark:text-slate-500">
+              Level
+            </p>
+            <p className="mt-1 text-lg font-black text-slate-700 dark:text-slate-200">
+              Level {level}
+            </p>
           </div>
         </div>
       ) : null}
@@ -152,29 +199,50 @@ export const LessonResultScreen = ({
 
       {!passed ? (
         <p className="mt-2 max-w-[460px] rounded-2xl border-2 border-rose-200 dark:border-rose-950/40 bg-rose-50 dark:bg-rose-950/10 px-4 py-3 text-sm font-bold text-rose-600 dark:text-rose-450">
-          Kết quả hiện tại chưa mở khóa node tiếp theo. Tiến độ lộ trình được giữ nguyên.
+          Kết quả hiện tại chưa mở khóa node tiếp theo. Tiến độ lộ trình được
+          giữ nguyên.
         </p>
       ) : null}
       {completionBlocked ? (
         <p className="mt-2 max-w-[460px] rounded-2xl border-2 border-amber-200 dark:border-amber-950/40 bg-amber-50 dark:bg-amber-950/10 px-4 py-3 text-sm font-bold text-amber-700 dark:text-amber-400">
-          Đây là lượt luyện tập ngoài thứ tự hiện tại. Không cộng XP, không cập nhật streak và không mở khóa node tiếp theo.
+          Đây là lượt luyện tập ngoài thứ tự hiện tại. Không cộng XP, không cập
+          nhật streak và không mở khóa node tiếp theo.
+        </p>
+      ) : null}
+
+      {recoveredAnswers > 0 ? (
+        <p className="mt-3 max-w-[460px] rounded-2xl border-2 border-violet-200 bg-violet-50 px-4 py-3 text-sm font-bold text-violet-700 dark:border-violet-950/40 dark:bg-violet-950/10 dark:text-violet-300">
+          Bạn đã khắc phục {recoveredAnswers} nội dung trong phần Ôn lỗi. Kết
+          quả này không cộng thêm XP.
         </p>
       ) : null}
 
       <div className="mt-8 flex w-full max-w-[360px] flex-col gap-3">
         {passed ? (
-          <Button variant="primary" onClick={onContinue} className="h-12 w-full rounded-2xl">
+          <Button
+            variant="primary"
+            onClick={onContinue}
+            className="h-12 w-full rounded-2xl"
+          >
             <CheckCircle2 className="mr-2 size-4 stroke-[3]" />
             Tiếp tục lộ trình
           </Button>
         ) : (
-          <Button variant="danger" onClick={onRestart} className="h-12 w-full rounded-2xl">
+          <Button
+            variant="danger"
+            onClick={onRestart}
+            className="h-12 w-full rounded-2xl"
+          >
             <RefreshCw className="mr-2 size-4 stroke-[3]" />
             Học lại
           </Button>
         )}
 
-        <Button variant="outline" onClick={onBackToLearn} className="h-12 w-full rounded-2xl border-2 border-slate-200 dark:border-[#202f36] dark:text-slate-200 dark:hover:bg-[#202f36]/40">
+        <Button
+          variant="outline"
+          onClick={onBackToLearn}
+          className="h-12 w-full rounded-2xl border-2 border-slate-200 dark:border-[#202f36] dark:text-slate-200 dark:hover:bg-[#202f36]/40"
+        >
           <Home className="mr-2 size-4 stroke-[3]" />
           Quay lại lộ trình
         </Button>

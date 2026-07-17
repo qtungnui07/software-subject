@@ -9,7 +9,7 @@ import {
 import { PlacementMemoryResultStore } from "@/lib/placement-test/placement-result-store";
 import { gradePlacementSubmission } from "@/lib/placement-test/placement-submission";
 import { toPublicPlacementQuestions } from "@/lib/placement-test/placement-public-question";
-import type { Exercise, ExerciseAnswer } from "@/types/exercise";
+import type { CoreExercise, CoreExerciseAnswer } from "@/types/exercise";
 import { ENGLISH_PLACEMENT_TEST_VERSION } from "@/types/placement-test";
 
 const publicQuestions = toPublicPlacementQuestions(englishPlacementQuestions);
@@ -27,7 +27,7 @@ for (const secretField of [
   );
 }
 
-const getCorrectAnswer = (exercise: Exercise): ExerciseAnswer => {
+const getCorrectAnswer = (exercise: CoreExercise): CoreExerciseAnswer => {
   switch (exercise.type) {
     case "multiple_choice":
     case "dialogue_choice":

@@ -1,5 +1,10 @@
 import { validateExercise } from "@/lib/exercises/exercise-validator";
-import type { Exercise, ExerciseAnswer, ExerciseType } from "@/types/exercise";
+import type {
+  CoreExercise,
+  CoreExerciseAnswer,
+  CoreExerciseType,
+  Exercise,
+} from "@/types/exercise";
 import {
   ENGLISH_PLACEMENT_TEST_VERSION,
   type PlacementBand,
@@ -9,7 +14,7 @@ import {
 
 const EXPECTED_QUESTION_COUNT = 12;
 const EXPECTED_PER_BAND = 4;
-const EXPECTED_TYPES = new Set<ExerciseType>([
+const EXPECTED_TYPES = new Set<CoreExerciseType>([
   "multiple_choice",
   "arrange_words",
   "fill_blank",
@@ -33,7 +38,7 @@ export const validatePlacementQuestions = (
   const questionIds = new Set<string>();
   const orders = new Set<number>();
   const prompts = new Set<string>();
-  const types = new Set<ExerciseType>();
+  const types = new Set<CoreExerciseType>();
   const skills = new Set<string>();
   const bandCounts = new Map<PlacementBand, number>([
     [1, 0],
@@ -145,7 +150,10 @@ export const validatePlacementQuestions = (
   return issues;
 };
 
-const isAnswerShapeValid = (exercise: Exercise, answer: ExerciseAnswer) => {
+const isAnswerShapeValid = (
+  exercise: CoreExercise,
+  answer: CoreExerciseAnswer
+) => {
   switch (exercise.type) {
     case "multiple_choice":
     case "dialogue_choice":

@@ -14,13 +14,13 @@ import {
   startPlacementOnboarding,
 } from "@/lib/onboarding/onboarding-policy";
 import { gradePlacementSubmission } from "@/lib/placement-test/placement-submission";
-import type { Exercise, ExerciseAnswer } from "@/types/exercise";
+import type { CoreExercise, CoreExerciseAnswer } from "@/types/exercise";
 import {
   ENGLISH_PLACEMENT_TEST_VERSION,
   type PlacementTestSubmission,
 } from "@/types/placement-test";
 
-const getCorrectAnswer = (exercise: Exercise): ExerciseAnswer => {
+const getCorrectAnswer = (exercise: CoreExercise): CoreExerciseAnswer => {
   switch (exercise.type) {
     case "multiple_choice":
     case "dialogue_choice":
@@ -33,7 +33,7 @@ const getCorrectAnswer = (exercise: Exercise): ExerciseAnswer => {
   }
 };
 
-const getWrongAnswer = (exercise: Exercise): ExerciseAnswer => {
+const getWrongAnswer = (exercise: CoreExercise): CoreExerciseAnswer => {
   switch (exercise.type) {
     case "multiple_choice":
     case "dialogue_choice":

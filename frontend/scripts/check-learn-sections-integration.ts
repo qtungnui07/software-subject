@@ -73,7 +73,7 @@ assert.match(sectionCardSource, /highlighted &&/);
 assert.match(lessonPlayerSource, /\/sections\?requested=/);
 assert.match(
   lessonPlayerSource,
-  /const redirectToLearn = \(\) => \{\s*router\.push\("\/learn"\);/,
+  /const redirectToLearn = \(\) => \{[\s\S]*?router\.push\("\/learn"\);/,
 );
 assert.doesNotMatch(lessonPlayerSource, /\/learn\?section=/);
 assert.doesNotMatch(onboardingSource, /\/learn\?section=/);

@@ -162,8 +162,10 @@ for (const section of englishCourse.sections) {
   for (const node of orderedNodes.filter((item) => item.type !== "chest")) {
     assert(node.href, `${node.id} must keep an internal navigation target.`);
     assert(
-      node.href.startsWith("/lesson?id=") || node.href.startsWith("/lesson/"),
-      `${node.id} must navigate through a supported Robogo lesson route.`,
+      node.href.startsWith("/lesson?id=") ||
+        node.href.startsWith("/lesson/") ||
+        node.href.startsWith("/checkpoint/"),
+      `${node.id} must navigate through a supported Robogo learning route.`,
     );
   }
 }

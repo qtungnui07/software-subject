@@ -3,10 +3,10 @@ import assert from "node:assert/strict";
 import { englishPlacementQuestions } from "@/data/placement-tests/english-placement-test";
 import { PlacementMemoryResultStore } from "@/lib/placement-test/placement-result-store";
 import { gradePlacementSubmission } from "@/lib/placement-test/placement-submission";
-import type { Exercise, ExerciseAnswer } from "@/types/exercise";
+import type { CoreExercise, CoreExerciseAnswer } from "@/types/exercise";
 import { ENGLISH_PLACEMENT_TEST_VERSION } from "@/types/placement-test";
 
-const getAnswer = (exercise: Exercise, correct: boolean): ExerciseAnswer => {
+const getAnswer = (exercise: CoreExercise, correct: boolean): CoreExerciseAnswer => {
   switch (exercise.type) {
     case "multiple_choice":
     case "dialogue_choice":

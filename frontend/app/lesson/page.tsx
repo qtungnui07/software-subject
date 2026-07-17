@@ -28,20 +28,39 @@ import {
 import { StreakNotification } from "@/components/streak/streak-notification";
 import type { StreakNotificationInput } from "@/components/streak/streak-data";
 import { ExerciseFeedback } from "@/components/lesson/exercise-feedback";
+import { ResumeSessionDialog } from "@/components/lesson/resume-session-dialog";
+import { SessionSaveStatus } from "@/components/lesson/session-save-status";
+import { SilentModeToggle } from "@/components/lesson/silent-mode-toggle";
 import { ExerciseRenderer } from "@/components/lesson/exercise-renderer";
 import {
   checkExerciseAnswer,
   isExerciseAnswerComplete,
 } from "@/lib/exercises/check-exercise-answer";
 import { getExercisesForLesson } from "@/lib/exercises/exercise-catalog";
-import { getLearningNodeById } from "@/lib/courses/course-catalog";
 import {
-  getCourseNodeAccess,
-} from "@/lib/courses/course-access";
+  canRetryExerciseAttempt,
+  recordExerciseAttempt,
+} from "@/lib/exercises/exercise-attempt";
+import { buildLessonScoreSummary } from "@/lib/exercises/lesson-score-summary";
+import {
+  createMistakeReviewQueue,
+  getCorrectMatchPairLeftIds,
+} from "@/lib/exercises/mistake-review";
+import { getLearningNodeById } from "@/lib/courses/course-catalog";
+import { useLearningSessionDraft } from "@/hooks/use-learning-session-draft";
+import { createExerciseCatalogFingerprint } from "@/lib/learning-session/draft-fingerprint";
+import { getLearningSessionDraftKey } from "@/lib/learning-session/draft-storage";
+import { validateLearningSessionDraft } from "@/lib/learning-session/draft-validator";
+import { getCourseNodeAccess } from "@/lib/courses/course-access";
 import { projectCourseProgressToChapterOne } from "@/lib/courses/chapter-one-adapter";
 import type { CourseProgressState } from "@/lib/courses/course-progress";
 import type { ExerciseAnswer, ExerciseCheckResult } from "@/types/exercise";
+import type { ExerciseAttemptResult } from "@/types/lesson-session";
 import type { LearningCompletionResult } from "@/types/learning-completion";
+import type {
+  AssessmentMode,
+  LessonSessionDraft,
+} from "@/types/learning-session-draft";
 
 const LESSON_PASS_THRESHOLD = 60;
 const CHECKPOINT_PASS_THRESHOLD = 70;
@@ -97,6 +116,9 @@ const LessonContent = () => {
         }
       : undefined;
   const shouldRedirectToLearn = requestedNode?.type === "chest";
+  const checkpointRedirectId =
+    requestedNode?.type === "checkpoint" ? requestedNode.nodeId : null;
+  const shouldRedirectToCheckpoint = Boolean(checkpointRedirectId);
   const hasKnownLessonNode = Boolean(requestedNode);
   const lessonNode: PlayableLessonNode = isPlayableLessonNode(requestedNode)
     ? requestedNode
@@ -113,11 +135,28 @@ const LessonContent = () => {
   useEffect(() => {
     if (shouldRedirectToLearn) {
       router.replace("/learn");
+      return;
     }
-  }, [router, shouldRedirectToLearn]);
+
+    if (checkpointRedirectId) {
+      router.replace(`/checkpoint/${checkpointRedirectId}`);
+    }
+  }, [checkpointRedirectId, router, shouldRedirectToLearn]);
 
   // Exercise engine states. The completion/XP flow below remains unchanged.
   const [currentExerciseIndex, setCurrentExerciseIndex] = useState(0);
+  const [currentUserId, setCurrentUserId] = useState<string | null>(null);
+  const [assessmentMode, setAssessmentMode] =
+    useState<AssessmentMode>("standard");
+  const [preferredAssessmentMode, setPreferredAssessmentMode] =
+    useState<AssessmentMode>("standard");
+  const [resumeDraft, setResumeDraft] = useState<LessonSessionDraft | null>(
+    null,
+  );
+  const [draftChecked, setDraftChecked] = useState(false);
+  const [draftReady, setDraftReady] = useState(false);
+  const [durationSeconds, setDurationSeconds] = useState(0);
+  const [afkCount, setAfkCount] = useState(0);
   const [exerciseAnswer, setExerciseAnswer] = useState<ExerciseAnswer | null>(
     null,
   );
@@ -128,9 +167,24 @@ const LessonContent = () => {
   const [isExitModalOpen, setIsExitModalOpen] = useState(false);
   const [isFinished, setIsFinished] = useState(false);
   const [correctAnswersCount, setCorrectAnswersCount] = useState(0);
+  const [attemptResults, setAttemptResults] = useState<
+    Record<string, ExerciseAttemptResult>
+  >({});
+  const [lockedMatchPairLeftIds, setLockedMatchPairLeftIds] = useState<
+    string[]
+  >([]);
+  const [isRetryAttempt, setIsRetryAttempt] = useState(false);
+  const [isReviewMode, setIsReviewMode] = useState(false);
+  const [reviewExerciseIds, setReviewExerciseIds] = useState<string[]>([]);
+  const [reviewExerciseIndex, setReviewExerciseIndex] = useState(0);
+  const [reviewResults, setReviewResults] = useState<
+    Record<string, { exerciseId: string; recovered: boolean }>
+  >({});
 
   // XP + Streak states
-  const [xpResult, setXpResult] = useState<LearningCompletionResult["xp"] | null>(null);
+  const [xpResult, setXpResult] = useState<
+    LearningCompletionResult["xp"] | null
+  >(null);
   const [isClaimingXp, setIsClaimingXp] = useState(false);
   const [xpError, setXpError] = useState<string | null>(null);
   const [streakResult, setStreakResult] =
@@ -154,34 +208,217 @@ const LessonContent = () => {
     () => getExercisesForLesson(lessonNode.nodeId),
     [lessonNode.nodeId],
   );
-  const currentExercise = exercises[currentExerciseIndex];
+  const catalogFingerprint = useMemo(
+    () => createExerciseCatalogFingerprint(exercises),
+    [exercises],
+  );
+  const draftContentVersion = Math.max(
+    1,
+    ...exercises.map((exercise) => exercise.contentVersion ?? 1),
+  );
+  const draftStorageKey = useMemo(
+    () =>
+      currentUserId
+        ? getLearningSessionDraftKey({
+            kind: "lesson",
+            userId: currentUserId,
+            contentId: lessonNode.nodeId,
+          })
+        : null,
+    [currentUserId, lessonNode.nodeId],
+  );
+  const usesSectionOneV2Session = useMemo(
+    () =>
+      exercises.some(
+        (exercise) =>
+          exercise.contentVersion === 2 ||
+          exercise.type === "match_pairs" ||
+          exercise.type === "arrange_dialogue" ||
+          exercise.type === "sentence_rewrite" ||
+          exercise.type === "short_writing",
+      ),
+    [exercises],
+  );
+  const reviewExerciseId = isReviewMode
+    ? reviewExerciseIds[reviewExerciseIndex]
+    : null;
+  const currentExercise = isReviewMode
+    ? exercises.find((exercise) => exercise.id === reviewExerciseId)
+    : exercises[currentExerciseIndex];
   const isAnswered = checkResult !== null;
   const isCorrect = checkResult?.isCorrect ?? false;
+  const isPartiallyCorrect = Boolean(
+    checkResult && !checkResult.isCorrect && checkResult.scoreRatio > 0,
+  );
   const answerComplete = currentExercise
     ? isExerciseAnswerComplete(currentExercise, exerciseAnswer)
     : false;
-  const progress =
-    exercises.length === 0
+  const progress = isReviewMode
+    ? 100
+    : exercises.length === 0
       ? 0
       : (currentExerciseIndex / exercises.length) * 100;
   const totalQuestions = exercises.length;
-  const accuracy =
-    totalQuestions === 0
+  const lessonScoreSummary = useMemo(
+    () => buildLessonScoreSummary(exercises, attemptResults),
+    [attemptResults, exercises],
+  );
+  const accuracy = usesSectionOneV2Session
+    ? lessonScoreSummary.accuracy
+    : totalQuestions === 0
       ? 0
       : Math.round((correctAnswersCount / totalQuestions) * 100);
-  const wrongAnswersCount = totalQuestions - correctAnswersCount;
+  const correctAnswersForResult = usesSectionOneV2Session
+    ? lessonScoreSummary.correctCount
+    : correctAnswersCount;
+  const partialAnswersCount = usesSectionOneV2Session
+    ? lessonScoreSummary.partialCount
+    : 0;
+  const wrongAnswersCount = usesSectionOneV2Session
+    ? lessonScoreSummary.incorrectCount
+    : totalQuestions - correctAnswersCount;
+  const recoveredAnswersCount = Object.values(reviewResults).filter(
+    (reviewResult) => reviewResult.recovered,
+  ).length;
+  const currentAttempt = currentExercise
+    ? attemptResults[currentExercise.id]
+    : undefined;
+  const canRetryCurrentExercise =
+    usesSectionOneV2Session &&
+    !isReviewMode &&
+    canRetryExerciseAttempt(currentAttempt, checkResult);
   const isCheckpoint = lessonNode.type === "checkpoint";
   const passThreshold = isCheckpoint
     ? CHECKPOINT_PASS_THRESHOLD
     : LESSON_PASS_THRESHOLD;
   const passed = accuracy >= passThreshold;
   const xpLessonId = lessonNode.nodeId;
+  const lessonDraft = useMemo<LessonSessionDraft | null>(() => {
+    if (
+      !currentUserId ||
+      !draftReady ||
+      !usesSectionOneV2Session ||
+      isFinished
+    ) {
+      return null;
+    }
+
+    return {
+      schemaVersion: 1,
+      kind: "lesson",
+      userId: currentUserId,
+      contentId: lessonNode.nodeId,
+      contentVersion: draftContentVersion,
+      catalogFingerprint,
+      savedAt: new Date().toISOString(),
+      assessmentMode,
+      durationSeconds,
+      afkCount,
+      currentExerciseIndex,
+      currentAnswer: exerciseAnswer,
+      attemptResults,
+      hearts,
+      isRetryAttempt: isRetryAttempt || checkResult !== null,
+      lockedMatchPairLeftIds,
+      isReviewMode,
+      reviewExerciseIds,
+      reviewExerciseIndex,
+      reviewResults,
+    };
+  }, [
+    afkCount,
+    assessmentMode,
+    attemptResults,
+    catalogFingerprint,
+    checkResult,
+    currentExerciseIndex,
+    currentUserId,
+    draftContentVersion,
+    draftReady,
+    durationSeconds,
+    exerciseAnswer,
+    hearts,
+    isFinished,
+    isRetryAttempt,
+    isReviewMode,
+    lessonNode.nodeId,
+    lockedMatchPairLeftIds,
+    reviewExerciseIds,
+    reviewExerciseIndex,
+    reviewResults,
+    usesSectionOneV2Session,
+  ]);
+  const {
+    read: readLessonDraft,
+    clear: clearLessonDraft,
+    saveNow: saveLessonDraftNow,
+    saveStatus: lessonDraftSaveStatus,
+  } = useLearningSessionDraft({
+    storageKey: draftStorageKey,
+    enabled: Boolean(
+      currentUserId && draftReady && usesSectionOneV2Session && !isFinished,
+    ),
+    draft: lessonDraft,
+  });
+
+  useEffect(() => {
+    if (
+      !currentUserId ||
+      draftChecked ||
+      !usesSectionOneV2Session ||
+      exercises.length === 0
+    ) {
+      return;
+    }
+
+    const restored = validateLearningSessionDraft({
+      value: readLessonDraft(),
+      kind: "lesson",
+      userId: currentUserId,
+      contentId: lessonNode.nodeId,
+      contentVersion: draftContentVersion,
+      catalogFingerprint,
+      exercises,
+    });
+
+    window.setTimeout(() => {
+      if (restored?.kind === "lesson") {
+        setResumeDraft(restored);
+      } else {
+        clearLessonDraft();
+        setDraftReady(true);
+      }
+      setDraftChecked(true);
+    }, 0);
+  }, [
+    catalogFingerprint,
+    clearLessonDraft,
+    currentUserId,
+    draftChecked,
+    draftContentVersion,
+    exercises,
+    lessonNode.nodeId,
+    readLessonDraft,
+    usesSectionOneV2Session,
+  ]);
+
+  useEffect(() => {
+    const currentId = currentExercise?.id ?? null;
+    if (!currentId) return;
+    window.setTimeout(() => setAssessmentMode(preferredAssessmentMode), 0);
+    // The preferred mode intentionally applies only when the exercise changes.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [currentExercise?.id]);
 
   useEffect(() => {
     let isMounted = true;
 
     const resolveAccess = async () => {
-      if (!hasKnownLessonNode || shouldRedirectToLearn) {
+      if (
+        !hasKnownLessonNode ||
+        shouldRedirectToLearn ||
+        shouldRedirectToCheckpoint
+      ) {
         if (isMounted) {
           setIsProgressReady(true);
           setAccessState("allowed");
@@ -215,6 +452,7 @@ const LessonContent = () => {
         const access = getCourseNodeAccess(data.progress, lessonNode.nodeId);
 
         setChapterOneProgressOwner(data.user.id);
+        setCurrentUserId(data.user.id);
         saveChapterOneProgress(
           projectCourseProgressToChapterOne(data.progress),
         );
@@ -252,6 +490,7 @@ const LessonContent = () => {
     lessonNode.nodeId,
     rawLessonId,
     router,
+    shouldRedirectToCheckpoint,
     shouldRedirectToLearn,
   ]);
 
@@ -285,7 +524,7 @@ const LessonContent = () => {
             nodeId: xpLessonId,
             accuracy,
             durationSeconds: studyDurationSecondsRef.current,
-            afkCount: studyTimerRef.current?.getAfkCount() ?? 0,
+            afkCount,
             idempotencyKey: completionIdempotencyKeyRef.current,
           }),
         });
@@ -310,6 +549,7 @@ const LessonContent = () => {
 
         const completion = (await response.json()) as LearningCompletionResult;
         if (isCancelled) return;
+        clearLessonDraft();
 
         if (isChapterOneNode) {
           saveChapterOneProgress(
@@ -385,6 +625,8 @@ const LessonContent = () => {
     };
   }, [
     accuracy,
+    afkCount,
+    clearLessonDraft,
     isChapterOneNode,
     isCheckpoint,
     isFinished,
@@ -401,22 +643,127 @@ const LessonContent = () => {
     const result = checkExerciseAnswer(currentExercise, exerciseAnswer);
     setCheckResult(result);
 
-    if (result.isCorrect) {
-      setCorrectAnswersCount((currentCount) => currentCount + 1);
-    } else {
+    if (!usesSectionOneV2Session) {
+      if (result.isCorrect) {
+        setCorrectAnswersCount((currentCount) => currentCount + 1);
+      } else {
+        setHearts((currentHearts) => Math.max(0, currentHearts - 1));
+      }
+      return;
+    }
+
+    if (isReviewMode) {
+      setReviewResults((currentResults) => ({
+        ...currentResults,
+        [currentExercise.id]: {
+          exerciseId: currentExercise.id,
+          recovered: result.isCorrect,
+        },
+      }));
+      return;
+    }
+
+    const previousAttempt = attemptResults[currentExercise.id];
+    const shouldLoseHeart =
+      result.scoreRatio === 0 &&
+      currentExercise.type !== "short_writing" &&
+      previousAttempt?.lostHeart !== true;
+    const nextAttempt = recordExerciseAttempt({
+      exerciseId: currentExercise.id,
+      previous: previousAttempt,
+      result,
+      lostHeart: shouldLoseHeart,
+    });
+
+    setAttemptResults((currentAttempts) => ({
+      ...currentAttempts,
+      [currentExercise.id]: nextAttempt,
+    }));
+    setIsRetryAttempt(false);
+
+    if (shouldLoseHeart) {
       setHearts((currentHearts) => Math.max(0, currentHearts - 1));
     }
-  }, [answerComplete, currentExercise, exerciseAnswer, isAnswered]);
+  }, [
+    answerComplete,
+    attemptResults,
+    currentExercise,
+    exerciseAnswer,
+    isAnswered,
+    isReviewMode,
+    usesSectionOneV2Session,
+  ]);
 
   const onContinue = useCallback(async () => {
-    if (!isAnswered) return;
+    if (!isAnswered || !currentExercise) return;
+
+    if (canRetryCurrentExercise) {
+      if (
+        currentExercise.type === "match_pairs" &&
+        exerciseAnswer?.type === "match_pairs"
+      ) {
+        const correctLeftIds = getCorrectMatchPairLeftIds(
+          currentExercise,
+          exerciseAnswer.pairs,
+        );
+        const correctLeftIdSet = new Set(correctLeftIds);
+        setExerciseAnswer({
+          type: "match_pairs",
+          pairs: exerciseAnswer.pairs.filter((pair) =>
+            correctLeftIdSet.has(pair.leftId),
+          ),
+        });
+        setLockedMatchPairLeftIds(correctLeftIds);
+      }
+
+      setCheckResult(null);
+      setIsRetryAttempt(true);
+      return;
+    }
+
+    if (isReviewMode) {
+      setExerciseAnswer(null);
+      setCheckResult(null);
+      setLockedMatchPairLeftIds([]);
+
+      if (reviewExerciseIndex < reviewExerciseIds.length - 1) {
+        setReviewExerciseIndex((currentIndex) => currentIndex + 1);
+        return;
+      }
+
+      const activeSeconds = await studyTimerRef.current?.flush({
+        keepalive: true,
+      });
+      if (typeof activeSeconds === "number") {
+        studyDurationSecondsRef.current = activeSeconds;
+      }
+      setIsReviewMode(false);
+      setIsFinished(true);
+      return;
+    }
 
     setExerciseAnswer(null);
     setCheckResult(null);
+    setLockedMatchPairLeftIds([]);
+    setIsRetryAttempt(false);
 
     if (currentExerciseIndex < exercises.length - 1) {
       setCurrentExerciseIndex((currentIndex) => currentIndex + 1);
       return;
+    }
+
+    if (usesSectionOneV2Session) {
+      const reviewQueue = createMistakeReviewQueue(
+        exercises,
+        attemptResults,
+        3,
+      );
+      if (reviewQueue.length > 0) {
+        setReviewExerciseIds(reviewQueue);
+        setReviewExerciseIndex(0);
+        setIsReviewMode(true);
+        return;
+      }
     }
 
     const activeSeconds = await studyTimerRef.current?.flush({
@@ -426,13 +773,30 @@ const LessonContent = () => {
       studyDurationSecondsRef.current = activeSeconds;
     }
     setIsFinished(true);
-  }, [currentExerciseIndex, exercises.length, isAnswered]);
+  }, [
+    attemptResults,
+    canRetryCurrentExercise,
+    currentExercise,
+    currentExerciseIndex,
+    exerciseAnswer,
+    exercises,
+    isAnswered,
+    isReviewMode,
+    reviewExerciseIds.length,
+    reviewExerciseIndex,
+    usesSectionOneV2Session,
+  ]);
 
   // Choice exercises keep the familiar 1-4 shortcuts. Enter checks the current
   // answer and, after feedback is visible, continues to the next exercise.
   useEffect(() => {
     const handleKeyDown = (event: KeyboardEvent) => {
-      if (isFinished || hearts === 0 || !currentExercise) return;
+      if (
+        isFinished ||
+        (hearts === 0 && !isRetryAttempt && !isReviewMode) ||
+        !currentExercise
+      )
+        return;
 
       const target = event.target;
       const isTypingTarget =
@@ -471,18 +835,34 @@ const LessonContent = () => {
     hearts,
     isAnswered,
     isFinished,
+    isRetryAttempt,
+    isReviewMode,
     onCheck,
     onContinue,
   ]);
 
   // Restart lesson
   const onRestart = () => {
+    clearLessonDraft();
     setCurrentExerciseIndex(0);
     setExerciseAnswer(null);
     setCheckResult(null);
     setHearts(5);
     setIsFinished(false);
     setCorrectAnswersCount(0);
+    setAssessmentMode("standard");
+    setPreferredAssessmentMode("standard");
+    setResumeDraft(null);
+    setDraftReady(true);
+    setDurationSeconds(0);
+    setAfkCount(0);
+    setAttemptResults({});
+    setLockedMatchPairLeftIds([]);
+    setIsRetryAttempt(false);
+    setIsReviewMode(false);
+    setReviewExerciseIds([]);
+    setReviewExerciseIndex(0);
+    setReviewResults({});
     setXpResult(null);
     setIsClaimingXp(false);
     setXpError(null);
@@ -497,6 +877,7 @@ const LessonContent = () => {
 
   // Redirect to learn page
   const redirectToLearn = () => {
+    saveLessonDraftNow();
     router.push("/learn");
   };
 
@@ -555,7 +936,13 @@ const LessonContent = () => {
   }
 
   // Game over state
-  if (hearts === 0 && !isFinished && !isAnswered) {
+  if (
+    hearts === 0 &&
+    !isFinished &&
+    !isAnswered &&
+    !isRetryAttempt &&
+    !isReviewMode
+  ) {
     return (
       <div className="flex min-h-screen flex-col items-center justify-center bg-white dark:bg-[#182226] px-4 text-center">
         <div className="relative mx-auto mb-6 flex size-32 items-center justify-center">
@@ -628,8 +1015,10 @@ const LessonContent = () => {
           lessonTitle={lessonNode.title}
           isCheckpoint={isCheckpoint}
           passed={passed}
-          correctAnswers={correctAnswersCount}
+          correctAnswers={correctAnswersForResult}
+          partialAnswers={partialAnswersCount}
           wrongAnswers={wrongAnswersCount}
+          recoveredAnswers={recoveredAnswersCount}
           totalQuestions={totalQuestions}
           accuracy={accuracy}
           passThreshold={passThreshold}
@@ -654,23 +1043,29 @@ const LessonContent = () => {
     );
   }
 
-  const mascotImageSrc = !isAnswered
-    ? "/robot-neutral-v4.png"
-    : isCorrect
-      ? "/robot-happy-v4.png"
-      : "/robot-sad-v4.png";
+  if (!currentExercise) {
+    return null;
+  }
 
-  const mascotAnimationClass = !isAnswered
-    ? "animate-robot-float"
-    : isCorrect
-      ? "animate-robot-bounce"
-      : "animate-robot-sad";
+  const mascotImageSrc =
+    !isAnswered || isPartiallyCorrect
+      ? "/robot-neutral-v4.png"
+      : isCorrect
+        ? "/robot-happy-v4.png"
+        : "/robot-sad-v4.png";
+
+  const mascotAnimationClass =
+    !isAnswered || isPartiallyCorrect
+      ? "animate-robot-float"
+      : isCorrect
+        ? "animate-robot-bounce"
+        : "animate-robot-sad";
 
   return (
     <div className="flex min-h-screen flex-col bg-white dark:bg-[#182226] text-slate-800 dark:text-slate-100">
       {/* Header bài học */}
       <LessonHeader
-        title={lessonNode.title}
+        title={isReviewMode ? `${lessonNode.title} · Ôn lỗi` : lessonNode.title}
         progress={progress}
         hearts={hearts}
         onExitClick={() => setIsExitModalOpen(true)}
@@ -696,11 +1091,45 @@ const LessonContent = () => {
             </div>
           </div>
 
+          {usesSectionOneV2Session ? (
+            <div className="flex flex-wrap items-center justify-between gap-3">
+              <SilentModeToggle
+                mode={preferredAssessmentMode}
+                onChange={setPreferredAssessmentMode}
+              />
+              <div className="flex items-center gap-2">
+                {preferredAssessmentMode !== assessmentMode ? (
+                  <span className="text-xs font-black text-sky-600 dark:text-sky-300">
+                    Áp dụng từ hoạt động tiếp theo
+                  </span>
+                ) : null}
+                <SessionSaveStatus status={lessonDraftSaveStatus} />
+              </div>
+            </div>
+          ) : null}
+
+          {isReviewMode ? (
+            <div className="rounded-2xl border-2 border-violet-200 bg-violet-50 px-4 py-3 text-sm font-black text-violet-700 dark:border-violet-950/50 dark:bg-violet-950/20 dark:text-violet-300">
+              Ôn lỗi {reviewExerciseIndex + 1}/{reviewExerciseIds.length} ·
+              Không mất tim và không cộng thêm XP
+            </div>
+          ) : null}
+
           <ExerciseRenderer
             exercise={currentExercise}
             answer={exerciseAnswer}
             disabled={isAnswered}
             result={checkResult}
+            lockedMatchPairLeftIds={lockedMatchPairLeftIds}
+            hintAvailable={
+              usesSectionOneV2Session && (currentAttempt?.attempts ?? 0) > 0
+            }
+            assessmentMode={assessmentMode}
+            revealContext={
+              usesSectionOneV2Session
+                ? isReviewMode || (isAnswered && !canRetryCurrentExercise)
+                : isAnswered
+            }
             onAnswerChange={setExerciseAnswer}
           />
         </div>
@@ -708,13 +1137,23 @@ const LessonContent = () => {
 
       <footer
         className={`border-t-2 px-4 py-4 transition-colors duration-250 md:px-6 md:py-6
-          ${isAnswered ? (isCorrect ? "border-green-200 bg-green-50 dark:border-green-950/40 dark:bg-green-950/20" : "border-rose-200 bg-rose-50 dark:border-rose-950/40 dark:bg-rose-950/20") : "border-slate-200 bg-white dark:border-[#202f36] dark:bg-[#182226]"}
+          ${isAnswered ? (isCorrect ? "border-green-200 bg-green-50 dark:border-green-950/40 dark:bg-green-950/20" : isPartiallyCorrect ? "border-amber-200 bg-amber-50 dark:border-amber-950/40 dark:bg-amber-950/20" : "border-rose-200 bg-rose-50 dark:border-rose-950/40 dark:bg-rose-950/20") : "border-slate-200 bg-white dark:border-[#202f36] dark:bg-[#182226]"}
         `}
       >
         <div className="mx-auto flex max-w-[840px] flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
           <div className="min-w-0 flex-1">
             {checkResult ? (
-              <ExerciseFeedback result={checkResult} />
+              <ExerciseFeedback
+                result={checkResult}
+                attempts={isReviewMode ? 1 : (currentAttempt?.attempts ?? 1)}
+                canRetry={canRetryCurrentExercise}
+                revealCorrectAnswer={
+                  !usesSectionOneV2Session ||
+                  isReviewMode ||
+                  !canRetryCurrentExercise
+                }
+                isReviewMode={isReviewMode}
+              />
             ) : (
               <p className="hidden text-sm font-bold text-slate-400 sm:block">
                 Hoàn thành câu trả lời rồi bấm Kiểm tra nhé!
@@ -738,14 +1177,61 @@ const LessonContent = () => {
                 onClick={() => void onContinue()}
                 className="h-12 w-full rounded-2xl sm:w-40"
               >
-                {currentExerciseIndex === exercises.length - 1
-                  ? "Hoàn thành"
-                  : "Tiếp tục"}
+                {canRetryCurrentExercise
+                  ? "Sửa lại"
+                  : isReviewMode
+                    ? reviewExerciseIndex === reviewExerciseIds.length - 1
+                      ? "Xong ôn lỗi"
+                      : "Tiếp tục"
+                    : currentExerciseIndex === exercises.length - 1
+                      ? "Hoàn thành"
+                      : "Tiếp tục"}
               </Button>
             )}
           </div>
         </div>
       </footer>
+
+      <ResumeSessionDialog
+        open={Boolean(resumeDraft)}
+        title="Tiếp tục phiên trước?"
+        detail={`Bạn đang ở hoạt động ${(resumeDraft?.currentExerciseIndex ?? 0) + 1}/${exercises.length}.`}
+        onResume={() => {
+          if (!resumeDraft) return;
+          setCurrentExerciseIndex(resumeDraft.currentExerciseIndex);
+          setExerciseAnswer(resumeDraft.currentAnswer);
+          setCheckResult(null);
+          setAttemptResults(resumeDraft.attemptResults);
+          setHearts(resumeDraft.hearts);
+          setIsRetryAttempt(resumeDraft.isRetryAttempt);
+          setLockedMatchPairLeftIds(resumeDraft.lockedMatchPairLeftIds);
+          setIsReviewMode(resumeDraft.isReviewMode);
+          setReviewExerciseIds(resumeDraft.reviewExerciseIds);
+          setReviewExerciseIndex(resumeDraft.reviewExerciseIndex);
+          setReviewResults(resumeDraft.reviewResults);
+          setAssessmentMode(resumeDraft.assessmentMode);
+          setPreferredAssessmentMode(resumeDraft.assessmentMode);
+          setDurationSeconds(resumeDraft.durationSeconds);
+          setAfkCount(resumeDraft.afkCount);
+          studyDurationSecondsRef.current = resumeDraft.durationSeconds;
+          window.setTimeout(
+            () =>
+              studyTimerRef.current?.restore(
+                resumeDraft.durationSeconds,
+                resumeDraft.afkCount,
+              ),
+            0,
+          );
+          setResumeDraft(null);
+          setDraftReady(true);
+        }}
+        onRestart={() => {
+          clearLessonDraft();
+          setResumeDraft(null);
+          setDraftReady(true);
+          onRestart();
+        }}
+      />
 
       {/* Modal xác nhận thoát */}
       <ExitModal
@@ -757,13 +1243,15 @@ const LessonContent = () => {
         ref={studyTimerRef}
         isActive={
           !isFinished &&
-          hearts > 0 &&
+          (hearts > 0 || isRetryAttempt || isReviewMode) &&
           !shouldRedirectToLearn &&
           !isExitModalOpen
         }
         onActiveSecondsChange={(seconds) => {
           studyDurationSecondsRef.current = seconds;
+          setDurationSeconds(seconds);
         }}
+        onAfkCountChange={setAfkCount}
       />
     </div>
   );
