@@ -2,7 +2,7 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import { useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { useClerk } from "@clerk/nextjs";
 import { usePathname } from "next/navigation";
 import { toast } from "sonner";
@@ -14,6 +14,8 @@ import { useStudyTimeMinutes } from "@/components/use-study-time-summary";
 
 import { getStudyTier } from "@/lib/study-tier";
 import { cn } from "@/lib/utils";
+import { subscribeToQuestStorage } from "@/lib/quests";
+import type { QuestClaimChestState, ResolvedQuest } from "@/types/quest";
 
 type Props = {
   className?: string;
@@ -46,6 +48,21 @@ const routes = [
 
 const goalMinutes = 60;
 
+type QuestTodaySidebarResponse = {
+  success?: boolean;
+  quests?: ResolvedQuest[];
+  bonusQuests?: ResolvedQuest[];
+  chest?: QuestClaimChestState;
+};
+
+const hasClaimableQuestReward = (data: QuestTodaySidebarResponse) => {
+  return Boolean(
+    data.quests?.some((quest) => quest.canClaim) ||
+      data.bonusQuests?.some((quest) => quest.canClaim) ||
+      data.chest?.canClaim,
+  );
+};
+
 const milestones = [
   {
     label: "15m",
@@ -70,6 +87,7 @@ const milestones = [
 export const Sidebar = ({ className, isLoggedIn = false }: Props) => {
   const pathname = usePathname();
   const [isMoreOpen, setIsMoreOpen] = useState(false);
+  const [hasQuestRewardToClaim, setHasQuestRewardToClaim] = useState(false);
   const { signOut } = useClerk();
   const currentMinutes = useStudyTimeMinutes(isLoggedIn);
   const progressPercent = Math.min(
@@ -77,6 +95,54 @@ export const Sidebar = ({ className, isLoggedIn = false }: Props) => {
     100,
   );
   const currentTier = getStudyTier(currentMinutes);
+
+  const refreshQuestRewardIndicator = useCallback(async () => {
+    if (!isLoggedIn) {
+      setHasQuestRewardToClaim(false);
+      return;
+    }
+
+    try {
+      const response = await fetch("/api/quests/today", {
+        cache: "no-store",
+      });
+
+      if (!response.ok) {
+        setHasQuestRewardToClaim(false);
+        return;
+      }
+
+      const data = (await response.json()) as QuestTodaySidebarResponse;
+
+      setHasQuestRewardToClaim(hasClaimableQuestReward(data));
+    } catch {
+      setHasQuestRewardToClaim(false);
+    }
+  }, [isLoggedIn]);
+
+  useEffect(() => {
+    const timeoutId = window.setTimeout(() => {
+      void refreshQuestRewardIndicator();
+    }, 0);
+
+    return () => window.clearTimeout(timeoutId);
+  }, [pathname, refreshQuestRewardIndicator]);
+
+  useEffect(() => {
+    if (!isLoggedIn) return;
+
+    const handleFocus = () => {
+      void refreshQuestRewardIndicator();
+    };
+    const unsubscribe = subscribeToQuestStorage(handleFocus);
+
+    window.addEventListener("focus", handleFocus);
+
+    return () => {
+      unsubscribe();
+      window.removeEventListener("focus", handleFocus);
+    };
+  }, [isLoggedIn, refreshQuestRewardIndicator]);
 
   const handleHelp = () => {
     setIsMoreOpen(false);
@@ -132,7 +198,12 @@ export const Sidebar = ({ className, isLoggedIn = false }: Props) => {
 
       <nav className="flex flex-1 flex-col gap-y-2">
         {routes.map((route) => (
-          <SidebarItem key={route.href} {...route} />
+          <SidebarItem
+            key={route.href}
+            {...route}
+            showNotificationDot={route.href === "/quests" && hasQuestRewardToClaim}
+            notificationLabel="Ban co phan thuong nhiem vu chua nhan"
+          />
         ))}
 
         {/* Xem thêm Popover Button */}

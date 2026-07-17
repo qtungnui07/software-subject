@@ -33,7 +33,7 @@ const canUseLocalStorage = () => {
   return typeof window !== "undefined" && typeof window.localStorage !== "undefined";
 };
 
-const emitQuestStorageChange = () => {
+export const notifyQuestStorageChange = () => {
   if (typeof window === "undefined") return;
 
   window.dispatchEvent(new Event(QUEST_STORAGE_CHANGE_EVENT));
@@ -73,7 +73,7 @@ export const writeQuestStorage = (state: QuestStorageState) => {
   if (!canUseLocalStorage()) return;
 
   window.localStorage.setItem(getQuestStorageKey(state.dateKey), JSON.stringify(state));
-  emitQuestStorageChange();
+  notifyQuestStorageChange();
 };
 
 export const getClaimedQuestIds = () => {
@@ -96,7 +96,7 @@ export const clearQuestStorage = () => {
   if (!canUseLocalStorage()) return;
 
   window.localStorage.removeItem(getQuestStorageKey());
-  emitQuestStorageChange();
+  notifyQuestStorageChange();
 };
 
 export const subscribeToQuestStorage = (onStoreChange: () => void) => {
