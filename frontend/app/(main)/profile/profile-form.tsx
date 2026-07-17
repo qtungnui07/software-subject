@@ -5,6 +5,7 @@ import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
+import { DEFAULT_USER_AVATAR, resolveUserAvatar } from "@/constants/user-avatar";
 
 type Props = {
   initialName: string;
@@ -12,23 +13,31 @@ type Props = {
   email?: string;
 };
 
-const PRESET_AVATARS = [
-  { label: "Mascot", src: "/logo.webp" },
-  { label: "Tiếng Anh", src: "/globe.svg" },
+// CHỈNH SỬA TẠI ĐÂY: Đổi thành false nếu muốn mở lại các ảnh đại diện cờ quốc gia khác (Tiếng Nhật, Tiếng Pháp, v.v.)
+const showOnlyEnglishAvatars = true;
+
+const ALL_PRESET_AVATARS = [
+  { label: "Robogo", src: DEFAULT_USER_AVATAR },
+  { label: "Tiếng Anh", src: "/gb.svg" },
   { label: "Tiếng Nhật", src: "/jp.svg" },
   { label: "Tiếng Pháp", src: "/fr.svg" },
   { label: "Tiếng Tây Ban Nha", src: "/es.svg" },
   { label: "Tiếng Ý", src: "/it.svg" },
 ];
 
+const PRESET_AVATARS = showOnlyEnglishAvatars
+  ? ALL_PRESET_AVATARS.filter((avatar) => avatar.label === "Robogo" || avatar.label === "Tiếng Anh")
+  : ALL_PRESET_AVATARS;
+
 export const ProfileForm = ({ initialName, initialImageSrc, email }: Props) => {
   const router = useRouter();
+  const normalizedInitialImageSrc = resolveUserAvatar(initialImageSrc);
   const [name, setName] = useState(initialName);
-  const [selectedAvatar, setSelectedAvatar] = useState(initialImageSrc);
+  const [selectedAvatar, setSelectedAvatar] = useState(normalizedInitialImageSrc);
   const [customAvatarUrl, setCustomAvatarUrl] = useState(
-    PRESET_AVATARS.some((avatar) => avatar.src === initialImageSrc)
+    PRESET_AVATARS.some((avatar) => avatar.src === normalizedInitialImageSrc)
       ? ""
-      : initialImageSrc
+      : normalizedInitialImageSrc
   );
   const [isPending, startTransition] = useTransition();
 
@@ -42,7 +51,7 @@ export const ProfileForm = ({ initialName, initialImageSrc, email }: Props) => {
     if (url.trim()) {
       setSelectedAvatar(url.trim());
     } else {
-      setSelectedAvatar("/logo.webp");
+      setSelectedAvatar(DEFAULT_USER_AVATAR);
     }
   };
 
@@ -79,7 +88,7 @@ export const ProfileForm = ({ initialName, initialImageSrc, email }: Props) => {
     <form onSubmit={onSubmit} className="space-y-6">
       {/* Name Input */}
       <div className="space-y-2">
-        <label className="text-sm font-black uppercase tracking-wider text-slate-500">
+        <label className="text-sm font-black uppercase tracking-wider text-slate-500 dark:text-slate-400">
           Tên hiển thị
         </label>
         <input
@@ -87,7 +96,7 @@ export const ProfileForm = ({ initialName, initialImageSrc, email }: Props) => {
           value={name}
           onChange={(e) => setName(e.target.value)}
           disabled={isPending}
-          className="w-full rounded-2xl border-2 border-slate-200 bg-slate-50 px-4 py-3 text-base font-bold text-slate-700 outline-none transition hover:border-slate-300 focus:border-[#1486CC] focus:bg-white disabled:opacity-50"
+          className="w-full rounded-2xl border-2 border-slate-200 bg-slate-50 px-4 py-3 text-base font-bold text-slate-700 outline-none transition hover:border-slate-300 focus:border-[#1486CC] focus:bg-white disabled:opacity-50 dark:border-slate-800 dark:bg-slate-900/50 dark:text-slate-200 dark:hover:border-slate-700 dark:focus:border-sky-500 dark:focus:bg-slate-950"
           placeholder="Nhập tên hiển thị của bạn..."
           maxLength={30}
         />
@@ -96,29 +105,29 @@ export const ProfileForm = ({ initialName, initialImageSrc, email }: Props) => {
       {/* Email (Read only) */}
       {email && (
         <div className="space-y-2">
-          <label className="text-sm font-black uppercase tracking-wider text-slate-400">
+          <label className="text-sm font-black uppercase tracking-wider text-slate-400 dark:text-slate-500">
             Địa chỉ Email (Đọc duy nhất)
           </label>
           <input
             type="email"
             value={email}
             readOnly
-            className="w-full rounded-2xl border-2 border-slate-200/60 bg-slate-100/60 px-4 py-3 text-base font-bold text-slate-400 outline-none cursor-not-allowed"
+            className="w-full rounded-2xl border-2 border-slate-200/60 bg-slate-100/60 px-4 py-3 text-base font-bold text-slate-400 outline-none cursor-not-allowed dark:border-slate-800/60 dark:bg-slate-900/60 dark:text-slate-500"
           />
         </div>
       )}
 
       {/* Avatar Picker */}
       <div className="space-y-3">
-        <label className="text-sm font-black uppercase tracking-wider text-slate-500">
+        <label className="text-sm font-black uppercase tracking-wider text-slate-500 dark:text-slate-400">
           Chọn ảnh đại diện của bạn
         </label>
 
         {/* Current Active Preview */}
-        <div className="flex items-center gap-x-4 rounded-2xl border-2 border-slate-100 bg-slate-50/50 p-4">
-          <div className="relative size-16 shrink-0 rounded-2xl bg-white border-2 border-slate-200 overflow-hidden flex items-center justify-center p-1 shadow-sm">
+        <div className="flex items-center gap-x-4 rounded-2xl border-2 border-slate-100 dark:border-[#202f36] bg-slate-50/50 dark:bg-slate-900/30 p-4">
+          <div className="relative size-16 shrink-0 rounded-2xl bg-white dark:bg-slate-900 border-2 border-slate-200 dark:border-slate-800 overflow-hidden flex items-center justify-center p-1 shadow-sm">
             <Image
-              src={selectedAvatar || "/logo.webp"}
+              src={resolveUserAvatar(selectedAvatar)}
               alt="Avatar Preview"
               fill
               className="object-contain"
@@ -126,8 +135,8 @@ export const ProfileForm = ({ initialName, initialImageSrc, email }: Props) => {
             />
           </div>
           <div>
-            <p className="text-sm font-black text-slate-700">Xem trước ảnh đại diện</p>
-            <p className="text-xs text-slate-400 font-bold truncate max-w-[250px] sm:max-w-[350px]">
+            <p className="text-sm font-black text-slate-700 dark:text-slate-200">Xem trước ảnh đại diện</p>
+            <p className="text-xs text-slate-400 dark:text-slate-500 font-bold truncate max-w-[250px] sm:max-w-[350px]">
               {selectedAvatar}
             </p>
           </div>
@@ -143,10 +152,10 @@ export const ProfileForm = ({ initialName, initialImageSrc, email }: Props) => {
                 type="button"
                 disabled={isPending}
                 onClick={() => handleAvatarSelect(avatar.src)}
-                className={`relative aspect-square rounded-2xl border-2 bg-white p-2 transition flex items-center justify-center hover:bg-slate-50 hover:border-slate-300 active:scale-[0.97] ${
+                className={`relative aspect-square rounded-2xl border-2 bg-white dark:bg-slate-900 p-2 transition flex items-center justify-center hover:bg-slate-50 dark:hover:bg-slate-800/50 hover:border-slate-300 dark:hover:border-slate-700 active:scale-[0.97] ${
                   isSelected
-                    ? "border-[#1486CC] bg-[#f4faff] ring-2 ring-sky-100"
-                    : "border-slate-200"
+                    ? "border-[#1486CC] bg-[#f4faff] ring-2 ring-sky-100 dark:border-sky-500 dark:bg-[#1c3547] dark:ring-sky-950"
+                    : "border-slate-200 dark:border-slate-800"
                 }`}
               >
                 <div className="relative size-full">
@@ -164,7 +173,7 @@ export const ProfileForm = ({ initialName, initialImageSrc, email }: Props) => {
 
         {/* Custom Avatar URL input */}
         <div className="space-y-2 pt-2">
-          <label className="text-xs font-black uppercase tracking-wider text-slate-400">
+          <label className="text-xs font-black uppercase tracking-wider text-slate-400 dark:text-slate-500">
             Hoặc nhập URL ảnh đại diện tùy chỉnh
           </label>
           <input
@@ -172,7 +181,7 @@ export const ProfileForm = ({ initialName, initialImageSrc, email }: Props) => {
             value={customAvatarUrl}
             onChange={(e) => handleCustomAvatarChange(e.target.value)}
             disabled={isPending}
-            className="w-full rounded-xl border-2 border-slate-200 bg-slate-50 px-3 py-2.5 text-sm font-bold text-slate-700 outline-none transition hover:border-slate-300 focus:border-[#1486CC] focus:bg-white disabled:opacity-50"
+            className="w-full rounded-xl border-2 border-slate-200 bg-slate-50 px-3 py-2.5 text-sm font-bold text-slate-700 outline-none transition hover:border-slate-300 focus:border-[#1486CC] focus:bg-white disabled:opacity-50 dark:border-slate-800 dark:bg-slate-900/50 dark:text-slate-200 dark:hover:border-slate-700 dark:focus:border-sky-500 dark:focus:bg-slate-950"
             placeholder="https://example.com/avatar.jpg"
           />
         </div>

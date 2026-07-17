@@ -1,29 +1,45 @@
 import { clerkMiddleware, createRouteMatcher } from "@clerk/nextjs/server";
 import { NextResponse } from "next/server";
+import type { NextFetchEvent, NextRequest } from "next/server";
 
 const LOCAL_SESSION_COOKIE = "local_session";
 
 const isProtectedRoute = createRouteMatcher([
   "/learn(.*)",
+  "/lesson(.*)",
   "/courses(.*)",
   "/dashboard(.*)",
   "/admin(.*)",
   "/api/admin(.*)",
+  "/leaderboard(.*)",
+  "/onboarding(.*)",
+  "/placement-test(.*)",
   "/profile(.*)",
+  "/quests(.*)",
   "/settings(.*)"
 ]);
 
-const isAuthRoute = createRouteMatcher([
+const isPublicAuthInfrastructure = createRouteMatcher([
   "/sign-in(.*)",
-  "/sign-up(.*)"
+  "/sign-up(.*)",
+  "/sso-callback(.*)",
+  "/api/auth/local(.*)",
 ]);
 
-export default clerkMiddleware(async (auth, req) => {
+const remoteSessionMiddleware = (req: NextRequest) => {
   const hasLocalSession = Boolean(req.cookies.get(LOCAL_SESSION_COOKIE)?.value);
 
-  if (hasLocalSession && isAuthRoute(req)) {
-    return NextResponse.redirect(new URL("/learn", req.url));
+  if (isProtectedRoute(req) && !hasLocalSession) {
+    const signInUrl = new URL("/sign-in", req.url);
+    signInUrl.searchParams.set("redirect", `${req.nextUrl.pathname}${req.nextUrl.search}`);
+    return NextResponse.redirect(signInUrl);
   }
+
+  return NextResponse.next();
+};
+
+const clerkSessionMiddleware = clerkMiddleware(async (auth, req) => {
+  const hasLocalSession = Boolean(req.cookies.get(LOCAL_SESSION_COOKIE)?.value);
 
   if (hasLocalSession && isProtectedRoute(req)) {
     return NextResponse.next();
@@ -31,16 +47,34 @@ export default clerkMiddleware(async (auth, req) => {
 
   const { userId } = await auth();
 
-  // If the user is logged in and tries to access sign-in/sign-up, redirect to /learn
-  if (userId && isAuthRoute(req)) {
-    return NextResponse.redirect(new URL("/learn", req.url));
+  // If the user is not logged in and tries to access protected routes, auth.protect() redirects to sign-in
+  if (isProtectedRoute(req) && !userId) {
+    const signInUrl = new URL("/sign-in", req.url);
+
+    signInUrl.searchParams.set(
+      "redirect",
+      `${req.nextUrl.pathname}${req.nextUrl.search}`
+    );
+
+    return NextResponse.redirect(signInUrl);
   }
 
-  // If the user is not logged in and tries to access protected routes, auth.protect() redirects to sign-in
-  if (isProtectedRoute(req)) {
-    await auth.protect();
-  }
+  return NextResponse.next();
 });
+
+export default function proxy(req: NextRequest, event: NextFetchEvent) {
+  // Keep both the forms and their local auth API independent from Clerk.
+  // This guarantees that email/password auth remains usable during a Clerk outage.
+  if (isPublicAuthInfrastructure(req)) {
+    return NextResponse.next();
+  }
+
+  if (process.env.REMOTE_API_URL) {
+    return remoteSessionMiddleware(req);
+  }
+
+  return clerkSessionMiddleware(req, event);
+}
 
 export const config = {
   matcher: [

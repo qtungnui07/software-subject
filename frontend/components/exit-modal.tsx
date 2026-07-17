@@ -23,27 +23,27 @@ export const ExitModal = ({ isOpen, onClose, onConfirm }: Props) => {
       onClick={onClose}
     >
       <div
-        className="w-full max-w-[420px] overflow-hidden rounded-[28px] border-2 border-slate-200 bg-white p-6 shadow-[0_24px_80px_rgba(15,23,42,0.22)] text-center animate-in fade-in zoom-in-95 duration-200"
+        className="w-full max-w-[420px] overflow-hidden rounded-[28px] border-2 border-slate-200 dark:border-[#202f36] bg-white dark:bg-[#182226] p-6 shadow-[0_24px_80px_rgba(15,23,42,0.22)] dark:shadow-[0_24px_80px_rgba(0,0,0,0.5)] text-center animate-in fade-in zoom-in-95 duration-200"
         onClick={(event) => event.stopPropagation()}
       >
         <div className="relative mx-auto mb-4 flex size-24 items-center justify-center">
           <Image
-            src="/mascot.svg"
+            src="/robot-sad-v4.png"
             alt="Mascot"
             width={84}
             height={84}
-            className="object-contain"
+            className="object-contain animate-robot-sad"
           />
-          <div className="absolute -bottom-1 -right-1 flex size-8 items-center justify-center rounded-full bg-rose-500 text-white shadow-md ring-4 ring-white">
+          <div className="absolute -bottom-1 -right-1 flex size-8 items-center justify-center rounded-full bg-rose-500 text-white shadow-md ring-4 ring-white dark:ring-[#182226]">
             <AlertTriangle className="size-4 stroke-[3]" />
           </div>
         </div>
 
-        <h2 id="exit-modal-title" className="text-2xl font-black text-slate-800 leading-tight">
+        <h2 id="exit-modal-title" className="text-2xl font-black text-slate-800 dark:text-slate-100 leading-tight">
           Bạn muốn thoát học?
         </h2>
 
-        <p className="mt-3 text-sm font-bold leading-relaxed text-slate-500">
+        <p className="mt-3 text-sm font-bold leading-relaxed text-slate-500 dark:text-slate-400">
           Chờ đã! Nếu bạn rời đi bây giờ, mọi tiến độ của bài học hiện tại sẽ bị mất.
         </p>
 

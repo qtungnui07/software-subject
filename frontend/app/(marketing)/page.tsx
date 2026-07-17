@@ -8,18 +8,15 @@ import {
   ArrowRight,
   BarChart3,
   BookOpen,
-  CheckCircle2,
   Flame,
   Gamepad2,
   GraduationCap,
   LineChart,
   Medal,
   MessageCircle,
-  Play,
   Rocket,
   ShieldCheck,
   Sparkles,
-  Star,
   Target,
   Trophy,
   Users,
@@ -549,7 +546,7 @@ export default function Home() {
         <div className="pointer-events-none absolute left-0 top-20 h-64 w-64 rounded-full bg-sky-200/35 blur-3xl dark:bg-sky-500/10" />
         <div className="pointer-events-none absolute bottom-12 right-10 h-72 w-72 rounded-full bg-blue-300/25 blur-3xl dark:bg-blue-500/10" />
 
-        <div className="mx-auto grid max-w-[1500px] items-center gap-10 rounded-[2.2rem] border border-sky-100/70 bg-white/75 p-5 shadow-[0_28px_90px_rgba(15,23,42,0.08)] backdrop-blur robogo-hero-shell md:p-10 lg:grid-cols-[0.95fr_1.05fr] lg:gap-14 lg:p-14 dark:border-slate-800 dark:bg-slate-900/60">
+        <div className="robogo-hero-shell mx-auto grid max-w-[1500px] items-center gap-10 rounded-[2.2rem] border border-sky-100/70 bg-white/95 p-5 shadow-[0_28px_90px_rgba(15,23,42,0.08)] dark:border-slate-800 dark:bg-slate-900/95 md:p-10 lg:grid-cols-[0.95fr_1.05fr] lg:gap-14 lg:p-14">
           <div className="relative order-2 mx-auto flex min-h-[360px] w-full max-w-[650px] items-center justify-center sm:min-h-[460px] lg:order-1 lg:min-h-[540px]">
             <div className="absolute inset-3 rounded-[2.5rem] bg-gradient-to-br robogo-orbit-ring from-sky-100 via-white to-blue-50 shadow-inner sm:inset-8 sm:rounded-[3rem] dark:from-sky-950/50 dark:via-slate-900 dark:to-blue-950/40" />
             <div className="absolute left-0 top-7 z-10 rounded-3xl bg-white px-4 py-3 shadow-2xl ring-1 ring-slate-100 robogo-float-card-a sm:left-2 sm:top-10 sm:px-5 sm:py-4 dark:bg-slate-900 dark:ring-slate-800">

@@ -6,10 +6,11 @@ import { useState } from "react";
 import { useClerk } from "@clerk/nextjs";
 import { usePathname } from "next/navigation";
 import { toast } from "sonner";
-import { CircleUser } from "lucide-react";
+
 
 import { SidebarItem } from "./sidebar-item";
 import { Button } from "@/components/ui/button";
+import { useStudyTimeMinutes } from "@/components/use-study-time-summary";
 
 import { getStudyTier } from "@/lib/study-tier";
 import { cn } from "@/lib/utils";
@@ -38,38 +39,31 @@ const routes = [
   {
     label: "Hồ sơ",
     href: "/profile",
-    icon: CircleUser,
+    iconSrc: "/profile.svg",
   },
 ];
 
 
-const currentMinutes = 43;
 const goalMinutes = 60;
-const progressPercent = Math.min(
-  Math.round((currentMinutes / goalMinutes) * 100),
-  100,
-);
-
-const currentTier = getStudyTier(currentMinutes);
 
 const milestones = [
   {
     label: "15m",
     title: "Bronze",
     left: "25%",
-    className: "bg-[#c8843d] ring-[#f4d2ad]",
+    className: "bg-gradient-to-br from-[#d97706] to-[#b45309] ring-[#fed7aa] shadow-[0_0_8px_rgba(217,119,6,0.42)]",
   },
   {
     label: "30m",
     title: "Silver",
     left: "50%",
-    className: "bg-[#9ca3af] ring-[#e5e7eb]",
+    className: "bg-gradient-to-br from-[#94a3b8] to-[#64748b] ring-[#f1f5f9] shadow-[0_0_8px_rgba(148,163,184,0.42)]",
   },
   {
     label: "1h",
     title: "Gold",
     left: "100%",
-    className: "bg-[#f5b828] ring-[#fde68a]",
+    className: "bg-gradient-to-br from-[#f59e0b] to-[#d97706] ring-[#fef9c3] shadow-[0_0_10px_rgba(245,158,11,0.55)]",
   },
 ];
 
@@ -77,6 +71,12 @@ export const Sidebar = ({ className, isLoggedIn = false }: Props) => {
   const pathname = usePathname();
   const [isMoreOpen, setIsMoreOpen] = useState(false);
   const { signOut } = useClerk();
+  const currentMinutes = useStudyTimeMinutes(isLoggedIn);
+  const progressPercent = Math.min(
+    Math.round((currentMinutes / goalMinutes) * 100),
+    100,
+  );
+  const currentTier = getStudyTier(currentMinutes);
 
   const handleHelp = () => {
     setIsMoreOpen(false);
@@ -111,7 +111,7 @@ export const Sidebar = ({ className, isLoggedIn = false }: Props) => {
       >
         <div className="relative size-[64px] shrink-0 drop-shadow-[0_8px_18px_rgba(20,134,204,0.18)]">
           <Image
-            src="/logo.webp"
+            src="/Robogo.svg"
             alt="Robogo logo"
             fill
             priority

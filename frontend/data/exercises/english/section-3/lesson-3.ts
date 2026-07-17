@@ -1,0 +1,72 @@
+import {
+  createArrangeWordsExercise,
+  createDialogueChoiceExercise,
+  createFillBlankExercise,
+  createListeningChoiceExercise,
+  createMultipleChoiceExercise,
+} from "@/data/exercises/english/exercise-builders";
+import type { Exercise } from "@/types/exercise";
+
+const lessonId = "en-s3-c1-lesson-3";
+
+export const sectionThreeLessonThreeExercises: Exercise[] = [
+  createMultipleChoiceExercise({
+    id: "en-s3-c1-l3-exercise-1",
+    lessonId,
+    skill: "grammar",
+    difficulty: 3,
+    instruction: "Chọn mệnh đề điều kiện đúng",
+    prompt: "If people ___ less time online, they might sleep better.",
+    explanation: "Trong câu điều kiện loại một, mệnh đề “if” dùng hiện tại đơn.",
+    options: ["spend", "spent yesterday", "will spent", "spending"],
+    correctIndex: 0,
+  }),
+  createFillBlankExercise({
+    id: "en-s3-c1-l3-exercise-2",
+    lessonId,
+    skill: "grammar",
+    difficulty: 3,
+    instruction: "Điền dạng bị động",
+    prompt: "Hoàn thành câu về dữ liệu cá nhân.",
+    explanation: "Câu bị động hiện tại đơn là “is collected”.",
+    sentenceBefore: "Personal data",
+    sentenceAfter: "by many mobile applications.",
+    acceptedAnswers: ["is collected"],
+  }),
+  createArrangeWordsExercise({
+    id: "en-s3-c1-l3-exercise-3",
+    lessonId,
+    skill: "grammar",
+    difficulty: 3,
+    instruction: "Sắp xếp thành câu hoàn chỉnh",
+    prompt: "Nêu một lợi ích của mạng xã hội.",
+    explanation: "Câu đúng là “Social media can connect people across the world.”",
+    wordsInCorrectOrder: ["Social", "media", "can", "connect", "people", "across", "the", "world"],
+    shuffledOrder: [7, 3, 0, 6, 2, 5, 1, 4],
+  }),
+  createDialogueChoiceExercise({
+    id: "en-s3-c1-l3-exercise-4",
+    lessonId,
+    skill: "conversation",
+    difficulty: 3,
+    instruction: "Chọn phản hồi phù hợp",
+    prompt: "Hoàn thành cuộc trò chuyện về quyền riêng tư.",
+    explanation: "Kiểm tra mục đích quyền truy cập là lời khuyên an toàn và hợp lý.",
+    speaker: "Nora",
+    dialogue: "This app wants access to all my contacts. Should I allow it?",
+    options: ["Check why it needs that permission before you agree.", "Contacts are people you met yesterday.", "The app is a blue square.", "Allow everything without reading."],
+    correctIndex: 0,
+  }),
+  createListeningChoiceExercise({
+    id: "en-s3-c1-l3-exercise-5",
+    lessonId,
+    skill: "listening",
+    difficulty: 3,
+    instruction: "Nghe và chọn ý chính",
+    prompt: "Nghe rồi xác định thông điệp của người nói.",
+    explanation: "Người nói cân bằng lợi ích giao tiếp với nhu cầu bảo vệ riêng tư.",
+    spokenText: "Technology makes communication easier, but users must protect their personal information.",
+    options: ["Technology has no benefits.", "Users should share every password.", "Technology helps communication, but privacy still matters.", "Personal information is never collected."],
+    correctIndex: 2,
+  }),
+];

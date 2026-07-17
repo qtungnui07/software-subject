@@ -1,3 +1,6 @@
+import { STREAK_FREEZE_REWARD } from "@/constants/course-rewards";
+import type { CourseRewardDefinition } from "@/types/course";
+
 export type ChapterOneNodeType = "lesson" | "chest" | "checkpoint";
 export type ChapterOneInitialStatus = "current" | "locked";
 
@@ -15,6 +18,7 @@ export type ChapterOneNode = {
   href: string | null;
   xp: number;
   countsTowardProgress: boolean;
+  rewards?: CourseRewardDefinition[];
   initialStatus: ChapterOneInitialStatus;
   x: number;
   y: number;
@@ -85,14 +89,15 @@ export const chapterOneNodes: ChapterOneNode[] = [
     id: "chest-1",
     legacyId: 4,
     type: "chest",
-    title: "Rương thưởng",
+    title: "Rương Freeze",
     shortTitle: "Rương",
-    description: "Nhận phần thưởng sau khi hoàn thành 3 bài học đầu tiên.",
+    description: "Nhận +1 Streak Freeze sau khi hoàn thành 3 bài học đầu tiên.",
     order: 4,
     unlockAfterId: "lesson-3",
     href: null,
-    xp: 10,
+    xp: 0,
     countsTowardProgress: false,
+    rewards: [STREAK_FREEZE_REWARD],
     initialStatus: "locked",
     x: 250,
     y: 635,
@@ -105,7 +110,7 @@ export const chapterOneNodes: ChapterOneNode[] = [
     shortTitle: "Hỏi tên tuổi",
     description: "Luyện các câu hỏi đơn giản trong cuộc trò chuyện hằng ngày.",
     order: 5,
-    unlockAfterId: "chest-1",
+    unlockAfterId: "lesson-3",
     href: "/lesson?id=lesson-4",
     xp: 35,
     countsTowardProgress: true,

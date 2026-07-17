@@ -1,0 +1,72 @@
+import {
+  createArrangeWordsExercise,
+  createDialogueChoiceExercise,
+  createFillBlankExercise,
+  createListeningChoiceExercise,
+  createMultipleChoiceExercise,
+} from "@/data/exercises/english/exercise-builders";
+import type { Exercise } from "@/types/exercise";
+
+const lessonId = "en-s2-c1-lesson-5";
+
+export const sectionTwoLessonFiveExercises: Exercise[] = [
+  createMultipleChoiceExercise({
+    id: "en-s2-c1-l5-exercise-1",
+    lessonId,
+    skill: "grammar",
+    difficulty: 2,
+    instruction: "Chọn động từ khuyết thiếu phù hợp",
+    prompt: "You have a fever. You ___ see a doctor.",
+    explanation: "“Should” dùng để đưa ra lời khuyên.",
+    options: ["should", "would", "did", "are"],
+    correctIndex: 0,
+  }),
+  createArrangeWordsExercise({
+    id: "en-s2-c1-l5-exercise-2",
+    lessonId,
+    skill: "grammar",
+    difficulty: 2,
+    instruction: "Sắp xếp thành câu so sánh",
+    prompt: "So sánh xe buýt này với xe buýt kia.",
+    explanation: "Câu đúng là “This bus is faster than that one.”",
+    wordsInCorrectOrder: ["This", "bus", "is", "faster", "than", "that", "one"],
+    shuffledOrder: [6, 3, 0, 5, 2, 4, 1],
+  }),
+  createFillBlankExercise({
+    id: "en-s2-c1-l5-exercise-3",
+    lessonId,
+    skill: "conversation",
+    difficulty: 2,
+    instruction: "Điền động từ phù hợp",
+    prompt: "Hoàn thành lời nhờ giúp đỡ.",
+    explanation: "“Can” hoặc “Could” đều có thể dùng để nhờ giúp đỡ.",
+    sentenceBefore: "",
+    sentenceAfter: "you help me carry this bag?",
+    acceptedAnswers: ["Can", "Could"],
+  }),
+  createDialogueChoiceExercise({
+    id: "en-s2-c1-l5-exercise-4",
+    lessonId,
+    skill: "conversation",
+    difficulty: 2,
+    instruction: "Chọn phản hồi lịch sự",
+    prompt: "Hoàn thành đoạn hội thoại.",
+    explanation: "“Of course.” là phản hồi đồng ý lịch sự.",
+    speaker: "Customer",
+    dialogue: "Could you open the window, please?",
+    options: ["Of course.", "I opened it yesterday.", "The window is blue.", "You should be a window."],
+    correctIndex: 0,
+  }),
+  createListeningChoiceExercise({
+    id: "en-s2-c1-l5-exercise-5",
+    lessonId,
+    skill: "listening",
+    difficulty: 2,
+    instruction: "Nghe và chọn lời khuyên",
+    prompt: "Nghe rồi chọn điều người nói khuyên.",
+    explanation: "Người nói khuyên đi xe buýt vì rẻ hơn.",
+    spokenText: "The train is faster, but you should take the bus because it is cheaper.",
+    options: ["Take the train", "Take the bus", "Walk home", "Call a taxi"],
+    correctIndex: 1,
+  }),
+];

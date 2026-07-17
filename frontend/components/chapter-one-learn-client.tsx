@@ -2,13 +2,14 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 
 import { FeedWrapper } from "@/components/feed-wrapper";
 import { LessonPath } from "@/components/lesson-path";
 import { ProgressOverview } from "@/components/progress/progress-overview";
 import { UnitProgressList } from "@/components/progress/unit-progress-list";
 import { StreakCard } from "@/components/streak/streak-card";
+import { StudyTimeCard } from "@/components/study-time-card";
 import { StickyWrapper } from "@/components/sticky-wrapper";
 import { Button } from "@/components/ui/button";
 import { UserProgress } from "@/components/user-progress";
@@ -19,15 +20,19 @@ import {
   getChapterOneNodeStatus,
   getChapterOneProgress,
   getInitialChapterOneProgress,
+  saveChapterOneProgress,
+  setChapterOneProgressOwner,
   subscribeChapterOneProgress,
   type ChapterOneNodeStatus,
   type ChapterOneProgressState,
 } from "@/lib/chapter-one-progress";
 import { getCourseProgressSummary } from "@/lib/progress-utils";
+import type { StudyTimeSummary } from "@/services/study-time-service";
 
 import { Header } from "@/app/(main)/learn/header";
 
-const todayMinutes = 43;
+const learnTransitionStorageKey = "robogo-learn-transition";
+const learnPopupSeenStorageKey = "robogo-learn-popup-seen";
 
 const sidebarCards = [
   {
@@ -52,6 +57,9 @@ type Props = {
   hearts: number;
   points: number;
   showAuthCard: boolean;
+  initialStudyTimeSummary: StudyTimeSummary | null;
+  progressOwnerId: string | null;
+  initialProgressState: ChapterOneProgressState;
 };
 
 const getProgressLessonStatus = (
@@ -93,20 +101,62 @@ const buildChapterOneProgressUnits = (state: ChapterOneProgressState): ProgressU
 export const ChapterOneLearnClient = ({
   activeCourse,
   hearts,
-  points,
   showAuthCard,
+  initialStudyTimeSummary,
+  progressOwnerId,
+  initialProgressState,
 }: Props) => {
+  const shellRef = useRef<HTMLDivElement>(null);
   const [progressState, setProgressState] = useState<ChapterOneProgressState>(
     getInitialChapterOneProgress
   );
+  const [studyTimeSummary, setStudyTimeSummary] = useState<StudyTimeSummary | null>(
+    initialStudyTimeSummary,
+  );
 
   useEffect(() => {
+    const shell = shellRef.current;
+    if (!shell) {
+      return;
+    }
+
+    if (localStorage.getItem(learnPopupSeenStorageKey) === "true") {
+      return;
+    }
+
+    localStorage.setItem(learnPopupSeenStorageKey, "true");
+
+    const isAfterHomeTransition =
+      sessionStorage.getItem(learnTransitionStorageKey) === "pending";
+    const delay = isAfterHomeTransition ? 1560 : 80;
+
+    const startTimer = window.setTimeout(() => {
+      shell.classList.remove("learn-page-shell-enter");
+      shell.getBoundingClientRect();
+      shell.classList.add("learn-page-shell-enter");
+    }, delay);
+
+    const cleanupTimer = window.setTimeout(() => {
+      shell.classList.remove("learn-page-shell-enter");
+    }, delay + 1200);
+
+    return () => {
+      window.clearTimeout(startTimer);
+      window.clearTimeout(cleanupTimer);
+      shell.classList.remove("learn-page-shell-enter");
+    };
+  }, []);
+
+  useEffect(() => {
+    setChapterOneProgressOwner(progressOwnerId);
+    saveChapterOneProgress(initialProgressState);
+
     const syncProgress = () => setProgressState(getChapterOneProgress());
 
     syncProgress();
 
     return subscribeChapterOneProgress(syncProgress);
-  }, []);
+  }, [initialProgressState, progressOwnerId]);
 
   const progressUnits = useMemo(
     () => buildChapterOneProgressUnits(progressState),
@@ -116,17 +166,30 @@ export const ChapterOneLearnClient = ({
     () => getCourseProgressSummary(progressUnits),
     [progressUnits]
   );
+  const todayMinutes = Math.floor((studyTimeSummary?.todaySeconds ?? 0) / 60);
+  const totalStudySeconds = studyTimeSummary?.totalSeconds ?? 0;
 
   const handleClaimChest = (chestId: string) => {
     const nextState = claimChapterOneChest(chestId);
     setProgressState(nextState);
+
+    void fetch("/api/progress/chapter-one", {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ progress: nextState }),
+    }).catch((error) => {
+      console.warn("Could not sync Chapter 1 chest progress:", error);
+    });
   };
 
   return (
-    <div className="grid grid-cols-1 gap-6 xl:grid-cols-[minmax(0,1fr)_400px] 2xl:grid-cols-[minmax(0,1fr)_425px] xl:items-start xl:gap-10">
+    <div
+      ref={shellRef}
+      className="learn-page-shell grid grid-cols-1 gap-6 xl:grid-cols-[minmax(0,1fr)_400px] 2xl:grid-cols-[minmax(0,1fr)_425px] xl:items-start xl:gap-10"
+    >
       <FeedWrapper>
         <section className="rounded-[28px] border-2 border-sky-100 dark:border-[#202f36] bg-white dark:bg-[#182226] shadow-sm">
-          <div className="sticky top-[56px] z-40 bg-white/95 dark:bg-[#182226]/95 px-4 py-4 backdrop-blur sm:px-6 lg:top-4">
+          <div className="sticky top-[56px] z-40 rounded-t-[26px] bg-white px-4 pb-4 pt-4 dark:bg-[#182226] sm:px-6 lg:top-0 lg:pt-6">
             <Header
               courseTitle={chapterOneDemoScope.courseTitle}
               sectionLabel={chapterOneDemoScope.sectionLabel}
@@ -140,7 +203,7 @@ export const ChapterOneLearnClient = ({
               completedLessons={courseProgress.completedLessons}
               completionPercent={courseProgress.completionPercent}
               earnedXp={courseProgress.earnedXp}
-              completedMinutes={courseProgress.completedMinutes}
+              totalStudySeconds={totalStudySeconds}
             />
 
             <UnitProgressList units={progressUnits} />
@@ -161,11 +224,16 @@ export const ChapterOneLearnClient = ({
           <UserProgress
             activeCourse={{ title: activeCourse.title, imageSrc: activeCourse.imageSrc }}
             hearts={hearts}
-            points={points}
           />
         </div>
 
         <StreakCard />
+
+        <StudyTimeCard
+          initialSummary={initialStudyTimeSummary}
+          isLoggedIn={!showAuthCard}
+          onSummaryChange={setStudyTimeSummary}
+        />
 
         <ProgressOverview
           className="hidden xl:block"
@@ -173,7 +241,7 @@ export const ChapterOneLearnClient = ({
           completedLessons={courseProgress.completedLessons}
           completionPercent={courseProgress.completionPercent}
           earnedXp={courseProgress.earnedXp}
-          completedMinutes={courseProgress.completedMinutes}
+          totalStudySeconds={totalStudySeconds}
         />
 
         <UnitProgressList className="hidden xl:block" units={progressUnits} />

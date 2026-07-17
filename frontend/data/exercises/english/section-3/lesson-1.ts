@@ -1,0 +1,72 @@
+import {
+  createArrangeWordsExercise,
+  createDialogueChoiceExercise,
+  createFillBlankExercise,
+  createListeningChoiceExercise,
+  createMultipleChoiceExercise,
+} from "@/data/exercises/english/exercise-builders";
+import type { Exercise } from "@/types/exercise";
+
+const lessonId = "en-s3-c1-lesson-1";
+
+export const sectionThreeLessonOneExercises: Exercise[] = [
+  createMultipleChoiceExercise({
+    id: "en-s3-c1-l1-exercise-1",
+    lessonId,
+    skill: "vocabulary",
+    difficulty: 3,
+    instruction: "Chọn cụm nêu ý kiến",
+    prompt: "Cụm nào phù hợp để bắt đầu một ý kiến cá nhân?",
+    explanation: "“In my opinion” dùng để giới thiệu quan điểm cá nhân.",
+    options: ["In my opinion,", "At the traffic lights,", "Once a week,", "By the way home,"],
+    correctIndex: 0,
+  }),
+  createArrangeWordsExercise({
+    id: "en-s3-c1-l1-exercise-2",
+    lessonId,
+    skill: "grammar",
+    difficulty: 3,
+    instruction: "Sắp xếp thành câu nêu ý kiến",
+    prompt: "Nêu quan điểm về việc học trực tuyến.",
+    explanation: "Câu đúng là “I believe that online learning is useful.”",
+    wordsInCorrectOrder: ["I", "believe", "that", "online", "learning", "is", "useful"],
+    shuffledOrder: [6, 3, 0, 5, 2, 4, 1],
+  }),
+  createFillBlankExercise({
+    id: "en-s3-c1-l1-exercise-3",
+    lessonId,
+    skill: "grammar",
+    difficulty: 3,
+    instruction: "Điền từ nối phù hợp",
+    prompt: "Hoàn thành lý do cho ý kiến.",
+    explanation: "“Because” nối ý kiến với lý do.",
+    sentenceBefore: "I support this idea",
+    sentenceAfter: "it saves time.",
+    acceptedAnswers: ["because"],
+  }),
+  createDialogueChoiceExercise({
+    id: "en-s3-c1-l1-exercise-4",
+    lessonId,
+    skill: "conversation",
+    difficulty: 3,
+    instruction: "Chọn phản hồi phát triển ý kiến",
+    prompt: "Hoàn thành đoạn hội thoại.",
+    explanation: "Câu trả lời nêu quan điểm và cân nhắc hai mặt của vấn đề.",
+    speaker: "Rina",
+    dialogue: "What do you think about working from home?",
+    options: ["I think it is flexible, although it can feel isolating.", "I worked at home at eight o’clock.", "The office is next to my house.", "Please turn left at the corner."],
+    correctIndex: 0,
+  }),
+  createListeningChoiceExercise({
+    id: "en-s3-c1-l1-exercise-5",
+    lessonId,
+    skill: "listening",
+    difficulty: 3,
+    instruction: "Nghe và xác định quan điểm",
+    prompt: "Nghe rồi chọn ý chính của người nói.",
+    explanation: "Người nói ủng hộ việc giảm giá giao thông công cộng.",
+    spokenText: "In my view, public transport should be cheaper because it would reduce traffic.",
+    options: ["Public transport should cost less.", "Traffic should be more expensive.", "Everyone should drive to work.", "Public transport is always empty."],
+    correctIndex: 0,
+  }),
+];

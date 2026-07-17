@@ -1,13 +1,9 @@
-try {
-    const { config } = require("dotenv");
-    config({ path: ".env.local" });
-} catch (e) {
-    // Bun loads .env.local automatically
-}
-
+import { config } from "dotenv";
 import postgres from "postgres";
 import { drizzle } from "drizzle-orm/postgres-js";
 import { courses } from "../db/schema";
+
+config({ path: ".env.local" });
 
 const databaseUrl = process.env.DATABASE_URL;
 
@@ -25,7 +21,7 @@ async function main() {
     await db.delete(courses);
     
     const initialCourses = [
-        { id: 1, title: "Tiếng Anh", imageSrc: "/globe.svg" },
+        { id: 1, title: "Tiếng Anh", imageSrc: "/gb.svg" },
         { id: 2, title: "Tiếng Nhật", imageSrc: "/jp.svg" },
         { id: 3, title: "Tiếng Pháp", imageSrc: "/fr.svg" },
         { id: 4, title: "Tiếng Tây Ban Nha", imageSrc: "/es.svg" },

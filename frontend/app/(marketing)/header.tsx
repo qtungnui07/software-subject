@@ -10,13 +10,14 @@ import {
   ThemeToggle,
 } from "./header-controls";
 import { HeaderSignOutButton } from "./header-signout-button";
+import { LearnTransitionLink } from "./learn-transition-link";
 
 export const Header = async () => {
   const session = await auth();
   const user = session?.user;
 
   return (
-    <header className="sticky top-0 z-50 h-20 w-full border-b border-slate-200/80 bg-white/95 px-4 shadow-[0_8px_28px_rgba(15,23,42,0.06)] backdrop-blur-md dark:border-slate-800 dark:bg-slate-950/95 lg:h-24 lg:px-8">
+    <header className="sticky top-0 z-50 h-20 w-full border-b border-slate-200/80 bg-white px-4 shadow-[0_8px_28px_rgba(15,23,42,0.06)] dark:border-slate-800 dark:bg-slate-950 lg:h-24 lg:px-8">
       <div className="mx-auto flex h-full max-w-[1640px] items-center justify-between gap-5">
         <div className="flex min-w-0 items-center gap-7">
           <Link
@@ -25,7 +26,7 @@ export const Header = async () => {
             className="flex shrink-0 items-center gap-3 transition-opacity hover:opacity-85"
           >
             <Image
-              src="/logo.webp"
+              src="/Robogo.svg"
               height={58}
               width={58}
               alt="Robogo logo"
@@ -58,13 +59,9 @@ export const Header = async () => {
 
           {user ? (
             <div className="flex items-center gap-3">
-              <Link
-                id="header-learn-link"
-                href="/learn"
+              <LearnTransitionLink
                 className="rounded-2xl border-b-4 border-[#0B6FAE] bg-[#1D9BF0] px-6 py-3 text-base font-black text-white shadow-sm transition-all duration-150 hover:bg-[#1486CC] active:translate-y-0.5 active:border-b-2"
-              >
-                Vào học
-              </Link>
+              />
 
               <div className="hidden items-center gap-3 rounded-2xl bg-slate-100 px-4 py-3 text-base font-bold text-slate-700 dark:bg-slate-800 dark:text-slate-200 2xl:flex">
                 <span className="inline-flex h-9 w-9 items-center justify-center rounded-full bg-sky-100 text-sm font-black uppercase text-[#1486CC] dark:bg-slate-700">

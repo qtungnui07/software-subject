@@ -295,7 +295,6 @@ export const ThemeToggle = () => {
   const handleToggleTheme = (event: ReactMouseEvent<HTMLButtonElement>) => {
     const nextTheme: Theme = theme === "dark" ? "light" : "dark";
 
-    // @ts-ignore
     if (!document.startViewTransition) {
       setTheme(nextTheme);
       localStorage.setItem("robogo-theme", nextTheme);
@@ -311,7 +310,6 @@ export const ThemeToggle = () => {
       Math.max(y, window.innerHeight - y)
     );
 
-    // @ts-ignore
     const transition = document.startViewTransition(() => {
       setTheme(nextTheme);
       localStorage.setItem("robogo-theme", nextTheme);
@@ -353,4 +351,3 @@ export const ThemeToggle = () => {
     </button>
   );
 };
-

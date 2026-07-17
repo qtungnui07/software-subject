@@ -11,14 +11,6 @@ const getCurrentXpUser = async () => {
   if (session?.user?.id) {
     return {
       id: session.user.id,
-      isDemoUser: false,
-    };
-  }
-
-  if (process.env.NODE_ENV !== "production") {
-    return {
-      id: "demo-user",
-      isDemoUser: true,
     };
   }
 
@@ -35,10 +27,7 @@ export async function GET() {
   try {
     const summary = await getUserXpSummary({ userId: currentUser.id });
 
-    return NextResponse.json({
-      ...summary,
-      isDemoUser: currentUser.isDemoUser,
-    });
+    return NextResponse.json(summary);
   } catch (error) {
     console.error("Failed to load XP summary", error);
 

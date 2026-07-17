@@ -1,0 +1,72 @@
+import {
+  createArrangeWordsExercise,
+  createDialogueChoiceExercise,
+  createFillBlankExercise,
+  createListeningChoiceExercise,
+  createMultipleChoiceExercise,
+} from "@/data/exercises/english/exercise-builders";
+import type { Exercise } from "@/types/exercise";
+
+const lessonId = "lesson-3";
+
+export const sectionOneLessonThreeExercises: Exercise[] = [
+  createMultipleChoiceExercise({
+    id: "lesson-3-exercise-1",
+    lessonId,
+    skill: "grammar",
+    difficulty: 1,
+    instruction: "Chọn từ đúng",
+    prompt: "Hoàn thành câu: “My name ___ Mai.”",
+    explanation: "Chủ ngữ “My name” đi với động từ “is”.",
+    options: ["am", "is", "are", "be"],
+    correctIndex: 1,
+  }),
+  createArrangeWordsExercise({
+    id: "lesson-3-exercise-2",
+    lessonId,
+    skill: "grammar",
+    difficulty: 1,
+    instruction: "Sắp xếp thành câu giới thiệu",
+    prompt: "Nói rằng bạn đến từ Việt Nam.",
+    explanation: "Câu đúng là “I am from Vietnam.”",
+    wordsInCorrectOrder: ["I", "am", "from", "Vietnam"],
+    shuffledOrder: [3, 1, 0, 2],
+  }),
+  createFillBlankExercise({
+    id: "lesson-3-exercise-3",
+    lessonId,
+    skill: "vocabulary",
+    difficulty: 1,
+    instruction: "Điền từ còn thiếu",
+    prompt: "Hoàn thành câu giới thiệu tuổi.",
+    explanation: "Có thể dùng “eighteen” hoặc số “18” để nói tuổi.",
+    sentenceBefore: "I am",
+    sentenceAfter: "years old.",
+    acceptedAnswers: ["eighteen", "18"],
+  }),
+  createDialogueChoiceExercise({
+    id: "lesson-3-exercise-4",
+    lessonId,
+    skill: "conversation",
+    difficulty: 1,
+    instruction: "Chọn câu trả lời phù hợp",
+    prompt: "Hoàn thành đoạn hội thoại giới thiệu.",
+    explanation: "“My name is Minh.” trả lời trực tiếp câu hỏi về tên.",
+    speaker: "Emma",
+    dialogue: "What's your name?",
+    options: ["My name is Minh.", "I am fine.", "I am from Hanoi.", "See you later."],
+    correctIndex: 0,
+  }),
+  createListeningChoiceExercise({
+    id: "lesson-3-exercise-5",
+    lessonId,
+    skill: "listening",
+    difficulty: 1,
+    instruction: "Nghe và chọn thông tin đúng",
+    prompt: "Nghe lời giới thiệu rồi chọn nơi người nói đến từ.",
+    explanation: "Người nói cho biết mình đến từ Hanoi.",
+    spokenText: "I'm Linh. I'm from Hanoi.",
+    options: ["Hanoi", "London", "Tokyo", "Sydney"],
+    correctIndex: 0,
+  }),
+];

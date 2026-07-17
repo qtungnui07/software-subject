@@ -113,7 +113,7 @@ paths:
               $ref: "#/components/schemas/UpdateProfileRequest"
             example:
               name: Nguyen Van A
-              imageSrc: /mascot.svg
+              imageSrc: /Robogo.svg
       responses:
         "200":
           description: Profile updated successfully.
@@ -687,7 +687,7 @@ components:
           format: email
         imageSrc:
           type: string
-          default: /mascot.svg
+          default: /Robogo.svg
 
     SyncedUser:
       type: object

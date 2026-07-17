@@ -1,9 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { ArrowLeft } from "lucide-react";
-
-import { Button } from "@/components/ui/button";
+import { ChevronRight, Layers3 } from "lucide-react";
 
 import { GuideDialog } from "./guide-dialog";
 
@@ -20,29 +18,32 @@ export const Header = ({ courseTitle, sectionLabel, chapterTitle }: Props) => {
       <div className="pointer-events-none absolute -bottom-20 right-12 h-36 w-36 rounded-full bg-sky-200/20" />
 
       <div className="relative flex items-center justify-between gap-3">
-        <div className="flex min-w-0 items-center gap-3">
-          <Button
-            asChild
-            variant="ghost"
-            size="icon"
-            className="size-10 shrink-0 rounded-2xl text-white hover:bg-white/15 hover:text-white"
-          >
-            <Link href="/courses" aria-label="Quay lại danh sách khóa học">
-              <ArrowLeft className="h-5 w-5 stroke-[3]" />
-            </Link>
-          </Button>
+        <Link
+          href="/sections"
+          aria-label="Xem các phần học"
+          className="group -m-1 flex min-w-0 flex-1 items-center gap-3 rounded-2xl p-1 outline-none transition hover:bg-white/10 focus-visible:ring-4 focus-visible:ring-white/45"
+        >
+          <span className="grid size-10 shrink-0 place-items-center rounded-2xl bg-white/15 transition group-hover:bg-white/20">
+            <Layers3 className="h-5 w-5 stroke-[2.8]" aria-hidden="true" />
+          </span>
 
-          <div className="min-w-0">
-            <div className="flex flex-wrap items-center gap-x-2 gap-y-1 text-xs font-black uppercase tracking-[0.16em] text-sky-100 sm:text-sm">
+          <span className="min-w-0 flex-1">
+            <span className="flex flex-wrap items-center gap-x-2 gap-y-1 text-xs font-black uppercase tracking-[0.16em] text-sky-100 sm:text-sm">
               <span>{courseTitle}</span>
               <span className="hidden opacity-70 sm:inline">•</span>
               <span>{sectionLabel}</span>
-            </div>
-            <h1 className="mt-1 truncate text-2xl font-black leading-tight sm:text-3xl">
-              {chapterTitle}
-            </h1>
-          </div>
-        </div>
+            </span>
+            <span className="mt-1 flex min-w-0 items-center gap-2">
+              <span className="truncate text-2xl font-black leading-tight sm:text-3xl">
+                {chapterTitle}
+              </span>
+              <ChevronRight
+                className="size-6 shrink-0 transition-transform group-hover:translate-x-0.5"
+                aria-hidden="true"
+              />
+            </span>
+          </span>
+        </Link>
 
         <div className="hidden shrink-0 sm:block">
           <GuideDialog />

@@ -1,0 +1,72 @@
+import {
+  createDialogueChoiceExercise,
+  createFillBlankExercise,
+  createListeningChoiceExercise,
+  createMultipleChoiceExercise,
+} from "@/data/exercises/english/exercise-builders";
+import type { Exercise } from "@/types/exercise";
+
+const lessonId = "lesson-5";
+
+export const sectionOneLessonFiveExercises: Exercise[] = [
+  createListeningChoiceExercise({
+    id: "lesson-5-exercise-1",
+    lessonId,
+    skill: "listening",
+    difficulty: 1,
+    instruction: "Nghe và chọn lời chào",
+    prompt: "Nghe câu được đọc rồi chọn đáp án đúng.",
+    explanation: "Câu được đọc là “Good evening, Anna.”",
+    spokenText: "Good evening, Anna.",
+    options: ["Good evening, Anna.", "Good morning, Anna.", "Goodbye, Anna.", "Thank you, Anna."],
+    correctIndex: 0,
+  }),
+  createListeningChoiceExercise({
+    id: "lesson-5-exercise-2",
+    lessonId,
+    skill: "listening",
+    difficulty: 1,
+    instruction: "Nghe và chọn tên",
+    prompt: "Nghe lời giới thiệu rồi chọn tên người nói.",
+    explanation: "Người nói tên là David.",
+    spokenText: "Hello, my name is David.",
+    options: ["Daniel", "David", "Peter", "Alex"],
+    correctIndex: 1,
+  }),
+  createMultipleChoiceExercise({
+    id: "lesson-5-exercise-3",
+    lessonId,
+    skill: "vocabulary",
+    difficulty: 1,
+    instruction: "Chọn nghĩa đúng",
+    prompt: "“See you tomorrow” có nghĩa là gì?",
+    explanation: "“See you tomorrow” nghĩa là hẹn gặp lại vào ngày mai.",
+    options: ["Hẹn gặp bạn ngày mai", "Hẹn gặp bạn tối nay", "Chào buổi sáng", "Cảm ơn bạn"],
+    correctIndex: 0,
+  }),
+  createFillBlankExercise({
+    id: "lesson-5-exercise-4",
+    lessonId,
+    skill: "grammar",
+    difficulty: 1,
+    instruction: "Điền từ bạn nghe được",
+    prompt: "Hoàn thành câu chào tạm biệt.",
+    explanation: "Cụm đúng là “See you later.”",
+    sentenceBefore: "See you",
+    sentenceAfter: ".",
+    acceptedAnswers: ["later"],
+  }),
+  createDialogueChoiceExercise({
+    id: "lesson-5-exercise-5",
+    lessonId,
+    skill: "conversation",
+    difficulty: 1,
+    instruction: "Chọn phản hồi tự nhiên",
+    prompt: "Hoàn thành đoạn hội thoại.",
+    explanation: "“Good night!” thường được đáp lại bằng cùng lời chúc.",
+    speaker: "Mia",
+    dialogue: "Good night!",
+    options: ["Good night!", "Good morning!", "How old are you?", "My name is Tom."],
+    correctIndex: 0,
+  }),
+];

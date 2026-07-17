@@ -1,0 +1,72 @@
+import {
+  createArrangeWordsExercise,
+  createDialogueChoiceExercise,
+  createFillBlankExercise,
+  createListeningChoiceExercise,
+  createMultipleChoiceExercise,
+} from "@/data/exercises/english/exercise-builders";
+import type { Exercise } from "@/types/exercise";
+
+const lessonId = "en-s2-c1-lesson-2";
+
+export const sectionTwoLessonTwoExercises: Exercise[] = [
+  createMultipleChoiceExercise({
+    id: "en-s2-c1-l2-exercise-1",
+    lessonId,
+    skill: "vocabulary",
+    difficulty: 2,
+    instruction: "Chọn cụm từ đúng",
+    prompt: "Biển báo yêu cầu bạn rẽ trái. Bạn chọn cụm nào?",
+    explanation: "“Turn left” nghĩa là rẽ trái.",
+    options: ["Turn left", "Go straight", "Turn right", "Stop here"],
+    correctIndex: 0,
+  }),
+  createArrangeWordsExercise({
+    id: "en-s2-c1-l2-exercise-2",
+    lessonId,
+    skill: "grammar",
+    difficulty: 2,
+    instruction: "Sắp xếp thành câu hỏi",
+    prompt: "Hỏi đường đến nhà ga.",
+    explanation: "Câu đúng là “How can I get to the station?”",
+    wordsInCorrectOrder: ["How", "can", "I", "get", "to", "the", "station"],
+    shuffledOrder: [6, 2, 4, 0, 5, 3, 1],
+  }),
+  createFillBlankExercise({
+    id: "en-s2-c1-l2-exercise-3",
+    lessonId,
+    skill: "vocabulary",
+    difficulty: 2,
+    instruction: "Điền cụm chỉ vị trí",
+    prompt: "Hoàn thành câu mô tả vị trí.",
+    explanation: "“Next to” và “beside” đều có nghĩa là ở bên cạnh.",
+    sentenceBefore: "The bank is",
+    sentenceAfter: "the post office.",
+    acceptedAnswers: ["next to", "beside"],
+  }),
+  createDialogueChoiceExercise({
+    id: "en-s2-c1-l2-exercise-4",
+    lessonId,
+    skill: "conversation",
+    difficulty: 2,
+    instruction: "Chọn chỉ dẫn phù hợp",
+    prompt: "Hoàn thành đoạn hội thoại.",
+    explanation: "Đây là câu chỉ đường phù hợp với câu hỏi.",
+    speaker: "Tourist",
+    dialogue: "Excuse me, where is the museum?",
+    options: ["Go straight and turn right at the traffic lights.", "It was very interesting.", "I visited it yesterday.", "The ticket was ten dollars."],
+    correctIndex: 0,
+  }),
+  createListeningChoiceExercise({
+    id: "en-s2-c1-l2-exercise-5",
+    lessonId,
+    skill: "listening",
+    difficulty: 2,
+    instruction: "Nghe và chọn điểm đến",
+    prompt: "Nghe chỉ dẫn rồi chọn nơi người nghe sẽ đến.",
+    explanation: "Điểm đến được nhắc tới là quán cà phê.",
+    spokenText: "Walk past the library. The café is on your left.",
+    options: ["The library", "The café", "The station", "The hospital"],
+    correctIndex: 1,
+  }),
+];

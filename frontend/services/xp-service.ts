@@ -1,7 +1,9 @@
 import "server-only";
+import { isRemoteApiMode, remoteApiRequest } from "@/lib/remote-api";
 
 import { and, eq } from "drizzle-orm";
 
+import { resolveUserAvatar } from "@/constants/user-avatar";
 import db from "@/db/drizzle";
 import {
   lessonXpClaims,
@@ -33,7 +35,7 @@ type GetUserXpSummaryInput = {
 };
 
 type GetXpLeaderboardInput = {
-  currentUserId: string;
+  currentUserId?: string | null;
   currentUserName?: string | null;
   currentUserImageSrc?: string | null;
 };
@@ -98,56 +100,6 @@ type XpState = {
   currentWeekStart: string | null;
 };
 
-type InMemoryXpClaim = {
-  userId: string;
-  lessonId: string;
-  earnedXp: number;
-  accuracy: number;
-  firstCompletedAt: Date;
-  updatedAt: Date;
-};
-
-const inMemoryXpSummaries = new Map<string, XpState>();
-const inMemoryXpClaims = new Map<string, InMemoryXpClaim>();
-const inMemoryUserProgressPoints = new Map<string, number>();
-const inMemoryXpEvents: Array<{
-  userId: string;
-  lessonId: string;
-  earnedXp: number;
-  baseXp: number;
-  accuracyBonus: number;
-  accuracy: number;
-  rewardType: XpRewardType;
-  eventDate: string;
-  weekStart: string;
-  createdAt: Date;
-}> = [];
-
-const useInMemoryXpStore = !process.env.DATABASE_URL;
-
-const DEMO_LEADERBOARD_USERS = [
-  { userId: "demo-linh", name: "Linh", avatarUrl: "/mascot.svg", weeklyXp: 72, totalXp: 310 },
-  { userId: "demo-minh", name: "Minh", avatarUrl: "/mascot.svg", weeklyXp: 54, totalXp: 240 },
-  { userId: "demo-an", name: "An", avatarUrl: "/mascot.svg", weeklyXp: 42, totalXp: 180 },
-  { userId: "demo-yuki", name: "Yuki", avatarUrl: "/mascot.svg", weeklyXp: 36, totalXp: 160 },
-  { userId: "demo-hana", name: "Hana", avatarUrl: "/mascot.svg", weeklyXp: 30, totalXp: 140 },
-  { userId: "demo-bao", name: "Bảo", avatarUrl: "/mascot.svg", weeklyXp: 26, totalXp: 120 },
-  { userId: "demo-khoa", name: "Khoa", avatarUrl: "/mascot.svg", weeklyXp: 22, totalXp: 105 },
-  { userId: "demo-sophia", name: "Sophia", avatarUrl: "/mascot.svg", weeklyXp: 18, totalXp: 96 },
-  { userId: "demo-nam", name: "Nam", avatarUrl: "/mascot.svg", weeklyXp: 15, totalXp: 82 },
-  { userId: "demo-emily", name: "Emily", avatarUrl: "/mascot.svg", weeklyXp: 12, totalXp: 70 },
-  { userId: "demo-tuan", name: "Tuấn", avatarUrl: "/mascot.svg", weeklyXp: 10, totalXp: 60 },
-  { userId: "demo-sarah", name: "Sarah", avatarUrl: "/mascot.svg", weeklyXp: 8, totalXp: 50 },
-  { userId: "demo-vy", name: "Vy", avatarUrl: "/mascot.svg", weeklyXp: 6, totalXp: 40 },
-  { userId: "demo-david", name: "David", avatarUrl: "/mascot.svg", weeklyXp: 5, totalXp: 34 },
-  { userId: "demo-trang", name: "Trang", avatarUrl: "/mascot.svg", weeklyXp: 4, totalXp: 30 },
-  { userId: "demo-hai", name: "Hải", avatarUrl: "/mascot.svg", weeklyXp: 3, totalXp: 22 },
-  { userId: "demo-alex", name: "Alex", avatarUrl: "/mascot.svg", weeklyXp: 2, totalXp: 18 },
-  { userId: "demo-mai", name: "Mai", avatarUrl: "/mascot.svg", weeklyXp: 1, totalXp: 12 },
-  { userId: "demo-jun", name: "Jun", avatarUrl: "/mascot.svg", weeklyXp: 0, totalXp: 8 },
-  { userId: "demo-anh", name: "Anh", avatarUrl: "/mascot.svg", weeklyXp: 0, totalXp: 4 },
-];
-
 const toSafeXp = (value: number | null | undefined) => {
   if (!Number.isFinite(value ?? 0)) {
     return 0;
@@ -202,8 +154,6 @@ export const getXpWeekStartKey = (date = new Date(), timeZone = XP_TIME_ZONE) =>
 
   return formatDateInTimeZone(utcDate, "UTC");
 };
-
-const claimKey = (userId: string, lessonId: string) => `${userId}::${lessonId}`;
 
 const buildStateAfterXp = ({
   currentState,
@@ -260,110 +210,6 @@ const toResponse = ({
   currentDay: todayKey,
   currentWeekStart: weekStartKey,
 });
-
-const logInMemoryXpEvent = ({
-  input,
-  xpResult,
-  todayKey,
-  weekStartKey,
-}: {
-  input: CompleteLessonXpInput;
-  xpResult: ReturnType<typeof calculateLessonXp>;
-  todayKey: string;
-  weekStartKey: string;
-}) => {
-  inMemoryXpEvents.push({
-    userId: input.userId,
-    lessonId: input.lessonId,
-    earnedXp: xpResult.earnedXp,
-    baseXp: xpResult.baseXp,
-    accuracyBonus: xpResult.accuracyBonus,
-    accuracy: xpResult.accuracy,
-    rewardType: xpResult.rewardType,
-    eventDate: todayKey,
-    weekStart: weekStartKey,
-    createdAt: new Date(),
-  });
-};
-
-const completeLessonXpInMemory = async (
-  input: CompleteLessonXpInput
-): Promise<CompleteLessonXpResult> => {
-  const todayKey = getXpDateKey();
-  const weekStartKey = getXpWeekStartKey();
-  const key = claimKey(input.userId, input.lessonId);
-  const existingClaim = inMemoryXpClaims.get(key);
-  const existingSummary = inMemoryXpSummaries.get(input.userId);
-  const progressPoints = inMemoryUserProgressPoints.get(input.userId) ?? 0;
-  const currentState: XpState = existingSummary ?? {
-    totalXp: progressPoints,
-    dailyXp: 0,
-    weeklyXp: 0,
-    currentDay: null,
-    currentWeekStart: null,
-  };
-
-  if (existingClaim) {
-    const xpResult = calculateLessonXp({
-      accuracy: input.accuracy,
-      isFirstCompletion: false,
-      isDuplicateRequest: true,
-    });
-    const nextState = buildStateAfterXp({
-      currentState,
-      earnedXp: 0,
-      todayKey,
-      weekStartKey,
-    });
-
-    inMemoryXpSummaries.set(input.userId, nextState);
-    logInMemoryXpEvent({ input, xpResult, todayKey, weekStartKey });
-
-    return toResponse({
-      lessonId: input.lessonId,
-      xpResult,
-      state: nextState,
-      alreadyClaimed: true,
-      todayKey,
-      weekStartKey,
-    });
-  }
-
-  const xpResult = calculateLessonXp({
-    accuracy: input.accuracy,
-    isFirstCompletion: true,
-  });
-  const nextState = buildStateAfterXp({
-    currentState,
-    earnedXp: xpResult.earnedXp,
-    todayKey,
-    weekStartKey,
-  });
-
-  inMemoryXpSummaries.set(input.userId, nextState);
-  logInMemoryXpEvent({ input, xpResult, todayKey, weekStartKey });
-
-  if (xpResult.isPassed) {
-    inMemoryXpClaims.set(key, {
-      userId: input.userId,
-      lessonId: input.lessonId,
-      earnedXp: xpResult.earnedXp,
-      accuracy: xpResult.accuracy,
-      firstCompletedAt: new Date(),
-      updatedAt: new Date(),
-    });
-    inMemoryUserProgressPoints.set(input.userId, nextState.totalXp);
-  }
-
-  return toResponse({
-    lessonId: input.lessonId,
-    xpResult,
-    state: nextState,
-    alreadyClaimed: false,
-    todayKey,
-    weekStartKey,
-  });
-};
 
 const getCurrentDbState = async (
   tx: any,
@@ -451,19 +297,17 @@ const upsertDbUserProgressPoints = async ({
   tx,
   input,
   nextTotalXp,
-  earnedXp,
 }: {
   tx: any;
   input: CompleteLessonXpInput;
   nextTotalXp: number;
-  earnedXp: number;
 }) => {
   await tx
     .insert(userProgress)
     .values({
       userId: input.userId,
       userName: input.userName?.trim() || "User",
-      userImageSrc: input.userImageSrc?.trim() || "/mascot.svg",
+      userImageSrc: resolveUserAvatar(input.userImageSrc),
       points: nextTotalXp,
     })
     .onConflictDoUpdate({
@@ -471,7 +315,7 @@ const upsertDbUserProgressPoints = async ({
       set: {
         points: nextTotalXp,
         userName: input.userName?.trim() || "User",
-        userImageSrc: input.userImageSrc?.trim() || "/mascot.svg",
+        userImageSrc: resolveUserAvatar(input.userImageSrc),
       },
     });
 };
@@ -547,7 +391,6 @@ const completeLessonXpInDatabase = async (
         tx,
         input,
         nextTotalXp: nextState.totalXp,
-        earnedXp: xpResult.earnedXp,
       });
     }
 
@@ -589,36 +432,6 @@ const toProfileSummaryResponse = ({
   };
 };
 
-const getUserXpSummaryInMemory = async ({
-  userId,
-}: GetUserXpSummaryInput): Promise<UserXpProfileSummary> => {
-  const todayKey = getXpDateKey();
-  const weekStartKey = getXpWeekStartKey();
-  const existingSummary = inMemoryXpSummaries.get(userId);
-  const progressPoints = inMemoryUserProgressPoints.get(userId) ?? 0;
-  const currentState: XpState = existingSummary ?? {
-    totalXp: progressPoints,
-    dailyXp: 0,
-    weeklyXp: 0,
-    currentDay: null,
-    currentWeekStart: null,
-  };
-  const normalizedState = buildStateAfterXp({
-    currentState,
-    earnedXp: 0,
-    todayKey,
-    weekStartKey,
-  });
-
-  inMemoryXpSummaries.set(userId, normalizedState);
-
-  return toProfileSummaryResponse({
-    state: normalizedState,
-    todayKey,
-    weekStartKey,
-  });
-};
-
 const getUserXpSummaryInDatabase = async ({
   userId,
 }: GetUserXpSummaryInput): Promise<UserXpProfileSummary> => {
@@ -649,33 +462,6 @@ const rankLeaderboardUsers = (users: Omit<XpLeaderboardUser, "rank">[]) =>
       rank: index + 1,
     }));
 
-const getXpLeaderboardInMemory = async ({
-  currentUserId,
-  currentUserName,
-  currentUserImageSrc,
-}: GetXpLeaderboardInput): Promise<XpLeaderboardResult> => {
-  const currentUserSummary = await getUserXpSummaryInMemory({ userId: currentUserId });
-  const todayKey = currentUserSummary.currentDay;
-  const weekStartKey = currentUserSummary.currentWeekStart;
-
-  const currentUserRow: Omit<XpLeaderboardUser, "rank"> = {
-    userId: currentUserId,
-    name: currentUserName?.trim() || "Bạn",
-    avatarUrl: currentUserImageSrc?.trim() || "/mascot.svg",
-    level: currentUserSummary.level,
-    weeklyXp: currentUserSummary.weeklyXp,
-    totalXp: currentUserSummary.totalXp,
-    isCurrentUser: true,
-  };
-
-  return {
-    success: true,
-    users: rankLeaderboardUsers([currentUserRow]),
-    currentDay: todayKey,
-    currentWeekStart: weekStartKey,
-  };
-};
-
 const getXpLeaderboardInDatabase = async ({
   currentUserId,
   currentUserName,
@@ -702,25 +488,28 @@ const getXpLeaderboardInDatabase = async ({
         (summary.userId === currentUserId ? currentUserName?.trim() : null) ||
         "User",
       avatarUrl:
-        summary.userProgress?.userImageSrc ||
-        (summary.userId === currentUserId ? currentUserImageSrc?.trim() : null) ||
-        "/mascot.svg",
+        resolveUserAvatar(
+          summary.userProgress?.userImageSrc ||
+            (summary.userId === currentUserId ? currentUserImageSrc : null),
+        ),
       level: calculateLevelFromXp(totalXp),
       weeklyXp,
       totalXp,
-      isCurrentUser: summary.userId === currentUserId,
+      isCurrentUser: Boolean(currentUserId && summary.userId === currentUserId),
     };
   });
 
-  const hasCurrentUser = rows.some((user) => user.userId === currentUserId);
+  const hasCurrentUser = Boolean(
+    currentUserId && rows.some((user) => user.userId === currentUserId)
+  );
 
-  if (!hasCurrentUser) {
+  if (currentUserId && !hasCurrentUser) {
     const currentUserSummary = await getUserXpSummaryInDatabase({ userId: currentUserId });
 
     rows.push({
       userId: currentUserId,
       name: currentUserName?.trim() || "Bạn",
-      avatarUrl: currentUserImageSrc?.trim() || "/mascot.svg",
+      avatarUrl: resolveUserAvatar(currentUserImageSrc),
       level: currentUserSummary.level,
       weeklyXp: currentUserSummary.weeklyXp,
       totalXp: currentUserSummary.totalXp,
@@ -739,18 +528,14 @@ const getXpLeaderboardInDatabase = async ({
 export const getXpLeaderboard = async (
   input: GetXpLeaderboardInput
 ): Promise<XpLeaderboardResult> => {
-  if (useInMemoryXpStore) {
-    return getXpLeaderboardInMemory(input);
-  }
-
   return getXpLeaderboardInDatabase(input);
 };
 
 export const getUserXpSummary = async (
   input: GetUserXpSummaryInput
 ): Promise<UserXpProfileSummary> => {
-  if (useInMemoryXpStore) {
-    return getUserXpSummaryInMemory(input);
+  if (isRemoteApiMode()) {
+    return remoteApiRequest<UserXpProfileSummary>("/api/xp/summary");
   }
 
   return getUserXpSummaryInDatabase(input);
@@ -759,9 +544,5 @@ export const getUserXpSummary = async (
 export const completeLessonXp = async (
   input: CompleteLessonXpInput
 ): Promise<CompleteLessonXpResult> => {
-  if (useInMemoryXpStore) {
-    return completeLessonXpInMemory(input);
-  }
-
   return completeLessonXpInDatabase(input);
 };

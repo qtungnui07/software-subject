@@ -45,7 +45,7 @@ export default function AuthLayout({
         <Link href="/" className="group flex flex-col items-center gap-1.5 animate-in fade-in slide-in-from-top-6 duration-500 ease-out fill-mode-both">
           <div className="relative w-16 h-16 transition-transform duration-300 group-hover:scale-110 active:scale-95">
             <Image
-              src="/logo.webp"
+              src="/Robogo.svg"
               alt="Robogo Mascot"
               fill
               priority

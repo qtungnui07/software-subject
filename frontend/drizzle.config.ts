@@ -1,11 +1,7 @@
 import type { Config } from "drizzle-kit";
+import { config } from "dotenv";
 
-try {
-    const { config } = require("dotenv");
-    config({ path: ".env.local" });
-} catch (e) {
-    // dotenv might not be found by drizzle-kit loader, fallback to process.env
-}
+config({ path: ".env.local" });
 
 export default {
     schema: "./db/schema.ts",

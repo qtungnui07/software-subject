@@ -1,0 +1,72 @@
+import {
+  createArrangeWordsExercise,
+  createDialogueChoiceExercise,
+  createFillBlankExercise,
+  createListeningChoiceExercise,
+  createMultipleChoiceExercise,
+} from "@/data/exercises/english/exercise-builders";
+import type { Exercise } from "@/types/exercise";
+
+const lessonId = "en-s3-c1-lesson-5";
+
+export const sectionThreeLessonFiveExercises: Exercise[] = [
+  createMultipleChoiceExercise({
+    id: "en-s3-c1-l5-exercise-1",
+    lessonId,
+    skill: "grammar",
+    difficulty: 3,
+    instruction: "Chọn câu tường thuật đúng",
+    prompt: "Lan said, “I am tired.” Câu tường thuật nào đúng?",
+    explanation: "Trong lời tường thuật quá khứ, “am” thường lùi thành “was”.",
+    options: ["Lan said that she was tired.", "Lan said that I am tired.", "Lan says she tired yesterday.", "Lan told that tired."],
+    correctIndex: 0,
+  }),
+  createFillBlankExercise({
+    id: "en-s3-c1-l5-exercise-2",
+    lessonId,
+    skill: "reading",
+    difficulty: 3,
+    instruction: "Điền từ nối kết quả",
+    prompt: "Hoàn thành kết luận.",
+    explanation: "“Therefore” giới thiệu kết quả hoặc kết luận logic.",
+    sentenceBefore: "The evidence is limited;",
+    sentenceAfter: ", we should avoid making a final decision.",
+    acceptedAnswers: ["therefore"],
+  }),
+  createArrangeWordsExercise({
+    id: "en-s3-c1-l5-exercise-3",
+    lessonId,
+    skill: "grammar",
+    difficulty: 3,
+    instruction: "Sắp xếp thành câu nhượng bộ",
+    prompt: "Tạo câu cân nhắc chi phí và lợi ích.",
+    explanation: "Câu đúng là “Although the plan is expensive, it may save money later.”",
+    wordsInCorrectOrder: ["Although", "the", "plan", "is", "expensive", "it", "may", "save", "money", "later"],
+    shuffledOrder: [9, 4, 0, 7, 3, 8, 2, 6, 1, 5],
+  }),
+  createDialogueChoiceExercise({
+    id: "en-s3-c1-l5-exercise-4",
+    lessonId,
+    skill: "conversation",
+    difficulty: 3,
+    instruction: "Chọn câu kết luận phù hợp",
+    prompt: "Hoàn thành phần kết của một cuộc thảo luận.",
+    explanation: "Câu trả lời tóm tắt cân bằng và đề xuất bước tiếp theo.",
+    speaker: "Moderator",
+    dialogue: "We have considered both the benefits and the risks. What can we conclude?",
+    options: ["Overall, a small trial would be the most reasonable next step.", "The meeting room is on the second floor.", "Everyone arrived at different times.", "The risks are a type of breakfast."],
+    correctIndex: 0,
+  }),
+  createListeningChoiceExercise({
+    id: "en-s3-c1-l5-exercise-5",
+    lessonId,
+    skill: "listening",
+    difficulty: 3,
+    instruction: "Nghe và chọn kết luận chính",
+    prompt: "Nghe rồi chọn tóm tắt phù hợp nhất.",
+    explanation: "Người nói nhìn thấy tiềm năng nhưng yêu cầu thử nghiệm thận trọng.",
+    spokenText: "The proposal may improve access, although it requires careful testing before a full launch.",
+    options: ["The proposal should be cancelled immediately.", "The proposal has potential but needs testing first.", "Testing is unnecessary because access is perfect.", "The proposal only discusses transportation."],
+    correctIndex: 1,
+  }),
+];

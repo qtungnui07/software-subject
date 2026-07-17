@@ -2,6 +2,8 @@ import { neon } from "@neondatabase/serverless";
 import fs from "fs";
 import path from "path";
 
+import { canUseOfflineDatabaseFallback } from "@/lib/env/env-policy";
+
 const databaseUrl = process.env.DATABASE_URL;
 
 export type User = {
@@ -14,7 +16,8 @@ export type User = {
 
 export const sql = databaseUrl
   ? neon(databaseUrl)
-  : (() => {
+  : canUseOfflineDatabaseFallback()
+    ? (() => {
       console.warn("DATABASE_URL is not set. Using users_mock.json offline database mock.");
       const filePath = path.join(process.cwd(), "users_mock.json");
       
@@ -81,4 +84,7 @@ export const sql = databaseUrl
       };
 
       return mockSql as any;
-    })();
+    })()
+    : ((() => {
+        throw new Error("DATABASE_URL is required at production runtime.");
+      }) as any);

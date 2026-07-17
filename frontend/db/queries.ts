@@ -11,8 +11,17 @@ import {
 import db from "@/db/drizzle";
 import { eq, sql, desc } from "drizzle-orm";
 import { auth } from "@/auth";
+import { isRemoteApiMode, remoteApiRequest } from "@/lib/remote-api";
+
+type RemoteData<T> = { data: T };
 
 export const getUserProgress = cache(async ()=> {
+    if (isRemoteApiMode()) {
+        return (await remoteApiRequest<RemoteData<any>>(
+            "/api/remote/bootstrap?operation=user-progress"
+        )).data;
+    }
+
     const session = await auth();
     const userId = session?.user?.id;
 
@@ -30,12 +39,24 @@ export const getUserProgress = cache(async ()=> {
 })
 
 export const getCourses = cache(async () => {
+    if (isRemoteApiMode()) {
+        return (await remoteApiRequest<RemoteData<any[]>>(
+            "/api/remote/bootstrap?operation=courses"
+        )).data;
+    }
+
     const data = await db.query.courses.findMany();
 
     return data;
 });
 
 export const getCourseById = cache(async (courseId: number) => {
+    if (isRemoteApiMode()) {
+        return (await remoteApiRequest<RemoteData<any>>(
+            `/api/remote/bootstrap?operation=course&courseId=${courseId}`
+        )).data;
+    }
+
     const data = await db.query.courses.findFirst({
         where: eq(courses.id, courseId),
     });

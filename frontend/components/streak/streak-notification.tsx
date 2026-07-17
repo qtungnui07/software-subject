@@ -18,17 +18,17 @@ type Props = {
 };
 
 const toneClasses: Record<StreakNotificationTone, string> = {
-    success: "border-orange-200 bg-orange-50 text-orange-700 shadow-orange-100/60",
-    info: "border-sky-200 bg-sky-50 text-sky-700 shadow-sky-100/60",
-    warning: "border-amber-200 bg-amber-50 text-amber-700 shadow-amber-100/60",
-    protected: "border-cyan-200 bg-cyan-50 text-cyan-700 shadow-cyan-100/60",
+    success: "border-orange-200 bg-orange-50 text-orange-700 shadow-orange-100/60 dark:border-orange-950/40 dark:bg-orange-950/20 dark:text-orange-400 dark:shadow-none",
+    info: "border-sky-200 bg-sky-50 text-sky-700 shadow-sky-100/60 dark:border-sky-950/40 dark:bg-sky-950/20 dark:text-sky-400 dark:shadow-none",
+    warning: "border-amber-200 bg-amber-50 text-amber-700 shadow-amber-100/60 dark:border-amber-950/40 dark:bg-amber-950/20 dark:text-amber-400 dark:shadow-none",
+    protected: "border-cyan-200 bg-cyan-50 text-cyan-700 shadow-cyan-100/60 dark:border-cyan-950/40 dark:bg-cyan-950/20 dark:text-cyan-400 dark:shadow-none",
 };
 
 const accentClasses: Record<StreakNotificationTone, string> = {
-    success: "bg-orange-100 text-orange-600",
-    info: "bg-sky-100 text-sky-600",
-    warning: "bg-amber-100 text-amber-600",
-    protected: "bg-cyan-100 text-cyan-600",
+    success: "bg-orange-100 text-orange-600 dark:bg-orange-500/15 dark:text-orange-300",
+    info: "bg-sky-100 text-sky-600 dark:bg-sky-500/15 dark:text-sky-300",
+    warning: "bg-amber-100 text-amber-600 dark:bg-amber-500/15 dark:text-amber-300",
+    protected: "bg-cyan-100 text-cyan-600 dark:bg-cyan-500/15 dark:text-cyan-300",
 };
 
 export const StreakNotification = ({
@@ -106,7 +106,7 @@ export const StreakNotification = ({
                     type="button"
                     variant="ghost"
                     size="icon"
-                    className="h-8 w-8 shrink-0 rounded-full bg-white/60 hover:bg-white/90"
+                    className="h-8 w-8 shrink-0 rounded-full bg-white/60 dark:bg-slate-800/60 hover:bg-white/90 dark:hover:bg-slate-700/80"
                     onClick={handleDismiss}
                     aria-label="Đóng thông báo streak"
                 >
