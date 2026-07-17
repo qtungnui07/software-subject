@@ -63,14 +63,14 @@ const WeekHeatmap = ({ recentActivity }: HeatmapProps) => {
             >
                 {currentWeekDays.map((dateKey) => {
                     const activity = activityMap.get(dateKey);
-                    const studied = Boolean(activity);
+                    const studied = (activity?.studyMinutes ?? 0) >= 15;
                     const today = isToday(dateKey);
 
                     return (
                         <div key={dateKey} className="flex flex-col items-center gap-1">
                             <div
                                 title={
-                                    studied
+                                    activity
                                         ? `${dateKey}: ${activity!.completedLessons} bài, +${activity!.earnedXp} XP`
                                         : dateKey
                                 }

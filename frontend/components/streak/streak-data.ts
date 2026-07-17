@@ -1,6 +1,7 @@
 export type CurrentStreakStatus = "not_started" | "active_today" | "active" | "missed";
 
 export type StreakUpdateStatus =
+    | "needs_more_time"
     | "first_study"
     | "already_completed_today"
     | "continued"
@@ -11,6 +12,7 @@ export type RecentStreakActivity = {
     studyDate: string;
     completedLessons: number;
     earnedXp: number;
+    studyMinutes: number;
 };
 
 export type CurrentStreakData = {
@@ -122,6 +124,13 @@ export const getStreakNotificationContent = ({
     const safeUsedFreezes = toSafeCount(usedStreakFreezes);
 
     switch (status) {
+        case "needs_more_time":
+            return {
+                icon: "⏱️",
+                title: "Chưa đủ 15 phút",
+                description: "Tiến độ bài học đã được lưu, nhưng streak chỉ được tính khi bạn học đủ 15 phút trong ngày.",
+                tone: "info",
+            };
         case "first_study":
             return {
                 icon: "🔥",

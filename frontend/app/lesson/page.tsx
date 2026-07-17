@@ -27,6 +27,7 @@ import {
 } from "@/lib/chapter-one-progress";
 import { StreakNotification } from "@/components/streak/streak-notification";
 import type { StreakNotificationInput } from "@/components/streak/streak-data";
+import { STREAK_UPDATED_EVENT } from "@/components/streak/use-streak";
 import { ExerciseFeedback } from "@/components/lesson/exercise-feedback";
 import { ExerciseRenderer } from "@/components/lesson/exercise-renderer";
 import {
@@ -355,6 +356,8 @@ const LessonContent = () => {
           completion.streak.status &&
           completion.streak.currentStreak !== null
         ) {
+          window.dispatchEvent(new Event(STREAK_UPDATED_EVENT));
+
           setStreakResult({
             status: completion.streak
               .status as StreakNotificationInput["status"],
