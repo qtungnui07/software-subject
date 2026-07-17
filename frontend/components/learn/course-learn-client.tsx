@@ -187,6 +187,44 @@ export const CourseLearnClient = ({
     return subscribeChapterOneProgress(syncProgress);
   }, [initialLegacyProgressState, progressOwnerId]);
 
+  useEffect(() => {
+    if (!progressOwnerId) return;
+
+    let isMounted = true;
+
+    const refreshCourseProgress = async () => {
+      try {
+        const response = await fetch("/api/progress/course", {
+          method: "GET",
+          cache: "no-store",
+        });
+
+        if (!response.ok) return;
+
+        const data = (await response.json()) as {
+          progress?: CourseProgressState;
+        };
+
+        if (!isMounted || !data.progress) return;
+
+        setCourseProgress(data.progress);
+        const nextLegacyProgress = projectCourseProgressToChapterOne(
+          data.progress,
+        );
+        saveChapterOneProgress(nextLegacyProgress);
+        setLegacyProgress(nextLegacyProgress);
+      } catch (error) {
+        console.warn("Could not refresh course progress:", error);
+      }
+    };
+
+    void refreshCourseProgress();
+
+    return () => {
+      isMounted = false;
+    };
+  }, [progressOwnerId]);
+
   const selectedSection =
     englishCourse.sections.find(
       (section) => section.id === courseProgress.currentSectionId,
