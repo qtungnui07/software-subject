@@ -26,6 +26,10 @@ const exerciseTypeLabels: Record<ExerciseType, string> = {
   fill_blank: "Điền từ",
   dialogue_choice: "Hội thoại",
   listening_choice: "Nghe hiểu",
+  match_pairs: "Nối thông tin",
+  arrange_dialogue: "Sắp xếp hội thoại",
+  sentence_rewrite: "Viết lại câu",
+  short_writing: "Viết ngắn",
 };
 
 const unique = <T,>(items: T[]) => Array.from(new Set(items));

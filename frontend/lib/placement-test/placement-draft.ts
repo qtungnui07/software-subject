@@ -1,4 +1,4 @@
-import type { ExerciseAnswer } from "@/types/exercise";
+import type { CoreExerciseAnswer } from "@/types/exercise";
 import {
   ENGLISH_PLACEMENT_TEST_VERSION,
   type PlacementTestVersion,
@@ -7,7 +7,7 @@ import {
 export type PlacementDraft = {
   testVersion: PlacementTestVersion;
   currentQuestionIndex: number;
-  answers: Record<string, ExerciseAnswer>;
+  answers: Record<string, CoreExerciseAnswer>;
   startedAt: string;
   submissionId: string;
 };
@@ -26,7 +26,7 @@ export const createPlacementDraft = (
   submissionId,
 });
 
-const isExerciseAnswer = (value: unknown): value is ExerciseAnswer => {
+const isExerciseAnswer = (value: unknown): value is CoreExerciseAnswer => {
   if (typeof value !== "object" || value === null || !("type" in value)) {
     return false;
   }
@@ -72,7 +72,7 @@ export const parsePlacementDraft = (
     }
 
     const answers = Object.fromEntries(
-      Object.entries(parsed.answers).filter((entry): entry is [string, ExerciseAnswer] =>
+      Object.entries(parsed.answers).filter((entry): entry is [string, CoreExerciseAnswer] =>
         typeof entry[0] === "string" && isExerciseAnswer(entry[1])
       )
     );
@@ -99,7 +99,7 @@ export const parsePlacementDraft = (
   }
 };
 
-export const isPlacementAnswerComplete = (answer: ExerciseAnswer | undefined) => {
+export const isPlacementAnswerComplete = (answer: CoreExerciseAnswer | undefined) => {
   if (!answer) return false;
   if (answer.type === "choice") return Boolean(answer.optionId);
   if (answer.type === "arrange_words") return answer.tokenIds.length > 0;
@@ -107,7 +107,7 @@ export const isPlacementAnswerComplete = (answer: ExerciseAnswer | undefined) =>
 };
 
 export const countAnsweredPlacementQuestions = (
-  answers: Record<string, ExerciseAnswer>,
+  answers: Record<string, CoreExerciseAnswer>,
   questionIds: string[]
 ) =>
   questionIds.filter((questionId) =>

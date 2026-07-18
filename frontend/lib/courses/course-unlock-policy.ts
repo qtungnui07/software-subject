@@ -79,12 +79,63 @@ export const isNodePrerequisiteSatisfied = (
   return prerequisite ? isNodeCompleted(state, prerequisite) : false;
 };
 
+const getNextSectionForCheckpoint = (checkpointId: string) => {
+  const section = getSectionForNode(checkpointId);
+  if (!section) return null;
+
+  return (
+    getOrderedSections(section.courseId).find(
+      (candidate) => candidate.order === section.order + 1,
+    ) ?? null
+  );
+};
+
+export const getCheckpointPrerequisiteNodeIds = (checkpointId: string) => {
+  const checkpoint = getLearningNodeById(checkpointId);
+  const section = getSectionForNode(checkpointId);
+  if (!checkpoint || checkpoint.type !== "checkpoint" || !section) return [];
+
+  return section.chapter.nodes
+    .filter(
+      (node) =>
+        node.order < checkpoint.order &&
+        node.type === "lesson" &&
+        node.countsTowardProgress,
+    )
+    .map((node) => node.id);
+};
+
+export const canAttemptCheckpoint = (
+  state: CourseProgressState,
+  checkpointId: string,
+) => {
+  const checkpoint = getLearningNodeById(checkpointId);
+  const section = getSectionForNode(checkpointId);
+  if (!checkpoint || checkpoint.type !== "checkpoint" || !section) return false;
+  if (!isSectionUnlocked(state, section.id)) return false;
+
+  if (state.completedNodeIds.includes(checkpoint.id)) return true;
+
+  const nextSection = getNextSectionForCheckpoint(checkpoint.id);
+  if (nextSection && isSectionUnlocked(state, nextSection.id)) return true;
+
+  const prerequisiteIds = getCheckpointPrerequisiteNodeIds(checkpoint.id);
+  return (
+    prerequisiteIds.length > 0 &&
+    prerequisiteIds.every((nodeId) => state.completedNodeIds.includes(nodeId))
+  );
+};
+
 export const canAccessCourseNode = (
   state: CourseProgressState,
   nodeId: string
 ) => {
   const node = getLearningNodeById(nodeId);
   if (!node || node.type === "chest") return false;
+
+  if (node.type === "checkpoint") {
+    return canAttemptCheckpoint(state, node.id);
+  }
 
   const section = getSectionForNode(nodeId);
 
@@ -195,11 +246,12 @@ export const recordCheckpointScore = (
   if (checkpoint.type !== "checkpoint") {
     return { progress: normalizeCourseProgressState(state), changed: false, reason: "not-checkpoint" };
   }
-  if (!canAccessCourseNode(state, checkpoint.id)) {
+  if (!canAttemptCheckpoint(state, checkpoint.id)) {
     return { progress: normalizeCourseProgressState(state), changed: false, reason: "locked-node" };
   }
 
-  const safeScore = Math.min(100, Math.max(0, Math.round(score)));
+  const safeScore =
+    Math.round(Math.min(100, Math.max(0, score)) * 100) / 100;
   const bestScore = Math.max(state.checkpointScores[checkpoint.id] ?? 0, safeScore);
   const section = getOrderedSections(state.courseId).find((item) =>
     item.chapter.nodes.some((node) => node.id === checkpoint.id)

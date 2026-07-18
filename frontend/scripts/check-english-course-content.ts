@@ -5,12 +5,19 @@ import { dedicatedExerciseCatalog } from "@/lib/exercises/exercise-catalog";
 import { validateExerciseCatalog } from "@/lib/exercises/exercise-validator";
 import type { ExerciseType } from "@/types/exercise";
 
-const EXPECTED_TYPES = new Set<ExerciseType>([
+const CORE_TYPES = new Set<ExerciseType>([
   "multiple_choice",
   "arrange_words",
   "fill_blank",
   "dialogue_choice",
   "listening_choice",
+]);
+const SECTION_ONE_TYPES = new Set<ExerciseType>([
+  ...CORE_TYPES,
+  "match_pairs",
+  "arrange_dialogue",
+  "sentence_rewrite",
+  "short_writing",
 ]);
 const EXPECTED_SKILLS = new Set([
   "vocabulary",
@@ -19,7 +26,7 @@ const EXPECTED_SKILLS = new Set([
   "reading",
   "conversation",
 ]);
-const EXPECTED_TOTAL = 104;
+const EXPECTED_TOTAL = 132;
 
 const issues = validateExerciseCatalog(dedicatedExerciseCatalog);
 assert.deepEqual(
@@ -46,7 +53,14 @@ for (const section of englishCourse.sections) {
     const exercises = dedicatedExerciseCatalog[node.id];
     assert.ok(exercises, `${node.id} is missing content.`);
 
-    const expectedCount = node.type === "checkpoint" ? 8 : 5;
+    const expectedCount =
+      node.type === "checkpoint"
+        ? node.id === "chapter-1-test"
+          ? 12
+          : 8
+        : ["lesson-1", "lesson-2", "lesson-3", "lesson-4", "lesson-5", "lesson-6"].includes(node.id)
+          ? 9
+          : 5;
     assert.equal(
       exercises.length,
       expectedCount,
@@ -57,11 +71,20 @@ for (const section of englishCourse.sections) {
       sectionTypes.add(exercise.type);
       sectionSkills.add(exercise.skill);
       assert.ok(exercise.explanation?.trim(), `${exercise.id} needs an explanation.`);
-      assert.equal(
-        exercise.difficulty,
-        section.order,
-        `${exercise.id} difficulty must match Section ${section.order}.`
-      );
+      if (exercise.contentVersion === 2) {
+        assert.ok(
+          exercise.difficulty === 1 ||
+            exercise.difficulty === 2 ||
+            (node.type === "checkpoint" && exercise.difficulty === 3),
+          `${exercise.id} V2 difficulty must stay within the lesson/checkpoint range.`,
+        );
+      } else {
+        assert.equal(
+          exercise.difficulty,
+          section.order,
+          `${exercise.id} difficulty must match Section ${section.order}.`,
+        );
+      }
       assert.equal(
         /placeholder|todo|phase 3/i.test(
           `${exercise.instruction} ${exercise.prompt} ${exercise.explanation ?? ""}`
@@ -76,8 +99,10 @@ for (const section of englishCourse.sections) {
 
   assert.deepEqual(
     sectionTypes,
-    EXPECTED_TYPES,
-    `${section.id} must use all five exercise types.`
+    section.order === 1 ? SECTION_ONE_TYPES : CORE_TYPES,
+    section.order === 1
+      ? `${section.id} must use all nine Section 1 exercise types.`
+      : `${section.id} must use all five core exercise types.`,
   );
   assert.deepEqual(
     sectionSkills,
@@ -102,5 +127,5 @@ assert.deepEqual(
 assert.equal(totalExercises, EXPECTED_TOTAL, `English Content Pack must contain ${EXPECTED_TOTAL} exercises.`);
 
 console.log(
-  "English course content check passed: 104 exercises, 19 dedicated lesson sets, 3 ready sections, and all 5 exercise types and skills per section."
+  "English course content check passed: 132 exercises, 19 dedicated lesson sets, Section 1 uses all 9 exercise types, Sections 2-3 retain the 5 core types, and all sections cover every learning skill."
 );

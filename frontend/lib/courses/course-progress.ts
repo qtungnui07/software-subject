@@ -61,7 +61,7 @@ const normalizeCheckpointScores = (
     const numericScore = Number(rawScore);
     if (!Number.isFinite(numericScore)) return;
 
-    scores[checkpointId] = Math.min(100, Math.max(0, Math.round(numericScore)));
+    scores[checkpointId] = Math.round(Math.min(100, Math.max(0, numericScore)) * 100) / 100;
   });
 
   return scores;

@@ -29,6 +29,7 @@ const SYNC_EVERY_SECONDS = 15;
 type Props = {
   isActive: boolean;
   onActiveSecondsChange?: (seconds: number) => void;
+  onAfkCountChange?: (count: number) => void;
 };
 
 export type LessonStudyTimerHandle = {
@@ -36,10 +37,11 @@ export type LessonStudyTimerHandle = {
   getActiveSeconds: () => number;
   getAfkCount: () => number;
   reset: () => void;
+  restore: (activeSeconds: number, afkCount: number) => void;
 };
 
 export const LessonStudyTimer = forwardRef<LessonStudyTimerHandle, Props>(
-  ({ isActive, onActiveSecondsChange }, ref) => {
+  ({ isActive, onActiveSecondsChange, onAfkCountChange }, ref) => {
     const [isAfk, setIsAfk] = useState(false);
     const [afkCount, setAfkCount] = useState(0);
 
@@ -187,11 +189,22 @@ export const LessonStudyTimer = forwardRef<LessonStudyTimerHandle, Props>(
           afkCountRef.current = 0;
           lastActivityAtRef.current = Date.now();
           setAfkCount(0);
+          onAfkCountChange?.(0);
+          setIsAfk(false);
+          notifyActiveSeconds();
+        },
+        restore: (activeSeconds: number, restoredAfkCount: number) => {
+          activeSecondsRef.current = Math.max(0, Math.floor(activeSeconds));
+          pendingSecondsRef.current = 0;
+          afkCountRef.current = Math.max(0, Math.floor(restoredAfkCount));
+          lastActivityAtRef.current = Date.now();
+          setAfkCount(afkCountRef.current);
+          onAfkCountChange?.(afkCountRef.current);
           setIsAfk(false);
           notifyActiveSeconds();
         },
       }),
-      [flushStudyTime, notifyActiveSeconds],
+      [flushStudyTime, notifyActiveSeconds, onAfkCountChange],
     );
 
     useEffect(() => {
@@ -259,10 +272,7 @@ export const LessonStudyTimer = forwardRef<LessonStudyTimerHandle, Props>(
       }
 
       const markActivity = () => {
-        if (
-          document.visibilityState === "visible" &&
-          document.hasFocus()
-        ) {
+        if (document.visibilityState === "visible" && document.hasFocus()) {
           lastActivityAtRef.current = Date.now();
         }
       };
@@ -309,6 +319,7 @@ export const LessonStudyTimer = forwardRef<LessonStudyTimerHandle, Props>(
         ) {
           afkCountRef.current += 1;
           setAfkCount(afkCountRef.current);
+          onAfkCountChange?.(afkCountRef.current);
           setIsAfk(true);
           void flushStudyTime();
           releaseStudySession();
@@ -330,6 +341,7 @@ export const LessonStudyTimer = forwardRef<LessonStudyTimerHandle, Props>(
       isActive,
       isAfk,
       notifyActiveSeconds,
+      onAfkCountChange,
       releaseStudySession,
     ]);
 
@@ -371,18 +383,17 @@ export const LessonStudyTimer = forwardRef<LessonStudyTimerHandle, Props>(
       window.addEventListener("beforeunload", handleBeforeUnload);
 
       return () => {
-        document.removeEventListener("visibilitychange", handleVisibilityChange);
+        document.removeEventListener(
+          "visibilitychange",
+          handleVisibilityChange,
+        );
         window.removeEventListener("focus", handleFocus);
         window.removeEventListener("blur", handleBlur);
         window.removeEventListener("beforeunload", handleBeforeUnload);
         void flushStudyTime({ keepalive: true });
         releaseStudySession();
       };
-    }, [
-      acquireOrRefreshStudySession,
-      flushStudyTime,
-      releaseStudySession,
-    ]);
+    }, [acquireOrRefreshStudySession, flushStudyTime, releaseStudySession]);
 
     const resumeStudying = () => {
       lastActivityAtRef.current = Date.now();
