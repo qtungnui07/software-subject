@@ -12,6 +12,8 @@ type Props = {
   iconSrc?: string;
   icon?: LucideIcon;
   href: string;
+  showNotificationDot?: boolean;
+  notificationLabel?: string;
 };
 
 const NavigationStatus = () => {
@@ -26,7 +28,14 @@ const NavigationStatus = () => {
   );
 };
 
-export const SidebarItem = ({ label, iconSrc, icon: Icon, href }: Props) => {
+export const SidebarItem = ({
+  label,
+  iconSrc,
+  icon: Icon,
+  href,
+  showNotificationDot = false,
+  notificationLabel = "Co thong bao moi",
+}: Props) => {
   const pathname = usePathname();
   const active = pathname === href || pathname.startsWith(`${href}/`);
 
@@ -41,18 +50,29 @@ export const SidebarItem = ({ label, iconSrc, icon: Icon, href }: Props) => {
         prefetch
         aria-current={active ? "page" : undefined}
       >
-        {Icon ? (
-          <Icon className="mr-4 size-8 shrink-0" strokeWidth={2.5} />
-        ) : iconSrc ? (
-          <Image
-            src={iconSrc}
-            alt=""
-            className="mr-4 size-8 object-contain"
-            height={32}
-            width={32}
-          />
-        ) : null}
+        <span className="relative mr-4 flex size-8 shrink-0 items-center justify-center">
+          {Icon ? (
+            <Icon className="size-8" strokeWidth={2.5} />
+          ) : iconSrc ? (
+            <Image
+              src={iconSrc}
+              alt=""
+              className="size-8 object-contain"
+              height={32}
+              width={32}
+            />
+          ) : null}
+          {showNotificationDot ? (
+            <span
+              className="absolute -right-0.5 -top-0.5 size-3.5 rounded-full border-2 border-white bg-red-500 shadow-[0_0_0_2px_rgba(239,68,68,0.18)] dark:border-[#131f24]"
+              aria-hidden="true"
+            />
+          ) : null}
+        </span>
         <span className="truncate">{label.toUpperCase()}</span>
+        {showNotificationDot ? (
+          <span className="sr-only">{notificationLabel}</span>
+        ) : null}
         <NavigationStatus />
       </Link>
     </Button>
