@@ -3,6 +3,7 @@ import { isRemoteApiMode, remoteApiRequest } from "@/lib/remote-api";
 
 import { and, eq } from "drizzle-orm";
 
+import { resolveUserAvatar } from "@/constants/user-avatar";
 import db from "@/db/drizzle";
 import {
   lessonXpClaims,
@@ -296,19 +297,17 @@ const upsertDbUserProgressPoints = async ({
   tx,
   input,
   nextTotalXp,
-  earnedXp,
 }: {
   tx: any;
   input: CompleteLessonXpInput;
   nextTotalXp: number;
-  earnedXp: number;
 }) => {
   await tx
     .insert(userProgress)
     .values({
       userId: input.userId,
       userName: input.userName?.trim() || "User",
-      userImageSrc: input.userImageSrc?.trim() || "/mascot.svg",
+      userImageSrc: resolveUserAvatar(input.userImageSrc),
       points: nextTotalXp,
     })
     .onConflictDoUpdate({
@@ -316,7 +315,7 @@ const upsertDbUserProgressPoints = async ({
       set: {
         points: nextTotalXp,
         userName: input.userName?.trim() || "User",
-        userImageSrc: input.userImageSrc?.trim() || "/mascot.svg",
+        userImageSrc: resolveUserAvatar(input.userImageSrc),
       },
     });
 };
@@ -392,7 +391,6 @@ const completeLessonXpInDatabase = async (
         tx,
         input,
         nextTotalXp: nextState.totalXp,
-        earnedXp: xpResult.earnedXp,
       });
     }
 
@@ -490,9 +488,10 @@ const getXpLeaderboardInDatabase = async ({
         (summary.userId === currentUserId ? currentUserName?.trim() : null) ||
         "User",
       avatarUrl:
-        summary.userProgress?.userImageSrc ||
-        (summary.userId === currentUserId ? currentUserImageSrc?.trim() : null) ||
-        "/mascot.svg",
+        resolveUserAvatar(
+          summary.userProgress?.userImageSrc ||
+            (summary.userId === currentUserId ? currentUserImageSrc : null),
+        ),
       level: calculateLevelFromXp(totalXp),
       weeklyXp,
       totalXp,
@@ -510,7 +509,7 @@ const getXpLeaderboardInDatabase = async ({
     rows.push({
       userId: currentUserId,
       name: currentUserName?.trim() || "Bạn",
-      avatarUrl: currentUserImageSrc?.trim() || "/mascot.svg",
+      avatarUrl: resolveUserAvatar(currentUserImageSrc),
       level: currentUserSummary.level,
       weeklyXp: currentUserSummary.weeklyXp,
       totalXp: currentUserSummary.totalXp,

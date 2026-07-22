@@ -14,6 +14,7 @@ import {
   TrendingUp,
   X,
 } from "lucide-react";
+import { resolveUserAvatar } from "@/constants/user-avatar";
 import { cn } from "@/lib/utils";
 import { FeedWrapper } from "@/components/feed-wrapper";
 import { StickyWrapper } from "@/components/sticky-wrapper";
@@ -84,6 +85,7 @@ interface LeaderboardClientProps {
   initialPoints: number;
   initialLeague: number;
   initialStatusEmoji: string | null;
+  initialCurrentDayIndex: number;
   hearts: number;
   activeCourse: { title: string; imageSrc: string };
   todayMinutes: number;
@@ -113,6 +115,7 @@ export const LeaderboardClient: React.FC<LeaderboardClientProps> = ({
   initialPoints,
   initialLeague,
   initialStatusEmoji,
+  initialCurrentDayIndex,
   hearts,
   activeCourse,
   todayMinutes,
@@ -394,11 +397,7 @@ export const LeaderboardClient: React.FC<LeaderboardClientProps> = ({
     ? Math.min(100, Math.round((myXpForSort / rank15Xp) * 100))
     : (userRankInList > 0 && userRankInList <= 15 ? 100 : 0);
 
-  // Week progress dots (Mon–Sun)
-  const todayDow = new Date().getDay(); // 0=Sun
   const dayNames = ["T2", "T3", "T4", "T5", "T6", "T7", "CN"];
-  // dow: Mon=1..Sat=6,Sun=0 → index 0=Mon..6=Sun
-  const currentDayIdx = todayDow === 0 ? 6 : todayDow - 1;
 
   return (
     <div className="grid grid-cols-1 gap-6 xl:grid-cols-[minmax(0,1fr)_400px] 2xl:grid-cols-[minmax(0,1fr)_420px] xl:items-start xl:gap-10">
@@ -544,15 +543,15 @@ export const LeaderboardClient: React.FC<LeaderboardClientProps> = ({
                   <div key={day} className="flex flex-col items-center gap-1">
                     <div className={cn(
                       "h-2 w-2 rounded-full transition-all",
-                      idx < currentDayIdx
+                      idx < initialCurrentDayIndex
                         ? "bg-emerald-400 dark:bg-emerald-500"
-                        : idx === currentDayIdx
+                        : idx === initialCurrentDayIndex
                         ? "bg-sky-400 dark:bg-sky-500 ring-2 ring-sky-200 dark:ring-sky-800 scale-125"
                         : "bg-slate-200 dark:bg-slate-700"
                     )} />
                     <span className={cn(
                       "text-[9px] font-black",
-                      idx === currentDayIdx ? "text-sky-500" : "text-slate-400 dark:text-slate-600"
+                      idx === initialCurrentDayIndex ? "text-sky-500" : "text-slate-400 dark:text-slate-600"
                     )}>
                       {day}
                     </span>
@@ -722,7 +721,7 @@ export const LeaderboardClient: React.FC<LeaderboardClientProps> = ({
 
                     {/* Row */}
                     <div className={cn(
-                      "flex items-center justify-between px-3 py-3 rounded-2xl transition-all duration-200 border-2 my-0.5",
+                      "render-lazy flex items-center justify-between px-3 py-3 rounded-2xl transition-all duration-200 border-2 my-0.5",
                       isUser
                         ? "bg-sky-50/70 border-sky-300 dark:bg-sky-950/20 dark:border-sky-800 shadow-[0_4px_12px_rgba(14,165,233,0.1)] scale-[1.01] z-10"
                         : isPodiumGold
@@ -868,7 +867,6 @@ export const LeaderboardClient: React.FC<LeaderboardClientProps> = ({
           <UserProgress
             activeCourse={activeCourse}
             hearts={hearts}
-            points={userPoints}
           />
         </div>
 
@@ -912,7 +910,7 @@ export const LeaderboardClient: React.FC<LeaderboardClientProps> = ({
             <div className="relative p-2.5">
               <div className="h-20 w-20 rounded-full border-2 border-dashed border-sky-300 flex items-center justify-center bg-slate-50 dark:border-sky-950 dark:bg-slate-950 relative p-1 shadow-inner select-none">
                 <Image
-                  src={initialUserName === "Bạn" ? "/mascot.svg" : initialUserImageSrc || "/mascot.svg"}
+                  src={resolveUserAvatar(initialUserImageSrc)}
                   alt="Avatar"
                   width={60}
                   height={60}

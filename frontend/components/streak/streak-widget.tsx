@@ -3,7 +3,7 @@
 import Link from "next/link";
 
 import { Button } from "@/components/ui/button";
-import { getCompactStreakDayLabel, getStreakDayLabel } from "./streak-data";
+import { getStreakDayLabel } from "./streak-data";
 import { useStreak } from "./use-streak";
 
 type Props = {
@@ -11,8 +11,7 @@ type Props = {
 };
 
 export const StreakWidget = ({ className }: Props) => {
-    const { data, isLoading, isFallback } = useStreak();
-    const compactDayLabel = getCompactStreakDayLabel(data.currentStreak);
+    const { data, isLoading } = useStreak();
     const fullDayLabel = getStreakDayLabel(data.currentStreak);
     const ariaLabel = isLoading ? "Đang tải streak học tập" : `Streak học tập: ${fullDayLabel}`;
 

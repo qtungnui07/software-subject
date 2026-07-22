@@ -10,7 +10,6 @@ import { projectCourseProgressToChapterOne } from "@/lib/courses/chapter-one-ada
 import { createDefaultCourseProgress } from "@/lib/courses/course-progress";
 import { getCourseProgressForUser } from "@/services/course-progress-service";
 import { getOnboardingStateForUser } from "@/services/onboarding-service";
-import { getPlacementTestResultForUser } from "@/services/placement-test-service";
 import { getStudyTime, type StudyTimeSummary } from "@/services/study-time-service";
 
 type LearnPageProps = {
@@ -40,31 +39,33 @@ const LearnPage = async ({ searchParams }: LearnPageProps) => {
   let studyTimeSummary: StudyTimeSummary | null = null;
   let legacyProgress = getInitialChapterOneProgress();
   let courseProgress = createDefaultCourseProgress("english");
-  let recommendedSectionId: "english-section-1" | "english-section-2" | "english-section-3" | null = null;
 
   if (session?.user?.id) {
-    const [studyResult, courseResult, placementResult] = await Promise.all([
+    const [studyResult, courseResult] = await Promise.all([
       getStudyTime(session.user.id).catch(() => null),
       getCourseProgressForUser(session.user.id).catch(() =>
         createDefaultCourseProgress("english")
       ),
-      getPlacementTestResultForUser(session.user.id).catch(() => null),
     ]);
 
     studyTimeSummary = studyResult?.ok ? studyResult.data.summary : null;
     courseProgress = courseResult;
     legacyProgress = projectCourseProgressToChapterOne(courseProgress);
-    recommendedSectionId = placementResult?.highestAssignedSectionId ?? null;
   }
 
   const params = (await searchParams) ?? {};
   const requestedSectionId = params.section ?? params.locked;
-  const requestedSectionExists = englishCourse.sections.some(
-    (section) => section.id === requestedSectionId
-  );
-  const initialSelectedSectionId = requestedSectionExists
-    ? requestedSectionId!
-    : courseProgress.currentSectionId;
+
+  if (requestedSectionId) {
+    const requestedSectionExists = englishCourse.sections.some(
+      (section) => section.id === requestedSectionId,
+    );
+    redirect(
+      requestedSectionExists
+        ? `/sections?requested=${encodeURIComponent(requestedSectionId)}`
+        : "/sections",
+    );
+  }
 
   return (
     <CourseLearnClient
@@ -76,8 +77,6 @@ const LearnPage = async ({ searchParams }: LearnPageProps) => {
       progressOwnerId={session?.user?.id ?? null}
       initialLegacyProgressState={legacyProgress}
       initialCourseProgressState={courseProgress}
-      initialSelectedSectionId={initialSelectedSectionId}
-      recommendedSectionId={recommendedSectionId}
     />
   );
 };

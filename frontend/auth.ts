@@ -1,10 +1,12 @@
 import { auth as clerkAuth, currentUser } from "@clerk/nextjs/server";
 import { cookies } from "next/headers";
+import { cache } from "react";
 
 import { LOCAL_SESSION_COOKIE } from "@/lib/local-session";
 import { syncClerkUser } from "@/services/auth-service";
 import { getValidLocalSessionUser } from "@/services/local-session-service";
 import { getRemoteApiUrl } from "@/lib/remote-api";
+import { resolveUserAvatar } from "@/constants/user-avatar";
 
 const syncUserToDatabase = async (user: NonNullable<Awaited<ReturnType<typeof currentUser>>>) => {
   const email = user.emailAddresses[0]?.emailAddress;
@@ -17,7 +19,7 @@ const syncUserToDatabase = async (user: NonNullable<Awaited<ReturnType<typeof cu
     clerkUserId: user.id,
     name,
     email,
-    imageSrc: user.imageUrl || "/mascot.svg",
+    imageSrc: resolveUserAvatar(user.imageUrl),
   });
 
   if (!result.ok) {
@@ -25,7 +27,7 @@ const syncUserToDatabase = async (user: NonNullable<Awaited<ReturnType<typeof cu
   }
 };
 
-export const auth = async () => {
+export const auth = cache(async () => {
   try {
     const cookieStore = await cookies();
     const remoteApiUrl = getRemoteApiUrl();
@@ -49,7 +51,7 @@ export const auth = async () => {
           id: localUser.id,
           name: localUser.name,
           email: localUser.email,
-          image: localUser.image || "/mascot.svg",
+          image: resolveUserAvatar(localUser.image),
         },
       };
     }
@@ -71,11 +73,11 @@ export const auth = async () => {
         id: userId,
         name: user ? `${user.firstName ?? ""} ${user.lastName ?? ""}`.trim() || user.username || "User" : "User",
         email: user?.emailAddresses[0]?.emailAddress ?? "",
-        image: user?.imageUrl ?? "",
+        image: resolveUserAvatar(user?.imageUrl),
       },
     };
   } catch (error) {
     console.error("Error in Clerk auth bridge:", error);
     return null;
   }
-};
+});

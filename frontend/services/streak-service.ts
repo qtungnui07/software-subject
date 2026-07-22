@@ -28,7 +28,7 @@ export type RecordLearningStreakInput = {
 
 export type RecordLearningStreakResult = {
   nodeId: string;
-  status: ReturnType<typeof calculateNextStreak>["status"];
+  status: ReturnType<typeof calculateNextStreak>["status"] | "needs_more_time";
   message: string;
   didIncrease: boolean;
   didReset: boolean;
@@ -100,7 +100,7 @@ export const recordLearningStreak = async ({
   if (dailyLog.studyMinutes < MIN_STREAK_STUDY_MINUTES) {
     return {
       nodeId,
-      status: "already_completed_today",
+      status: "needs_more_time",
       message: `Cần học đủ ${MIN_STREAK_STUDY_MINUTES} phút trong ngày để tính streak.`,
       didIncrease: false,
       didReset: false,

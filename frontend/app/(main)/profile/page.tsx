@@ -4,6 +4,7 @@ import { redirect } from "next/navigation";
 
 import { Button } from "@/components/ui/button";
 import { auth } from "@/auth";
+import { resolveUserAvatar } from "@/constants/user-avatar";
 import { ProfileForm } from "./profile-form";
 import { createDefaultCourseProgress } from "@/lib/courses/course-progress";
 import { getLearningProfileStats } from "@/lib/learning/profile-stats";
@@ -21,14 +22,11 @@ const ProfilePage = async () => {
   }
 
   const user = session.user;
-  let profile: Profile | null = null;
-  try {
-    profile = await requireProfile(user.id);
-  } catch (error) {
-    console.error("Failed to load user profile:", error);
-  }
-
-  const [genericCourseProgress, xpSummary] = await Promise.all([
+  const [profile, genericCourseProgress, xpSummary] = await Promise.all([
+    requireProfile(user.id).catch((error): Profile | null => {
+      console.error("Failed to load user profile:", error);
+      return null;
+    }),
     getCourseProgressForUser(user.id).catch((error) => {
       console.warn(
         "Falling back to default course progress. Check that the local database schema is up to date.",
@@ -41,7 +39,7 @@ const ProfilePage = async () => {
   const courseProgress = getLearningProfileStats(genericCourseProgress);
 
   const displayName = profile?.name || user.name || "User";
-  const avatarSrc = profile?.imageSrc || user.image || "/logo.webp";
+  const avatarSrc = resolveUserAvatar(profile?.imageSrc || user.image);
   const email = profile?.email || user.email || "";
 
   const quickStats = [
@@ -84,7 +82,7 @@ const ProfilePage = async () => {
             </p>
           </div>
 
-          <div className="rounded-[28px] border-2 border-white bg-white/80 p-4 shadow-sm backdrop-blur dark:border-slate-800 dark:bg-slate-900/60">
+          <div className="rounded-[28px] border-2 border-white bg-white/95 p-4 shadow-sm dark:border-slate-800 dark:bg-slate-900/95">
             <div className="flex items-center gap-4 lg:flex-col lg:text-center">
               <div className="relative size-24 shrink-0 overflow-hidden rounded-[28px] border-4 border-sky-100 bg-white p-3 shadow-sm sm:size-28 dark:border-slate-800 dark:bg-slate-950">
                 <Image

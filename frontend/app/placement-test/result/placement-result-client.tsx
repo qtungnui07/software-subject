@@ -51,9 +51,7 @@ export default function PlacementResultClient({ result }: Props) {
       if (!response.ok) {
         throw new Error("Không thể chọn phần học được đề xuất.");
       }
-      router.push(
-        `/learn?section=${encodeURIComponent(result.latestAssignedSectionId)}`,
-      );
+      router.push("/learn");
     } catch (error) {
       setStartError(
         error instanceof Error ? error.message : "Không thể bắt đầu phần học.",
@@ -98,7 +96,7 @@ export default function PlacementResultClient({ result }: Props) {
           </Link>
         </header>
 
-        <section className="rounded-[2rem] border-2 border-slate-200 bg-white/95 p-6 shadow-[0_18px_55px_rgba(15,23,42,0.08)] backdrop-blur dark:border-[#263840] dark:bg-[#152126]/95 sm:p-10">
+        <section className="rounded-[2rem] border-2 border-slate-200 bg-white p-6 shadow-[0_18px_55px_rgba(15,23,42,0.08)] dark:border-[#263840] dark:bg-[#152126] sm:p-10">
           <div className="text-center">
             <div
               className={`mx-auto mb-5 flex size-24 items-center justify-center rounded-[2rem] bg-gradient-to-br ${latest.accentClassName} text-white shadow-xl`}

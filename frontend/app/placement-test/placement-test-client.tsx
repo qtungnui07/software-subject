@@ -31,7 +31,7 @@ import {
   type PlacementDraft,
 } from "@/lib/placement-test/placement-draft";
 import { getPlacementSectionPresentation } from "@/lib/placement-test/placement-presentation";
-import type { ExerciseAnswer } from "@/types/exercise";
+import type { CoreExerciseAnswer } from "@/types/exercise";
 import type {
   PlacementResultSummary,
   PlacementTestGetResponse,
@@ -173,7 +173,7 @@ export default function PlacementTestClient({
     ? countAnsweredPlacementQuestions(draft.answers, questionIds)
     : 0;
 
-  const updateAnswer = (answer: ExerciseAnswer) => {
+  const updateAnswer = (answer: CoreExerciseAnswer) => {
     if (!draft || !question) return;
     saveDraft({
       ...draft,
@@ -287,7 +287,7 @@ export default function PlacementTestClient({
             </Link>
           </header>
 
-          <section className="rounded-[2rem] border-2 border-slate-200 bg-white/95 p-6 shadow-[0_18px_55px_rgba(15,23,42,0.08)] backdrop-blur dark:border-[#263840] dark:bg-[#152126]/95 sm:p-10">
+          <section className="rounded-[2rem] border-2 border-slate-200 bg-white p-6 shadow-[0_18px_55px_rgba(15,23,42,0.08)] dark:border-[#263840] dark:bg-[#152126] sm:p-10">
             <div className="mx-auto max-w-2xl text-center">
               <div className="mx-auto mb-5 flex size-20 items-center justify-center rounded-3xl bg-gradient-to-br from-sky-500 to-cyan-400 text-white shadow-[0_10px_30px_rgba(14,165,233,0.28)]">
                 <BrainCircuit className="size-10" />
@@ -413,7 +413,7 @@ export default function PlacementTestClient({
 
   return (
     <main className="min-h-screen bg-[#f6fbff] text-slate-800 dark:bg-[#101a1e] dark:text-slate-100">
-      <header className="sticky top-0 z-20 border-b-2 border-slate-200 bg-white/95 px-4 py-4 backdrop-blur dark:border-[#223138] dark:bg-[#111c20]/95">
+      <header className="sticky top-0 z-20 border-b-2 border-slate-200 bg-white px-4 py-4 dark:border-[#223138] dark:bg-[#111c20]">
         <div className="mx-auto flex max-w-4xl items-center gap-4">
           <button type="button" onClick={exitTest} aria-label="Thoát bài kiểm tra" className="rounded-xl p-2 text-slate-400 transition hover:bg-slate-100 hover:text-slate-700 dark:hover:bg-[#223138] dark:hover:text-slate-200">
             <X className="size-6" />

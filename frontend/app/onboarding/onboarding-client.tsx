@@ -82,7 +82,7 @@ export default function OnboardingClient({
     if (!next) return;
 
     sessionStorage.removeItem(getPlacementDraftStorageKey(userId));
-    router.push("/learn?section=english-section-1");
+    router.push("/learn");
     router.refresh();
   };
 
@@ -118,7 +118,7 @@ export default function OnboardingClient({
           </div>
         </header>
 
-        <section className="rounded-[2rem] border-2 border-slate-200 bg-white/95 p-6 shadow-[0_18px_55px_rgba(15,23,42,0.08)] backdrop-blur dark:border-[#263840] dark:bg-[#152126]/95 sm:p-10">
+        <section className="rounded-[2rem] border-2 border-slate-200 bg-white p-6 shadow-[0_18px_55px_rgba(15,23,42,0.08)] dark:border-[#263840] dark:bg-[#152126] sm:p-10">
           <div className="mx-auto max-w-2xl text-center">
             <div className="mx-auto flex size-20 items-center justify-center rounded-3xl bg-gradient-to-br from-sky-500 to-cyan-400 text-white shadow-[0_10px_30px_rgba(14,165,233,0.28)]">
               <GraduationCap className="size-10" />

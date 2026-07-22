@@ -1,11 +1,11 @@
 import type {
   ArrangeWordToken,
   ChoiceOption,
-  Exercise,
-  ExerciseAnswer,
+  CoreExercise,
+  CoreExerciseAnswer,
+  CoreExerciseType,
   ExerciseDifficulty,
   ExerciseSkill,
-  ExerciseType,
 } from "@/types/exercise";
 
 export const ENGLISH_PLACEMENT_TEST_VERSION = "english-placement-v1" as const;
@@ -19,14 +19,14 @@ export type PlacementSectionId =
   | "english-section-3";
 
 export type PlacementQuestionDefinition = {
-  exercise: Exercise;
+  exercise: CoreExercise;
   band: PlacementBand;
   order: number;
 };
 
 type PublicPlacementQuestionBase = {
   id: string;
-  type: ExerciseType;
+  type: CoreExerciseType;
   instruction: string;
   prompt: string;
   skill: ExerciseSkill;
@@ -77,7 +77,7 @@ export type PublicPlacementQuestion =
 
 export type PlacementSubmissionAnswer = {
   questionId: string;
-  answer: ExerciseAnswer;
+  answer: CoreExerciseAnswer;
 };
 
 export type PlacementTestSubmission = {
@@ -95,7 +95,7 @@ export type PlacementBandScores = {
 
 export type PlacementScoredAnswer = {
   questionId: string;
-  answer: ExerciseAnswer | null;
+  answer: CoreExerciseAnswer | null;
   band: PlacementBand;
   skill: ExerciseSkill;
   isCorrect: boolean;

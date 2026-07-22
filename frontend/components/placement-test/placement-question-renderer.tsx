@@ -8,15 +8,15 @@ import { PlacementListeningQuestion } from "@/components/placement-test/placemen
 import type {
   ArrangeWordsExerciseAnswer,
   ChoiceExerciseAnswer,
-  ExerciseAnswer,
+  CoreExerciseAnswer,
   FillBlankExerciseAnswer,
 } from "@/types/exercise";
 import type { PublicPlacementQuestion } from "@/types/placement-test";
 
 type Props = {
   question: PublicPlacementQuestion;
-  answer: ExerciseAnswer | null;
-  onAnswerChange: (answer: ExerciseAnswer) => void;
+  answer: CoreExerciseAnswer | null;
+  onAnswerChange: (answer: CoreExerciseAnswer) => void;
 };
 
 export const PlacementQuestionRenderer = ({

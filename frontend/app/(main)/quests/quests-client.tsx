@@ -12,22 +12,16 @@ import {
 import {
   ArrowRight,
   BadgeCheck,
-  BookOpen,
-  CalendarDays,
   Check,
   CircleDot,
   Clock,
-  Flame,
   Gift,
-  Lightbulb,
   LoaderCircle,
   Lock,
   PackageOpen,
   PartyPopper,
   RotateCcw,
-  Rocket,
   ShieldCheck,
-  Sparkles,
   Target,
   Trophy,
   Zap,
@@ -105,27 +99,109 @@ const statusViewMap: Record<QuestStatus, StatusView> = {
   },
 };
 
-const robotMoodView: Record<RobotMood, { emoji: string; title: string; description: string; tone: string }> = {
+const SleepyMascot = ({ className }: { className?: string }) => (
+  <svg viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg" className={cn("animate-robot-sad", className)}>
+    <rect x="23" y="10" width="2" height="4" fill="#94a3b8" rx="1"/>
+    <circle cx="24" cy="9" r="2" fill="#ff4d4f"/>
+    <rect x="8" y="20" width="3" height="8" fill="#1486cc" rx="1.5"/>
+    <rect x="37" y="20" width="3" height="8" fill="#1486cc" rx="1.5"/>
+    <rect x="11" y="14" width="26" height="20" rx="6" fill="#1486CC"/>
+    <rect x="12" y="15" width="24" height="18" rx="5" fill="#38bdf8"/>
+    <rect x="15" y="18" width="18" height="12" rx="3" fill="#0f172a"/>
+    <path d="M18 24h3M27 24h3" stroke="#50e2ff" strokeWidth="2" strokeLinecap="round"/>
+    <path d="M35 12h3l-3 4h3" stroke="#38bdf8" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+    <path d="M38 6h4l-4 5h4" stroke="#38bdf8" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+  </svg>
+);
+
+const AwakeMascot = ({ className }: { className?: string }) => (
+  <svg viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg" className={cn("animate-robot-float", className)}>
+    <rect x="23" y="10" width="2" height="4" fill="#94a3b8" rx="1"/>
+    <circle cx="24" cy="9" r="2" fill="#ff4d4f"/>
+    <rect x="8" y="20" width="3" height="8" fill="#1486cc" rx="1.5"/>
+    <rect x="37" y="20" width="3" height="8" fill="#1486cc" rx="1.5"/>
+    <rect x="11" y="14" width="26" height="20" rx="6" fill="#1486CC"/>
+    <rect x="12" y="15" width="24" height="18" rx="5" fill="#38bdf8"/>
+    <rect x="15" y="18" width="18" height="12" rx="3" fill="#0f172a"/>
+    <circle cx="20" cy="23" r="2.5" fill="#50e2ff"/>
+    <circle cx="20" cy="23" r="1" fill="#ffffff"/>
+    <circle cx="28" cy="23" r="2.5" fill="#50e2ff"/>
+    <circle cx="28" cy="23" r="1" fill="#ffffff"/>
+    <path d="M22 27c1 1 3 1 4 0" stroke="#50e2ff" strokeWidth="1.5" strokeLinecap="round"/>
+    <path d="M38 12l1 2 2 1-2 1-1 2-1-2-2-1 2-1 1-2z" fill="#ffc53d"/>
+    <path d="M7 13l0.8 1.6 1.6 0.8-1.6 0.8-0.8 1.6-0.8-1.6-1.6-0.8 1.6-0.8 0.8-1.6z" fill="#ffc53d"/>
+  </svg>
+);
+
+const ExcitedMascot = ({ className }: { className?: string }) => (
+  <svg viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg" className={cn("animate-robot-bounce", className)}>
+    <rect x="23" y="12" width="2" height="4" fill="#94a3b8" rx="1"/>
+    <circle cx="24" cy="11" r="2" fill="#ff4d4f"/>
+    <rect x="8" y="22" width="3" height="8" fill="#1486cc" rx="1.5"/>
+    <rect x="37" y="22" width="3" height="8" fill="#1486cc" rx="1.5"/>
+    <rect x="11" y="16" width="26" height="20" rx="6" fill="#1486CC"/>
+    <rect x="12" y="17" width="24" height="18" rx="5" fill="#38bdf8"/>
+    <rect x="15" y="20" width="18" height="12" rx="3" fill="#0f172a"/>
+    <circle cx="20" cy="25" r="2.5" fill="#50e2ff"/>
+    <circle cx="20" cy="25" r="1" fill="#ffffff"/>
+    <circle cx="28" cy="25" r="2.5" fill="#50e2ff"/>
+    <circle cx="28" cy="25" r="1" fill="#ffffff"/>
+    <path d="M22 28.5c1 1.5 3 1.5 4 0" fill="#50e2ff" stroke="#50e2ff" strokeWidth="1" strokeLinecap="round"/>
+    <g transform="translate(28, -2) rotate(15)">
+      <path d="M8 20c-1 1-1 3-1 3s1.5 0 2.5-1 0.5-2.5 0.5-2.5-1 0-2 1z" fill="#ff9c6e"/>
+      <path d="M8 3C4 7 4 16 4 19h8c0-3 0-12-4-16z" fill="#f8fafc" stroke="#cbd5e1" strokeWidth="0.5"/>
+      <path d="M8 3c-2 2-2.5 5-2.5 7h5c0-2-.5-5-2.5-7z" fill="#ff4d4f"/>
+      <path d="M4 16c-2 0-3 2-3 4v1h3v-5z" fill="#1486cc"/>
+      <path d="M12 16c2 0 3 2 3 4v1h-3v-5z" fill="#1486cc"/>
+      <circle cx="8" cy="12" r="1.5" fill="#38bdf8" />
+    </g>
+  </svg>
+);
+
+const CelebratingMascot = ({ className }: { className?: string }) => (
+  <svg viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg" className={cn("animate-robot-bounce", className)}>
+    <rect x="23" y="10" width="2" height="4" fill="#94a3b8" rx="1"/>
+    <circle cx="24" cy="9" r="2" fill="#ff4d4f"/>
+    <rect x="8" y="20" width="3" height="8" fill="#1486cc" rx="1.5"/>
+    <rect x="37" y="20" width="3" height="8" fill="#1486cc" rx="1.5"/>
+    <rect x="11" y="14" width="26" height="20" rx="6" fill="#1486CC"/>
+    <rect x="12" y="15" width="24" height="18" rx="5" fill="#38bdf8"/>
+    <rect x="15" y="18" width="18" height="12" rx="3" fill="#0f172a"/>
+    <path d="M18 24.5c.5-.7 1.5-.7 2 0M26 24.5c.5-.7 1.5-.7 2 0" stroke="#50e2ff" strokeWidth="2" strokeLinecap="round"/>
+    <path d="M21 27c1 1.2 3 1.2 4 0" fill="#50e2ff" stroke="#50e2ff" strokeWidth="0.8" strokeLinecap="round"/>
+    <g transform="translate(10, 4) rotate(-15)">
+      <polygon points="12,0 6,12 18,12" fill="#ff4d4f" />
+      <polygon points="12,0 9,12 15,12" fill="#ffc53d" />
+      <circle cx="12" cy="0" r="1.5" fill="#ffc53d" />
+    </g>
+    <rect x="36" y="8" width="2" height="4" rx="0.5" fill="#52c41a" transform="rotate(30 36 8)"/>
+    <rect x="6" y="9" width="2" height="4" rx="0.5" fill="#ff4d4f" transform="rotate(-45 6 9)"/>
+    <circle cx="39" cy="20" r="1.5" fill="#ffc53d" />
+    <circle cx="7" cy="22" r="1.2" fill="#1890ff" />
+  </svg>
+);
+
+const robotMoodView: Record<RobotMood, { mascot: React.ReactNode; title: string; description: string; tone: string }> = {
   sleepy: {
-    emoji: "🤖💤",
+    mascot: <SleepyMascot className="size-16 sm:size-18" />,
     title: "Robo đang chờ bạn khởi động",
     description: "Hoàn thành nhiệm vụ đầu tiên để đánh thức nhịp học hôm nay.",
     tone: "border-slate-200 bg-slate-50 dark:border-slate-800 dark:bg-slate-900/50",
   },
   awake: {
-    emoji: "🤖✨",
+    mascot: <AwakeMascot className="size-16 sm:size-18" />,
     title: "Robo đã tỉnh dậy",
     description: "Bạn đã có nhịp học tốt. Tiếp tục để mở phần thưởng lớn hơn.",
     tone: "border-sky-200 bg-sky-50 dark:border-sky-900/60 dark:bg-sky-950/40",
   },
   excited: {
-    emoji: "🚀🤖",
+    mascot: <ExcitedMascot className="size-16 sm:size-18" />,
     title: "Robo đang rất hào hứng",
     description: "Chỉ còn 1 nhiệm vụ nữa để mở Ngày hoàn hảo.",
     tone: "border-[#bfe3fb] bg-[#f1f9ff] dark:border-[#234455] dark:bg-[#132a38]",
   },
   celebrating: {
-    emoji: "🎉🤖",
+    mascot: <CelebratingMascot className="size-16 sm:size-18" />,
     title: "Ngày hoàn hảo đã mở",
     description: "Bạn đã hoàn thành toàn bộ nhiệm vụ hôm nay. Rất đáng giữ chuỗi này.",
     tone: "border-emerald-200 bg-emerald-50 dark:border-emerald-900/60 dark:bg-emerald-950/40",
@@ -364,7 +440,7 @@ const QuestPolishStyles = () => {
         }
 
         .quest-completed-glow {
-          animation: quest-soft-glow 2.8s ease-in-out infinite;
+          box-shadow: 0 18px 42px rgba(16, 185, 129, 0.14);
         }
 
         .quest-chest-ready {
@@ -429,53 +505,148 @@ const StatusBadge = ({ status }: { status: QuestStatus }) => {
   );
 };
 
+const BookOpenIcon = ({ className }: { className?: string }) => (
+  <svg viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg" className={className}>
+    <path d="M4 6c0-1.1.9-2 2-2h8v22H6c-1.1 0-2-.9-2-2V6z" fill="#ff7875" />
+    <path d="M28 6c0-1.1-.9-2-2-2h-8v22h8c1.1 0 2-.9 2-2V6z" fill="#ff4d4f" />
+    <path d="M6 5c0-.6.4-1 1-1h7v21H7c-.6 0-1-.4-1-1V5z" fill="#f8fafc" />
+    <path d="M26 5c0-.6-.4-1-1-1h-7v21h7c.6 0 1-.4 1-1V5z" fill="#f1f5f9" />
+    <line x1="8" y1="8" x2="12" y2="8" stroke="#cbd5e1" strokeWidth="1.5" strokeLinecap="round"/>
+    <line x1="8" y1="12" x2="12" y2="12" stroke="#cbd5e1" strokeWidth="1.5" strokeLinecap="round"/>
+    <line x1="8" y1="16" x2="12" y2="16" stroke="#cbd5e1" strokeWidth="1.5" strokeLinecap="round"/>
+    <line x1="20" y1="8" x2="24" y2="8" stroke="#94a3b8" strokeWidth="1.5" strokeLinecap="round"/>
+    <line x1="20" y1="12" x2="24" y2="12" stroke="#94a3b8" strokeWidth="1.5" strokeLinecap="round"/>
+    <line x1="20" y1="16" x2="24" y2="16" stroke="#94a3b8" strokeWidth="1.5" strokeLinecap="round"/>
+  </svg>
+);
+
+const TargetIcon = ({ className }: { className?: string }) => (
+  <svg viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg" className={className}>
+    <circle cx="16" cy="16" r="13" fill="#ff4d4f"/>
+    <circle cx="16" cy="16" r="10" fill="#ffffff"/>
+    <circle cx="16" cy="16" r="7" fill="#ff4d4f"/>
+    <circle cx="16" cy="16" r="4" fill="#ffffff"/>
+    <circle cx="16" cy="16" r="1.5" fill="#ffc53d"/>
+  </svg>
+);
+
+const ClockIcon = ({ className }: { className?: string }) => (
+  <svg viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg" className={className}>
+    <circle cx="16" cy="17" r="12" fill="#1486cc" />
+    <circle cx="16" cy="17" r="10" fill="#38bdf8" />
+    <circle cx="16" cy="17" r="8" fill="#f8fafc" />
+    <rect x="14" y="2" width="4" height="3" fill="#94a3b8" rx="1" />
+    <circle cx="25" cy="8" r="1.5" fill="#ff4d4f" />
+    <path d="M16 17v-5" stroke="#0f172a" strokeWidth="1.5" strokeLinecap="round"/>
+    <path d="M16 17l4 3" stroke="#0f172a" strokeWidth="1.5" strokeLinecap="round"/>
+    <circle cx="16" cy="17" r="1.5" fill="#0f172a" />
+  </svg>
+);
+
+const SparklesIcon = ({ className }: { className?: string }) => (
+  <svg viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg" className={className}>
+    <path d="M16 3l3.5 8.5L28 15l-8.5 3.5L16 27l-3.5-8.5L4 15l8.5-3.5L16 3z" fill="#ffc53d"/>
+    <path d="M26 6l1.2 2.8L30 10l-2.8 1.2L26 14l-1.2-2.8L22 10l2.8-1.2L26 6z" fill="#ff9c6e"/>
+    <path d="M6 22l1.2 2.8L10 26l-2.8 1.2L6 30l-1.2-2.8L2 26l2.8-1.2L6 22z" fill="#ff9c6e"/>
+  </svg>
+);
+
+const RocketIcon = ({ className }: { className?: string }) => (
+  <svg viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg" className={className}>
+    <path d="M16 24c-2 2-2 5-2 5s3 0 5-2 1-5 1-5-2 0-4 2z" fill="#ff9c6e"/>
+    <path d="M16 24c-1 1.5-1 3.5-1 3.5s2 0 3.5-1.5.7-3.5.7-3.5-1.2 0-3.2 1.5z" fill="#ff4d4f"/>
+    <path d="M16 3C11 9 11 20 11 23h10c0-3 0-14-5-20z" fill="#f1f5f9"/>
+    <path d="M16 3c-2.5 3-3 7-3 9h6c0-2-.5-6-3-9z" fill="#ff4d4f"/>
+    <path d="M11 20c-3 0-5 3-5 5v1h5v-6z" fill="#1486cc"/>
+    <path d="M21 20c3 0 5 3 5 5v1h-5v-6z" fill="#1486cc"/>
+    <circle cx="16" cy="14" r="3" fill="#38bdf8" stroke="#cbd5e1" strokeWidth="1.5"/>
+    <circle cx="15.5" cy="13.5" r="1.5" fill="#ffffff" opacity="0.6"/>
+  </svg>
+);
+
+const TrophyIcon = ({ className }: { className?: string }) => (
+  <svg viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg" className={className}>
+    <rect x="11" y="25" width="10" height="3" fill="#1e293b" rx="1" />
+    <path d="M13 22h6v3h-6z" fill="#475569" />
+    <path d="M7 6h18v10c0 4.4-3.6 8-8 8h-2c-4.4 0-8-3.6-8-8V6z" fill="#ffc53d" />
+    <path d="M8 7v9c0 3.9 3.1 7 7 7h1c3.9 0 7-3.1 7-7V7H8z" fill="#ffb81c" />
+    <path d="M7 9H4v5c0 2 1.5 3.5 3.5 3.5h.5V16c-1 0-2-1-2-3V9zM25 9h3v5c0 2-1.5 3.5-3.5 3.5h-.5V16c1 0 2-1 2-3V9z" fill="#d97706" />
+    <path d="M16 11l1 2h2l-1.5 1 .5 2-1.5-1-1.5 1 .5-2-1.5-1h2z" fill="#ffffff" />
+  </svg>
+);
+
+const ZapIcon = ({ className }: { className?: string }) => (
+  <svg viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg" className={className}>
+    <path d="M19 3L7 17h8l-3 12 13-14h-8l3-12z" fill="#ffc53d" stroke="#d97706" strokeWidth="1.5" strokeLinejoin="round"/>
+  </svg>
+);
+
+const ChestIcon = ({ className }: { className?: string }) => (
+  <svg viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg" className={className}>
+    <path d="M4 16v10c0 1.1.9 2 2 2h20c1.1 0 2-.9 2-2V16H4z" fill="#8d5b4c" />
+    <path d="M5 16v9c0 .6.4 1 1 1h20c.6 0 1-.4 1-1v-9H5z" fill="#a16a5e" />
+    <path d="M4 16h24v-4c0-2.8-2.2-5-5-5H9c-2.8 0-5 2.2-5 5v4z" fill="#8d5b4c" />
+    <path d="M5 15h22v-3c0-2.2-1.8-4-4-4H9c-2.2 0-4 1.8-4 4v3z" fill="#a16a5e" />
+    <rect x="7" y="7" width="3" height="21" fill="#ffc53d" />
+    <rect x="22" y="7" width="3" height="21" fill="#ffc53d" />
+    <rect x="13" y="13" width="6" height="6" rx="1" fill="#ffc53d" stroke="#d97706" strokeWidth="1" />
+    <circle cx="16" cy="16" r="1" fill="#0f172a" />
+  </svg>
+);
+
+const MedalIcon = ({ className }: { className?: string }) => (
+  <svg viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg" className={className}>
+    <path d="M11 6l3 9h-6z" fill="#ff4d4f" />
+    <path d="M21 6l-3 9h6z" fill="#ff4d4f" />
+    <path d="M16 6l2 9h-4z" fill="#e8f5ff" />
+    <circle cx="16" cy="18" r="9" fill="#ffc53d" />
+    <circle cx="16" cy="18" r="7" fill="#d97706" />
+    <circle cx="16" cy="18" r="5" fill="#ffc53d" />
+    <path d="M16 15l.6 1.2 1.4.1-1 .9.3 1.3-1.3-.7-1.3.7.3-1.3-1-.9 1.4-.1z" fill="#ffffff" />
+  </svg>
+);
+
 const QuestIcon = ({
   icon,
   className,
-  strokeWidth = 2.6,
 }: {
   icon: string;
   className?: string;
   strokeWidth?: number;
 }) => {
-  const iconProps = { className, strokeWidth };
-
   switch (icon) {
     case "book-open":
-      return <BookOpen {...iconProps} />;
+      return <BookOpenIcon className={className} />;
     case "target":
-      return <Target {...iconProps} />;
+      return <TargetIcon className={className} />;
     case "clock":
-      return <Clock {...iconProps} />;
+      return <ClockIcon className={className} />;
     case "sparkles":
-      return <Sparkles {...iconProps} />;
+      return <SparklesIcon className={className} />;
     case "rocket":
-      return <Rocket {...iconProps} />;
+      return <RocketIcon className={className} />;
     case "trophy":
-      return <Trophy {...iconProps} />;
+      return <TrophyIcon className={className} />;
     default:
-      return <CircleDot {...iconProps} />;
+      return <TargetIcon className={className} />;
   }
 };
 
 const RewardTypeIcon = ({
   type,
   className,
-  strokeWidth = 3,
 }: {
   type: ResolvedQuest["reward"]["type"];
   className?: string;
   strokeWidth?: number;
 }) => {
-  const iconProps = { className, strokeWidth };
-
   switch (type) {
     case "chest":
-      return <PackageOpen {...iconProps} />;
+      return <ChestIcon className={className} />;
     case "badge":
-      return <Trophy {...iconProps} />;
+      return <MedalIcon className={className} />;
     default:
-      return <Zap {...iconProps} />;
+      return <ZapIcon className={className} />;
   }
 };
 
@@ -526,7 +697,7 @@ const QuestAction = ({
       <Button
         type="button"
         variant="primary-outline"
-        className="h-10 w-full justify-center rounded-2xl border-2 border-emerald-500/60 bg-slate-900 px-5 font-black text-emerald-300 disabled:opacity-100 dark:border-emerald-700 dark:bg-[#0d171b] dark:text-emerald-300 sm:h-11 sm:w-auto"
+        className="h-10 w-full justify-center rounded-2xl border-2 border-emerald-200 bg-emerald-50 px-5 font-black text-emerald-600 disabled:opacity-100 dark:border-emerald-700 dark:bg-[#0d171b] dark:text-emerald-300 sm:h-11 sm:w-auto"
         disabled
       >
         <Check className="mr-2 size-4" strokeWidth={3} />
@@ -562,7 +733,7 @@ const QuestCard = ({
   return (
     <article
       className={cn(
-        "quest-card-enter group relative overflow-hidden rounded-[22px] border-2 bg-white p-3.5 ring-1 ring-white/80 transition-all duration-300 dark:bg-[#141f23] dark:ring-white/5 sm:rounded-[24px] sm:p-5",
+        "render-lazy quest-card-enter group relative overflow-hidden rounded-[22px] border-2 bg-white p-3.5 ring-1 ring-white/80 transition-all duration-300 dark:bg-[#141f23] dark:ring-white/5 sm:rounded-[24px] sm:p-5",
         isCompleted
           ? "border-emerald-200 shadow-[0_12px_28px_rgba(16,185,129,0.1)] dark:border-emerald-900/60"
           : "border-slate-200 shadow-[0_10px_22px_rgba(15,23,42,0.04)] dark:border-[#243841]",
@@ -639,7 +810,7 @@ const QuestCard = ({
 
 const HeroStat = ({ label, value, icon }: { label: string; value: string; icon: ReactNode }) => {
   return (
-    <div className="rounded-[18px] border-2 border-white/80 bg-white/80 px-3.5 py-3 shadow-[0_8px_20px_rgba(20,134,204,0.07)] backdrop-blur dark:border-[#2a4654] dark:bg-[#141f23]/80 dark:shadow-none sm:rounded-[20px] sm:px-4">
+    <div className="rounded-[18px] border-2 border-white/80 bg-white/95 px-3.5 py-3 shadow-[0_8px_20px_rgba(20,134,204,0.07)] dark:border-[#2a4654] dark:bg-[#141f23] dark:shadow-none sm:rounded-[20px] sm:px-4">
       <div className="flex items-center gap-2 text-[#1486CC] dark:text-sky-300">{icon}</div>
       <p className="mt-2 text-[11px] font-black uppercase tracking-[0.18em] text-slate-400">
         {label}
@@ -692,8 +863,8 @@ const QuestsHero = ({
 
   return (
     <section className="relative overflow-hidden rounded-[28px] border-2 border-[#cde8fb] bg-gradient-to-br from-[#e4f5ff] via-white to-[#f7fcff] p-3.5 shadow-[0_20px_48px_rgba(20,134,204,0.12)] dark:border-[#2a5365] dark:from-[#102838] dark:via-[#182226] dark:to-[#10191d] dark:shadow-none sm:rounded-[32px] sm:p-6">
-      <div className="pointer-events-none absolute -right-20 -top-24 size-72 rounded-full bg-[#31B6FF]/20 blur-3xl" />
-      <div className="pointer-events-none absolute -bottom-24 left-12 size-64 rounded-full bg-emerald-300/20 blur-3xl" />
+      <div className="quest-ambient-orb pointer-events-none absolute -right-20 -top-24 size-72 [--quest-orb:rgba(49,182,255,0.22)]" />
+      <div className="quest-ambient-orb pointer-events-none absolute -bottom-24 left-12 size-64 [--quest-orb:rgba(110,231,183,0.2)]" />
 
       <div className="relative grid gap-4 lg:grid-cols-[minmax(0,1fr)_270px] lg:items-center">
         <div className="max-w-3xl">
@@ -717,7 +888,7 @@ const QuestsHero = ({
 
           </div>
 
-          <div className="mt-4 flex flex-col gap-3 rounded-[22px] border-2 border-white/80 bg-white/70 p-3.5 backdrop-blur dark:border-[#2a4654] dark:bg-[#10191d]/60 sm:mt-5 sm:flex-row sm:items-center sm:justify-between sm:rounded-[24px] sm:p-4">
+          <div className="mt-4 flex flex-col gap-3 rounded-[22px] border-2 border-white/80 bg-white/90 p-3.5 dark:border-[#2a4654] dark:bg-[#10191d]/90 sm:mt-5 sm:flex-row sm:items-center sm:justify-between sm:rounded-[24px] sm:p-4">
             <div>
               <p className="text-xs font-black uppercase tracking-[0.2em] text-slate-400">Tiến độ hôm nay</p>
               <div className="mt-2 flex items-center gap-3">
@@ -742,7 +913,7 @@ const QuestsHero = ({
           </div>
           {SHOW_QUEST_DEMO_CONTROLS ? (
 
-          <details className="mt-4 rounded-2xl border border-white/80 bg-white/45 px-3 py-2 text-xs font-black uppercase tracking-[0.12em] text-slate-500 backdrop-blur dark:border-[#20313a] dark:bg-[#10191d]/40">
+          <details className="mt-4 rounded-2xl border border-white/80 bg-white/90 px-3 py-2 text-xs font-black uppercase tracking-[0.12em] text-slate-500 dark:border-[#20313a] dark:bg-[#10191d]/90">
             <summary className="cursor-pointer select-none text-[#1486CC] dark:text-sky-300">Chế độ test</summary>
             <div className="mt-3 flex flex-wrap items-center gap-2">
               <button type="button" className="inline-flex items-center gap-1.5 rounded-full border border-slate-200 bg-white/80 px-3 py-1.5 text-slate-500 transition-colors hover:text-[#1486CC] dark:border-[#20313a] dark:bg-[#10191d]/70" onClick={onResetDemo}>
@@ -777,8 +948,8 @@ const QuestsHero = ({
         </div>
 
         <div className={cn("rounded-[28px] border-2 p-4 text-center shadow-[0_16px_34px_rgba(20,134,204,0.11)] transition-transform duration-300 hover:-translate-y-1 dark:shadow-none", mood.tone)}>
-          <div className="quest-robot-idle mx-auto flex size-20 items-center justify-center rounded-[24px] bg-white text-5xl shadow-[0_12px_26px_rgba(20,134,204,0.12)] dark:bg-[#10191d] sm:size-22">
-            {mood.emoji}
+          <div className="quest-robot-idle mx-auto flex size-20 items-center justify-center rounded-[24px] bg-white shadow-[0_12px_26px_rgba(20,134,204,0.12)] dark:bg-[#10191d] sm:size-22">
+            {mood.mascot}
           </div>
           <h2 className="mt-3 text-lg font-black text-slate-900 dark:text-white">
             {mood.title}
@@ -815,6 +986,71 @@ const PerfectDayStep = ({ index, active }: { index: number; active: boolean }) =
   );
 };
 
+const PerfectDayRewardIcon = ({ className }: { className?: string }) => (
+  <svg viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg" className={className}>
+    <path d="M4 22l2-14 6 5 4-8 4 8 6-5 2 14H4z" fill="#ffc53d" />
+    <path d="M6 21l1.5-10.5 4.5 3.75 4-6 4 6 4.5-3.75L26 21H6z" fill="#ffb81c" />
+    <circle cx="4" cy="8" r="1.5" fill="#ff4d4f" />
+    <circle cx="12" cy="13" r="1.5" fill="#1890ff" />
+    <circle cx="16" cy="5" r="1.5" fill="#52c41a" />
+    <circle cx="20" cy="13" r="1.5" fill="#1890ff" />
+    <circle cx="28" cy="8" r="1.5" fill="#ff4d4f" />
+    <rect x="3" y="22" width="26" height="3" rx="1.5" fill="#d97706" />
+    <rect x="5" y="23" width="22" height="1" rx="0.5" fill="#ffc53d" />
+  </svg>
+);
+
+const CustomChestIcon = ({ tone, className }: { tone: "gold" | "silver" | "blue"; className?: string }) => {
+  const metalColor = tone === "gold" ? "#ffc53d" : tone === "silver" ? "#cbd5e1" : "#d97706";
+  const metalShadow = tone === "gold" ? "#d97706" : tone === "silver" ? "#94a3b8" : "#78350f";
+
+  return (
+    <svg viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg" className={className}>
+      <path d="M4 16v10c0 1.1.9 2 2 2h20c1.1 0 2-.9 2-2V16H4z" fill="#8d5b4c" />
+      <path d="M5 16v9c0 .6.4 1 1 1h20c.6 0 1-.4 1-1v-9H5z" fill="#a16a5e" />
+      <path d="M4 16h24v-4c0-2.8-2.2-5-5-5H9c-2.8 0-5 2.2-5 5v4z" fill="#8d5b4c" />
+      <path d="M5 15h22v-3c0-2.2-1.8-4-4-4H9c-2.2 0-4 1.8-4 4v3z" fill="#a16a5e" />
+      <rect x="7" y="7" width="3" height="21" fill={metalColor} />
+      <rect x="22" y="7" width="3" height="21" fill={metalColor} />
+      <rect x="13" y="13" width="6" height="6" rx="1" fill={metalColor} stroke={metalShadow} strokeWidth="1" />
+      <circle cx="16" cy="16" r="1" fill="#0f172a" />
+    </svg>
+  );
+};
+
+const CustomCalendarIcon = ({ className }: { className?: string }) => (
+  <svg viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg" className={className}>
+    <rect x="4" y="6" width="24" height="22" rx="4" fill="#cbd5e1" />
+    <rect x="5" y="7" width="22" height="20" rx="3" fill="#ffffff" />
+    <path d="M5 12h22V9c0-1.1-.9-2-2-2H7c-1.1 0-2 .9-2 2v3z" fill="#ff4d4f" />
+    <rect x="8" y="3" width="3" height="6" rx="1.5" fill="#64748b" />
+    <rect x="21" y="3" width="3" height="6" rx="1.5" fill="#64748b" />
+    <path d="M16 23.3s-4.5-2.7-4.5-4.5c0-1.4 1-2.3 2.3-2.3.8 0 1.6.5 2.2 1 .6-.5 1.4-1 2.2-1 1.3 0 2.3.9 2.3 2.3 0 1.8-4.5 4.5-4.5 4.5z" fill="#ff4d4f" />
+  </svg>
+);
+
+const CustomTipsIcon = ({ className }: { className?: string }) => (
+  <svg viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg" className={className}>
+    <circle cx="16" cy="14" r="10" fill="#fef08a" opacity="0.5" />
+    <path d="M16 4C10.5 4 8 8 8 13.5c0 3.3 2 6 3.5 7.5v2c0 .6.4 1 1 1h7c.6 0 1-.4 1-1v-2c1.5-1.5 3.5-4.2 3.5-7.5C24 8 21.5 4 16 4z" fill="#fde047" />
+    <path d="M16 5c-4.4 0-6.5 3.2-6.5 7.5c0 2.5 1.5 4.6 2.8 5.8v2.2c0 .3.2.5.5.5h6.4c.3 0 .5-.2.5-.5v-2.2c1.3-1.2 2.8-3.3 2.8-5.8C22.5 8.2 20.4 5 16 5z" fill="#fef08a" />
+    <rect x="12" y="24" width="8" height="3" rx="1" fill="#94a3b8" />
+    <rect x="13.5" y="27" width="5" height="2" rx="1" fill="#64748b" />
+    <path d="M13 14l2-3 2 3" stroke="#eab308" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+    <line x1="16" y1="1" x2="16" y2="3" stroke="#eab308" strokeWidth="2" strokeLinecap="round" />
+    <line x1="6.5" y1="4.5" x2="8.5" y2="6.5" stroke="#eab308" strokeWidth="2" strokeLinecap="round" />
+    <line x1="25.5" y1="4.5" x2="23.5" y2="6.5" stroke="#eab308" strokeWidth="2" strokeLinecap="round" />
+  </svg>
+);
+
+const CustomFlameIcon = ({ className }: { className?: string }) => (
+  <svg viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg" className={className}>
+    <path d="M16 2C16 2 25 9 25 18c0 5-4 9-9 9s-9-4-9-9c0-9 9-18 9-18z" fill="#ff763b" />
+    <path d="M16 8C16 8 21 13 21 18c0 3-2.5 5.5-5 5.5s-5-2.5-5-5.5c0-5 5-10 5-10z" fill="#ffba00" />
+    <path d="M16 13c0 0 2.5 2.5 2.5 5 0 1.5-1.2 2.5-2.5 2.5S13.5 19.5 13.5 18c0-2.5 2.5-5 2.5-5z" fill="#ffffff" />
+  </svg>
+);
+
 const PerfectDayCard = ({ quest, data }: { quest?: ResolvedQuest; data: QuestsPageData }) => {
   if (!quest) return null;
 
@@ -824,14 +1060,14 @@ const PerfectDayCard = ({ quest, data }: { quest?: ResolvedQuest; data: QuestsPa
 
   return (
     <section className={cn("relative overflow-hidden rounded-[32px] border-2 border-indigo-100 bg-gradient-to-br from-indigo-50 via-white to-[#f4fbff] p-5 shadow-[0_18px_42px_rgba(99,102,241,0.12)] transition-all duration-300 dark:border-indigo-900/50 dark:from-indigo-950/30 dark:via-[#182226] dark:to-[#10191d] dark:shadow-none sm:p-6", isUnlocked ? "ring-2 ring-emerald-200/80 dark:ring-emerald-900/50" : null)}>
-      <div className="pointer-events-none absolute -right-16 -top-20 size-52 rounded-full bg-indigo-300/20 blur-3xl" />
-      <div className="pointer-events-none absolute -bottom-24 left-16 size-64 rounded-full bg-[#31B6FF]/15 blur-3xl" />
+      <div className="quest-ambient-orb pointer-events-none absolute -right-16 -top-20 size-52 [--quest-orb:rgba(165,180,252,0.2)]" />
+      <div className="quest-ambient-orb pointer-events-none absolute -bottom-24 left-16 size-64 [--quest-orb:rgba(49,182,255,0.16)]" />
 
       <div className="relative space-y-5">
         <div className="flex flex-col gap-5 lg:flex-row lg:items-start lg:justify-between">
           <div className="flex gap-3 sm:gap-4">
-            <div className="flex size-16 shrink-0 items-center justify-center rounded-[22px] border-2 border-indigo-100 bg-white text-indigo-500 shadow-[0_12px_24px_rgba(99,102,241,0.12)] dark:border-indigo-900/60 dark:bg-[#10191d] dark:text-indigo-300">
-              <Sparkles className="size-8" strokeWidth={2.6} />
+            <div className="flex size-16 shrink-0 items-center justify-center rounded-[22px] border-2 border-indigo-100 bg-white shadow-[0_12px_24px_rgba(99,102,241,0.12)] dark:border-indigo-900/60 dark:bg-[#10191d]">
+              <PerfectDayRewardIcon className="size-8" />
             </div>
             <div>
               <p className="text-xs font-black uppercase tracking-[0.22em] text-indigo-500 dark:text-indigo-300">
@@ -923,8 +1159,8 @@ const SummaryCard = ({ data }: { data: QuestsPageData }) => {
   return (
     <CardShell className="p-4">
       <div className="flex items-center gap-3">
-        <div className="flex size-12 items-center justify-center rounded-2xl bg-[#e8f5ff] text-[#1486CC] dark:bg-[#1c3547] dark:text-sky-300">
-          <Flame className="size-6" strokeWidth={2.8} />
+        <div className="flex size-12 items-center justify-center rounded-2xl bg-[#e8f5ff] dark:bg-[#1c3547]">
+          <CustomFlameIcon className="size-7" />
         </div>
         <div>
           <h2 className="text-lg font-black text-slate-900 dark:text-white">Tiến độ hôm nay</h2>
@@ -974,7 +1210,7 @@ const RewardChestCard = ({ data }: { data: QuestsPageData }) => {
     <CardShell className={cn("p-4", chestView.status === "available" ? "border-amber-200 shadow-[0_18px_44px_rgba(245,158,11,0.14)] dark:border-amber-900/60" : null)}>
       <div className="flex items-start gap-4">
         <div className={cn("flex size-14 shrink-0 items-center justify-center rounded-2xl border-2 transition-transform duration-300", toneClass, chestView.status === "available" ? "quest-chest-ready" : null)}>
-          <Gift className="size-7" strokeWidth={2.8} />
+          <CustomChestIcon tone={chestView.tone} className="size-8" />
         </div>
         <div>
           <p className="text-xs font-black uppercase tracking-[0.18em] text-amber-500 dark:text-amber-300">
@@ -999,8 +1235,8 @@ const WeekActivityCard = ({ data }: { data: QuestsPageData }) => {
   return (
     <CardShell className="p-4">
       <div className="mb-4 flex items-center gap-3">
-        <div className="flex size-11 items-center justify-center rounded-2xl bg-[#e8f5ff] text-[#1486CC] dark:bg-[#1c3547] dark:text-sky-300">
-          <CalendarDays className="size-5" strokeWidth={2.8} />
+        <div className="flex size-11 items-center justify-center rounded-2xl bg-[#e8f5ff] dark:bg-[#1c3547]">
+          <CustomCalendarIcon className="size-6" />
         </div>
         <div>
           <h2 className="text-lg font-black text-slate-900 dark:text-white">Lịch 7 ngày</h2>
@@ -1033,8 +1269,8 @@ const TipCard = () => {
   return (
     <CardShell className="p-4">
       <div className="flex items-start gap-4">
-        <div className="flex size-12 shrink-0 items-center justify-center rounded-2xl bg-emerald-50 text-emerald-500 dark:bg-emerald-950/30 dark:text-emerald-300">
-          <Lightbulb className="size-6" strokeWidth={2.8} />
+        <div className="flex size-12 shrink-0 items-center justify-center rounded-2xl bg-emerald-50 dark:bg-emerald-950/30">
+          <CustomTipsIcon className="size-7" />
         </div>
         <div>
           <h2 className="text-lg font-black text-slate-900 dark:text-white">Mẹo hôm nay</h2>
@@ -1056,7 +1292,7 @@ const LongTermQuestCard = ({ quest }: { quest: ResolvedQuest }) => {
   const iconTone = view.tone === "monthly" ? "text-violet-500 bg-violet-50 border-violet-100 dark:bg-violet-950/30 dark:border-violet-900/60 dark:text-violet-300" : "text-[#1486CC] bg-[#e8f5ff] border-[#d8ecfb] dark:bg-[#1c3547] dark:border-[#234455] dark:text-sky-300";
 
   return (
-    <article className={cn("quest-card-enter relative overflow-hidden rounded-[28px] border-2 p-5 shadow-[0_14px_30px_rgba(20,134,204,0.08)] transition-all duration-300 hover:-translate-y-0.5 hover:shadow-[0_18px_38px_rgba(20,134,204,0.13)]", toneClass)}>
+    <article className={cn("render-lazy quest-card-enter relative overflow-hidden rounded-[28px] border-2 p-5 shadow-[0_14px_30px_rgba(20,134,204,0.08)] transition-all duration-300 hover:-translate-y-0.5 hover:shadow-[0_18px_38px_rgba(20,134,204,0.13)]", toneClass)}>
       <div className="pointer-events-none absolute -right-16 -top-20 size-44 rounded-full bg-white/60 blur-2xl dark:bg-white/5" />
       <div className="relative space-y-5">
         <div className="flex items-start gap-4">

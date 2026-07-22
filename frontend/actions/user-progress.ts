@@ -11,6 +11,7 @@ import { redirect } from 'next/navigation';
 
 
 import { auth } from "@/auth";
+import { resolveUserAvatar } from "@/constants/user-avatar";
 import { isRemoteApiMode, remoteApiRequest } from "@/lib/remote-api";
 
 export const upsertUserProgress = async (courseId: number) => {
@@ -51,7 +52,7 @@ export const upsertUserProgress = async (courseId: number) => {
         await db.update(userProgress).set({
             activeCourseId: courseId,
             userName: user.name || "User",
-            userImageSrc: user.image || "/logo.webp",
+            userImageSrc: resolveUserAvatar(user.image),
         }).where(eq(userProgress.userId, userId));
             
         revalidatePath("/courses");
@@ -63,7 +64,7 @@ export const upsertUserProgress = async (courseId: number) => {
         userId,
         activeCourseId: courseId,
         userName: user.name || "User",
-        userImageSrc: user.image || "/logo.webp",  
+        userImageSrc: resolveUserAvatar(user.image),
     });
 
     revalidatePath("/courses");

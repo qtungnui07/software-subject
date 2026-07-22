@@ -14,6 +14,16 @@ assert.equal(getContinueLearningTarget(initial)?.nodeId, "lesson-1");
 const afterLesson = completeCourseNode(initial, "lesson-1").progress;
 assert.equal(getContinueLearningTarget(afterLesson)?.nodeId, "lesson-2");
 
+let afterThirdLesson = initial;
+for (const lessonId of ["lesson-1", "lesson-2", "lesson-3"]) {
+  afterThirdLesson = completeCourseNode(afterThirdLesson, lessonId).progress;
+}
+assert.equal(
+  getContinueLearningTarget(afterThirdLesson)?.nodeId,
+  "lesson-4",
+  "Optional reward chests must not block the next lesson target."
+);
+
 const sectionTwoUnlocked = applyPlacementUnlock(
   initial,
   "english-section-2"

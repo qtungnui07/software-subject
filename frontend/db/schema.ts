@@ -1,15 +1,19 @@
 import {
+    boolean,
     date,
     index,
     integer,
     pgTable,
     serial,
     text,
+    time,
     timestamp,
     uniqueIndex,
 } from "drizzle-orm/pg-core";
 
 import { relations } from "drizzle-orm";
+
+import { DEFAULT_USER_AVATAR } from "@/constants/user-avatar";
 
 export const users = pgTable("users", {
     id: serial("id").primaryKey(),
@@ -17,7 +21,7 @@ export const users = pgTable("users", {
     name: text("name").notNull().default("User"),
     email: text("email").notNull().unique(),
     passwordHash: text("password_hash"),
-    imageSrc: text("image_src").notNull().default("/mascot.svg"),
+    imageSrc: text("image_src").notNull().default(DEFAULT_USER_AVATAR),
     createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
     updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
 });
@@ -35,7 +39,7 @@ export const coursesRelations = relations(courses, ({ many }) => ({
 export const userProgress = pgTable("user_progress", {
     userId: text("user_id").primaryKey(),
     userName: text("user_name").notNull().default("User"),
-    userImageSrc: text("user_image_src").notNull().default("/mascot.svg"),
+    userImageSrc: text("user_image_src").notNull().default(DEFAULT_USER_AVATAR),
     activeCourseId: integer("active_course_id").references(() => courses.id, {
         onDelete: "cascade",
     }),
@@ -118,6 +122,15 @@ export const studyTimeSummary = pgTable(
         currentDayIdx: index("study_time_summary_current_day_idx").on(table.currentDay),
     })
 );
+
+export const emailReminderSettings = pgTable("email_reminder_settings", {
+    userId: text("user_id").primaryKey(),
+    enabled: boolean("enabled").notNull().default(false),
+    reminderTime: time("reminder_time").notNull().default("19:00"),
+    lastSentDate: date("last_sent_date"),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+    updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
+});
 
 export const chapterOneProgress = pgTable("chapter_one_progress", {
     userId: text("user_id").primaryKey(),

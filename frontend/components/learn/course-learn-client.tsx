@@ -3,14 +3,10 @@
 import Image from "next/image";
 import Link from "next/link";
 import { useEffect, useMemo, useRef, useState } from "react";
-import { useRouter } from "next/navigation";
 
 import { Header } from "@/app/(main)/learn/header";
 import { FeedWrapper } from "@/components/feed-wrapper";
-import { LessonPath } from "@/components/lesson-path";
-import { LockedSectionPanel } from "@/components/learn/locked-section-panel";
 import { SectionLearningPath } from "@/components/learn/section-learning-path";
-import { SectionSwitcher } from "@/components/learn/section-switcher";
 import { ProgressOverview } from "@/components/progress/progress-overview";
 import { UnitProgressList } from "@/components/progress/unit-progress-list";
 import { StreakCard } from "@/components/streak/streak-card";
@@ -22,7 +18,6 @@ import { chapterOneDemoScope, chapterOneNodes } from "@/constants/chapter-one";
 import { englishCourse } from "@/data/courses/english-course";
 import type { ProgressLesson, ProgressUnit } from "@/data/progress-data";
 import {
-  claimChapterOneChest,
   getChapterOneNodeStatus,
   getChapterOneProgress,
   saveChapterOneProgress,
@@ -32,11 +27,13 @@ import {
   type ChapterOneProgressState,
 } from "@/lib/chapter-one-progress";
 import { canAccessCourseNode } from "@/lib/courses/course-unlock-policy";
-import { buildCourseSectionViewModels } from "@/lib/courses/course-view-model";
+import {
+  migrateChapterOneProgressToCourseProgress,
+  projectCourseProgressToChapterOne,
+} from "@/lib/courses/chapter-one-adapter";
 import type { CourseProgressState } from "@/lib/courses/course-progress";
 import { getCourseProgressSummary } from "@/lib/progress-utils";
 import type { StudyTimeSummary } from "@/services/study-time-service";
-import type { PlacementSectionId } from "@/types/placement-test";
 
 const learnTransitionStorageKey = "robogo-learn-transition";
 const learnPopupSeenStorageKey = "robogo-learn-popup-seen";
@@ -44,7 +41,8 @@ const learnPopupSeenStorageKey = "robogo-learn-popup-seen";
 const sidebarCards = [
   {
     title: "Mở khóa Bảng xếp hạng",
-    description: "Hoàn thành thêm 3 bài học để bắt đầu thi đua với người học khác.",
+    description:
+      "Hoàn thành thêm 3 bài học để bắt đầu thi đua với người học khác.",
     iconSrc: "/leaderboard.svg",
   },
   {
@@ -68,19 +66,19 @@ type Props = {
   progressOwnerId: string | null;
   initialLegacyProgressState: ChapterOneProgressState;
   initialCourseProgressState: CourseProgressState;
-  initialSelectedSectionId: string;
-  recommendedSectionId: PlacementSectionId | null;
 };
 
 const getLegacyLessonStatus = (
   nodeId: string,
-  state: ChapterOneProgressState
+  state: ChapterOneProgressState,
 ): ProgressLesson["status"] => {
   const status: ChapterOneNodeStatus = getChapterOneNodeStatus(nodeId, state);
   return status === "available" ? "available" : status;
 };
 
-const buildLegacyProgressUnits = (state: ChapterOneProgressState): ProgressUnit[] => [
+const buildLegacyProgressUnits = (
+  state: ChapterOneProgressState,
+): ProgressUnit[] => [
   {
     id: 1,
     title: `${chapterOneDemoScope.unitTitle}: ${chapterOneDemoScope.chapterTitle}`,
@@ -104,7 +102,7 @@ const buildLegacyProgressUnits = (state: ChapterOneProgressState): ProgressUnit[
 
 const buildGenericProgressUnits = (
   sectionId: string,
-  state: CourseProgressState
+  state: CourseProgressState,
 ): ProgressUnit[] => {
   const section = englishCourse.sections.find((item) => item.id === sectionId);
   if (!section) return [];
@@ -139,33 +137,27 @@ const buildGenericProgressUnits = (
 export const CourseLearnClient = ({
   activeCourse,
   hearts,
-  points,
   showAuthCard,
   initialStudyTimeSummary,
   progressOwnerId,
   initialLegacyProgressState,
   initialCourseProgressState,
-  initialSelectedSectionId,
-  recommendedSectionId,
 }: Props) => {
-  const router = useRouter();
   const shellRef = useRef<HTMLDivElement>(null);
   const [legacyProgress, setLegacyProgress] = useState<ChapterOneProgressState>(
-    initialLegacyProgressState
+    initialLegacyProgressState,
   );
   const [courseProgress, setCourseProgress] = useState<CourseProgressState>(
-    initialCourseProgressState
+    initialCourseProgressState,
   );
-  const [selectedSectionId, setSelectedSectionId] = useState(
-    initialSelectedSectionId
-  );
-  const [todayStudySeconds, setTodayStudySeconds] = useState(
-    initialStudyTimeSummary?.todaySeconds ?? 0
+  const [studyTimeSummary, setStudyTimeSummary] = useState<StudyTimeSummary | null>(
+    initialStudyTimeSummary,
   );
 
   useEffect(() => {
     const shell = shellRef.current;
-    if (!shell || localStorage.getItem(learnPopupSeenStorageKey) === "true") return;
+    if (!shell || localStorage.getItem(learnPopupSeenStorageKey) === "true")
+      return;
 
     localStorage.setItem(learnPopupSeenStorageKey, "true");
     const isAfterHomeTransition =
@@ -178,7 +170,7 @@ export const CourseLearnClient = ({
     }, delay);
     const cleanupTimer = window.setTimeout(
       () => shell.classList.remove("learn-page-shell-enter"),
-      delay + 1200
+      delay + 1200,
     );
 
     return () => {
@@ -195,75 +187,93 @@ export const CourseLearnClient = ({
     return subscribeChapterOneProgress(syncProgress);
   }, [initialLegacyProgressState, progressOwnerId]);
 
-  const sectionViews = useMemo(
-    () => buildCourseSectionViewModels(courseProgress, recommendedSectionId),
-    [courseProgress, recommendedSectionId]
+  useEffect(() => {
+    if (!progressOwnerId) return;
+
+    let isMounted = true;
+
+    const refreshCourseProgress = async () => {
+      try {
+        const response = await fetch("/api/progress/course", {
+          method: "GET",
+          cache: "no-store",
+        });
+
+        if (!response.ok) return;
+
+        const data = (await response.json()) as {
+          progress?: CourseProgressState;
+        };
+
+        if (!isMounted || !data.progress) return;
+
+        setCourseProgress(data.progress);
+        const nextLegacyProgress = projectCourseProgressToChapterOne(
+          data.progress,
+        );
+        saveChapterOneProgress(nextLegacyProgress);
+        setLegacyProgress(nextLegacyProgress);
+      } catch (error) {
+        console.warn("Could not refresh course progress:", error);
+      }
+    };
+
+    void refreshCourseProgress();
+
+    return () => {
+      isMounted = false;
+    };
+  }, [progressOwnerId]);
+
+  const selectedSection =
+    englishCourse.sections.find(
+      (section) => section.id === courseProgress.currentSectionId,
+    ) ?? englishCourse.sections[0];
+  const selectedRoadmapProgress = useMemo(
+    () =>
+      selectedSection.id === "english-section-1"
+        ? migrateChapterOneProgressToCourseProgress(
+            legacyProgress,
+            courseProgress,
+          )
+        : courseProgress,
+    [courseProgress, legacyProgress, selectedSection.id],
   );
-  const selectedSection = englishCourse.sections.find(
-    (section) => section.id === selectedSectionId
-  ) ?? englishCourse.sections[0];
-  const selectedView = sectionViews.find((section) => section.id === selectedSection.id);
   const progressUnits = useMemo(
-    () => selectedSection.id === "english-section-1"
-      ? buildLegacyProgressUnits(legacyProgress)
-      : buildGenericProgressUnits(selectedSection.id, courseProgress),
-    [courseProgress, legacyProgress, selectedSection.id]
+    () =>
+      selectedSection.id === "english-section-1"
+        ? buildLegacyProgressUnits(legacyProgress)
+        : buildGenericProgressUnits(selectedSection.id, courseProgress),
+    [courseProgress, legacyProgress, selectedSection.id],
   );
   const progressSummary = useMemo(
     () => getCourseProgressSummary(progressUnits),
-    [progressUnits]
+    [progressUnits],
   );
-  const todayMinutes = Math.floor(todayStudySeconds / 60);
+  const todayMinutes = Math.floor((studyTimeSummary?.todaySeconds ?? 0) / 60);
+  const totalStudySeconds = studyTimeSummary?.totalSeconds ?? 0;
 
-  const updateUrl = (sectionId: string) => {
-    router.replace(`/learn?section=${encodeURIComponent(sectionId)}`, {
-      scroll: false,
-    });
-  };
-
-  const handleSelectSection = async (sectionId: string) => {
-    setSelectedSectionId(sectionId);
-    updateUrl(sectionId);
-
-    if (!courseProgress.unlockedSectionIds.includes(sectionId) || !progressOwnerId) {
-      return;
-    }
-
-    const response = await fetch("/api/progress/course/select-section", {
+  const handleClaimReward = async (nodeId: string) => {
+    const response = await fetch("/api/progress/course/claim-reward", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ sectionId }),
-    }).catch(() => null);
-    if (response?.ok) {
-      const data = (await response.json()) as { progress: CourseProgressState };
-      setCourseProgress(data.progress);
+      body: JSON.stringify({ nodeId }),
+    });
+
+    const data = (await response.json().catch(() => null)) as {
+      progress?: CourseProgressState;
+      message?: string;
+    } | null;
+
+    if (!response.ok || !data?.progress) {
+      throw new Error(data?.message ?? "Không thể nhận Freeze lúc này.");
     }
+
+    setCourseProgress(data.progress);
+    const nextLegacyProgress = projectCourseProgressToChapterOne(data.progress);
+    saveChapterOneProgress(nextLegacyProgress);
+    setLegacyProgress(nextLegacyProgress);
   };
-
-  const handleClaimChest = (chestId: string) => {
-    const nextLegacyState = claimChapterOneChest(chestId);
-    setLegacyProgress(nextLegacyState);
-
-    void fetch("/api/progress/chapter-one", {
-      method: "PATCH",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ progress: nextLegacyState }),
-    })
-      .then(() => fetch("/api/progress/course", { cache: "no-store" }))
-      .then(async (response) => {
-        if (!response.ok) return;
-        const data = (await response.json()) as { progress: CourseProgressState };
-        setCourseProgress(data.progress);
-      })
-      .catch((error) => {
-        console.warn("Could not sync Chapter 1 chest progress:", error);
-      });
-  };
-
-  const currentSectionId = courseProgress.currentSectionId;
-  const previousSection = englishCourse.sections.find(
-    (section) => section.order === selectedSection.order - 1
-  );
 
   return (
     <div
@@ -272,12 +282,7 @@ export const CourseLearnClient = ({
     >
       <FeedWrapper>
         <section className="rounded-[28px] border-2 border-sky-100 bg-white shadow-sm dark:border-[#202f36] dark:bg-[#182226]">
-          <div className="sticky top-[56px] z-40 space-y-3 rounded-t-[26px] bg-white/95 px-4 pb-4 pt-4 backdrop-blur dark:bg-[#182226]/95 sm:px-6 lg:top-0 lg:pt-6">
-            <SectionSwitcher
-              sections={sectionViews}
-              selectedSectionId={selectedSection.id}
-              onSelect={(sectionId) => void handleSelectSection(sectionId)}
-            />
+          <div className="sticky top-[56px] z-40 rounded-t-[26px] bg-white/95 px-4 pb-4 pt-4 backdrop-blur dark:bg-[#182226]/95 sm:px-6 lg:top-0 lg:pt-6">
             <Header
               courseTitle={chapterOneDemoScope.courseTitle}
               sectionLabel={selectedSection.title}
@@ -285,56 +290,42 @@ export const CourseLearnClient = ({
             />
           </div>
 
-          {selectedView?.unlocked ? (
-            <>
-              <div className="space-y-4 px-4 pb-4 pt-2 sm:px-6 xl:hidden">
-                <ProgressOverview
-                  totalLessons={progressSummary.totalLessons}
-                  completedLessons={progressSummary.completedLessons}
-                  completionPercent={progressSummary.completionPercent}
-                  earnedXp={progressSummary.earnedXp}
-                  completedMinutes={progressSummary.completedMinutes}
-                />
-                <UnitProgressList units={progressUnits} />
-              </div>
-              <div className="px-4 pb-7 pt-2 sm:px-6 sm:pb-9">
-                {selectedSection.id === "english-section-1" ? (
-                  <LessonPath
-                    todayMinutes={todayMinutes}
-                    progressState={legacyProgress}
-                    onClaimChest={handleClaimChest}
-                  />
-                ) : (
-                  <SectionLearningPath
-                    section={selectedSection}
-                    progress={courseProgress}
-                  />
-                )}
-              </div>
-            </>
-          ) : (
-            <LockedSectionPanel
-              sectionTitle={selectedSection.title}
-              previousSectionTitle={previousSection?.title}
-              onBack={() => void handleSelectSection(currentSectionId)}
+          <div className="space-y-4 px-4 pb-4 pt-2 sm:px-6 xl:hidden">
+            <ProgressOverview
+              totalLessons={progressSummary.totalLessons}
+              completedLessons={progressSummary.completedLessons}
+              completionPercent={progressSummary.completionPercent}
+              earnedXp={progressSummary.earnedXp}
+              totalStudySeconds={totalStudySeconds}
             />
-          )}
+            <UnitProgressList units={progressUnits} />
+          </div>
+          <div className="px-4 pb-7 pt-2 sm:px-6 sm:pb-9">
+            <SectionLearningPath
+              section={selectedSection}
+              progress={selectedRoadmapProgress}
+              todayMinutes={todayMinutes}
+              onClaimReward={handleClaimReward}
+            />
+          </div>
         </section>
       </FeedWrapper>
 
       <StickyWrapper>
         <div className="rounded-[24px] border-2 border-sky-100 bg-white p-4 shadow-sm dark:border-[#202f36] dark:bg-[#182226]">
           <UserProgress
-            activeCourse={{ title: activeCourse.title, imageSrc: activeCourse.imageSrc }}
+            activeCourse={{
+              title: activeCourse.title,
+              imageSrc: activeCourse.imageSrc,
+            }}
             hearts={hearts}
-            points={points}
           />
         </div>
         <StreakCard />
         <StudyTimeCard
           initialSummary={initialStudyTimeSummary}
           isLoggedIn={!showAuthCard}
-          onTodaySecondsChange={setTodayStudySeconds}
+          onSummaryChange={setStudyTimeSummary}
         />
         <ProgressOverview
           className="hidden xl:block"
@@ -342,19 +333,26 @@ export const CourseLearnClient = ({
           completedLessons={progressSummary.completedLessons}
           completionPercent={progressSummary.completionPercent}
           earnedXp={progressSummary.earnedXp}
-          completedMinutes={progressSummary.completedMinutes}
+          totalStudySeconds={totalStudySeconds}
         />
         <UnitProgressList className="hidden xl:block" units={progressUnits} />
 
         {sidebarCards.map((card) => (
-          <div key={card.title} className="rounded-[24px] border-2 border-slate-200 bg-white p-5 shadow-sm dark:border-[#202f36] dark:bg-[#182226]">
+          <div
+            key={card.title}
+            className="rounded-[24px] border-2 border-slate-200 bg-white p-5 shadow-sm dark:border-[#202f36] dark:bg-[#182226]"
+          >
             <div className="flex items-start gap-4">
               <div className="flex h-16 w-16 shrink-0 items-center justify-center rounded-2xl bg-sky-50 dark:bg-slate-800">
                 <Image src={card.iconSrc} alt="" width={42} height={42} />
               </div>
               <div>
-                <h3 className="text-lg font-black text-slate-700 dark:text-slate-100">{card.title}</h3>
-                <p className="mt-2 text-sm font-bold leading-6 text-slate-500 dark:text-slate-400">{card.description}</p>
+                <h3 className="text-lg font-black text-slate-700 dark:text-slate-100">
+                  {card.title}
+                </h3>
+                <p className="mt-2 text-sm font-bold leading-6 text-slate-500 dark:text-slate-400">
+                  {card.description}
+                </p>
               </div>
             </div>
           </div>
@@ -362,11 +360,23 @@ export const CourseLearnClient = ({
 
         {showAuthCard ? (
           <div className="rounded-[24px] border-2 border-slate-200 bg-white p-5 shadow-sm dark:border-[#202f36] dark:bg-[#182226]">
-            <h3 className="text-lg font-black text-slate-700 dark:text-slate-100">Tạo hồ sơ</h3>
-            <p className="mt-2 text-sm font-bold leading-6 text-slate-500 dark:text-slate-400">Lưu tiến độ và phần được mở trên mọi thiết bị.</p>
+            <h3 className="text-lg font-black text-slate-700 dark:text-slate-100">
+              Tạo hồ sơ
+            </h3>
+            <p className="mt-2 text-sm font-bold leading-6 text-slate-500 dark:text-slate-400">
+              Lưu tiến độ và phần được mở trên mọi thiết bị.
+            </p>
             <div className="mt-5 grid gap-3">
-              <Button asChild variant="primary" className="h-12 rounded-2xl"><Link href="/sign-up">Tạo hồ sơ</Link></Button>
-              <Button asChild variant="primary-outline" className="h-12 rounded-2xl"><Link href="/sign-in">Đăng nhập</Link></Button>
+              <Button asChild variant="primary" className="h-12 rounded-2xl">
+                <Link href="/sign-up">Tạo hồ sơ</Link>
+              </Button>
+              <Button
+                asChild
+                variant="primary-outline"
+                className="h-12 rounded-2xl"
+              >
+                <Link href="/sign-in">Đăng nhập</Link>
+              </Button>
             </div>
           </div>
         ) : null}

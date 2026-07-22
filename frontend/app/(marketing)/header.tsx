@@ -17,7 +17,7 @@ export const Header = async () => {
   const user = session?.user;
 
   return (
-    <header className="sticky top-0 z-50 h-20 w-full border-b border-slate-200/80 bg-white/95 px-4 shadow-[0_8px_28px_rgba(15,23,42,0.06)] backdrop-blur-md dark:border-slate-800 dark:bg-slate-950/95 lg:h-24 lg:px-8">
+    <header className="sticky top-0 z-50 h-20 w-full border-b border-slate-200/80 bg-white px-4 shadow-[0_8px_28px_rgba(15,23,42,0.06)] dark:border-slate-800 dark:bg-slate-950 lg:h-24 lg:px-8">
       <div className="mx-auto flex h-full max-w-[1640px] items-center justify-between gap-5">
         <div className="flex min-w-0 items-center gap-7">
           <Link
@@ -26,7 +26,7 @@ export const Header = async () => {
             className="flex shrink-0 items-center gap-3 transition-opacity hover:opacity-85"
           >
             <Image
-              src="/logo.webp"
+              src="/Robogo.svg"
               height={58}
               width={58}
               alt="Robogo logo"

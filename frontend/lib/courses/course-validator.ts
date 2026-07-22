@@ -92,6 +92,44 @@ export const validateCourseDefinition = (
         errors.push(`Node ${node.id} cannot have negative XP.`);
       }
 
+      if (node.type === "chest") {
+        if (node.href !== null) {
+          errors.push(`Chest node ${node.id} must not have a lesson route.`);
+        }
+
+        if (node.countsTowardProgress) {
+          errors.push(`Chest node ${node.id} must not count toward progress.`);
+        }
+
+        if (!node.rewards || node.rewards.length === 0) {
+          errors.push(`Chest node ${node.id} must define at least one reward.`);
+        }
+      } else if (node.rewards && node.rewards.length > 0) {
+        errors.push(`Non-chest node ${node.id} must not define rewards.`);
+      }
+
+      node.rewards?.forEach((reward, rewardIndex) => {
+        if (reward.type !== "streak_freeze") {
+          errors.push(`Reward ${rewardIndex + 1} on ${node.id} has an unsupported type.`);
+        }
+
+        if (!Number.isInteger(reward.amount) || reward.amount <= 0) {
+          errors.push(`Reward ${rewardIndex + 1} on ${node.id} must have a positive integer amount.`);
+        }
+
+        if (!reward.label.trim()) {
+          errors.push(`Reward ${rewardIndex + 1} on ${node.id} needs a label.`);
+        }
+
+        if (!reward.description.trim()) {
+          errors.push(`Reward ${rewardIndex + 1} on ${node.id} needs a description.`);
+        }
+
+        if (reward.icon !== "freeze") {
+          errors.push(`Reward ${rewardIndex + 1} on ${node.id} has an unsupported icon.`);
+        }
+      });
+
       if (index === 0 && node.unlockAfterId !== null) {
         errors.push(`First node ${node.id} must not have an unlock dependency.`);
       }

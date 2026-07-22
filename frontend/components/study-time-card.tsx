@@ -3,20 +3,35 @@
 import { useEffect, useMemo, useState } from "react";
 import { Clock3, TimerReset } from "lucide-react";
 
-import { dispatchStudyTimeUpdate } from "@/components/use-study-time-summary";
+import { formatStudyDuration } from "@/lib/study-time/study-time-format";
 import { cn } from "@/lib/utils";
 import type { StudyTimeSummary } from "@/services/study-time-service";
 
 const DAILY_MILESTONES = [
-  { label: "15M ĐỒNG", seconds: 15 * 60, dotClass: "bg-orange-300" },
-  { label: "30M BẠC", seconds: 30 * 60, dotClass: "bg-slate-200" },
-  { label: "1H VÀNG", seconds: 60 * 60, dotClass: "bg-amber-300" },
+  {
+    label: "15M ĐỒNG",
+    seconds: 15 * 60,
+    dotClass:
+      "bg-gradient-to-br from-[#d97706] to-[#b45309] shadow-[0_0_6px_rgba(217,119,6,0.4)]",
+  },
+  {
+    label: "30M BẠC",
+    seconds: 30 * 60,
+    dotClass:
+      "bg-gradient-to-br from-[#94a3b8] to-[#64748b] shadow-[0_0_6px_rgba(148,163,184,0.4)]",
+  },
+  {
+    label: "1H VÀNG",
+    seconds: 60 * 60,
+    dotClass:
+      "bg-gradient-to-br from-[#f59e0b] to-[#d97706] shadow-[0_0_8px_rgba(245,158,11,0.5)]",
+  },
 ];
 
 type Props = {
   initialSummary: StudyTimeSummary | null;
   isLoggedIn: boolean;
-  onTodaySecondsChange?: (todaySeconds: number) => void;
+  onSummaryChange?: (summary: StudyTimeSummary) => void;
 };
 
 const emptySummary: StudyTimeSummary = {
@@ -30,34 +45,6 @@ const emptySummary: StudyTimeSummary = {
 
 const clampPercent = (value: number) => Math.max(0, Math.min(100, value));
 
-const formatMinutes = (seconds: number) => {
-  if (seconds > 0 && seconds < 60) {
-    return "<1 phút";
-  }
-
-  return `${Math.floor(seconds / 60)} phút`;
-};
-
-const formatLongDuration = (seconds: number) => {
-  const totalMinutes = Math.floor(seconds / 60);
-  const hours = Math.floor(totalMinutes / 60);
-  const minutes = totalMinutes % 60;
-
-  if (hours <= 0) {
-    if (seconds > 0 && seconds < 60) {
-      return "<1 phút";
-    }
-
-    return `${minutes} phút`;
-  }
-
-  if (minutes <= 0) {
-    return `${hours} giờ`;
-  }
-
-  return `${hours} giờ ${minutes} phút`;
-};
-
 const getDailyTier = (seconds: number) => {
   if (seconds >= 60 * 60) return "Chuỗi vàng";
   if (seconds >= 30 * 60) return "Chuỗi bạc";
@@ -69,10 +56,10 @@ const getDailyTier = (seconds: number) => {
 export const StudyTimeCard = ({
   initialSummary,
   isLoggedIn,
-  onTodaySecondsChange,
+  onSummaryChange,
 }: Props) => {
   const [summary, setSummary] = useState<StudyTimeSummary>(
-    initialSummary ?? emptySummary
+    initialSummary ?? emptySummary,
   );
 
   const todaySeconds = summary.todaySeconds;
@@ -87,13 +74,12 @@ export const StudyTimeCard = ({
         left: `${clampPercent((milestone.seconds / dailyGoalSeconds) * 100)}%`,
         reached: todaySeconds >= milestone.seconds,
       })),
-    [dailyGoalSeconds, todaySeconds]
+    [dailyGoalSeconds, todaySeconds],
   );
 
   useEffect(() => {
-    onTodaySecondsChange?.(summary.todaySeconds);
-    dispatchStudyTimeUpdate(summary.todaySeconds);
-  }, [onTodaySecondsChange, summary.todaySeconds]);
+    onSummaryChange?.(summary);
+  }, [onSummaryChange, summary]);
 
   useEffect(() => {
     if (!isLoggedIn || initialSummary) {
@@ -131,10 +117,10 @@ export const StudyTimeCard = ({
             <span>Thời gian học</span>
           </div>
           <p className="mt-3 text-2xl font-black text-slate-800 dark:text-white">
-            {formatMinutes(todaySeconds)}
+            {formatStudyDuration(todaySeconds)}
           </p>
           <p className="mt-1 text-xs font-bold text-slate-500 dark:text-slate-400">
-            Tổng: {formatLongDuration(summary.totalSeconds)}
+            Tổng: {formatStudyDuration(summary.totalSeconds)}
           </p>
         </div>
       </div>
@@ -147,7 +133,7 @@ export const StudyTimeCard = ({
               <span>Mục tiêu ngày</span>
             </div>
             <p className="mt-1 text-xs font-bold text-slate-500 dark:text-slate-400">
-              {formatMinutes(todaySeconds)} hôm nay · {tierLabel}
+              {formatStudyDuration(todaySeconds)} hôm nay · {tierLabel}
             </p>
           </div>
         </div>
@@ -166,7 +152,9 @@ export const StudyTimeCard = ({
               <span
                 className={cn(
                   "block size-full rounded-full",
-                  milestone.reached ? milestone.dotClass : "bg-slate-300 dark:bg-slate-600"
+                  milestone.reached
+                    ? milestone.dotClass
+                    : "bg-slate-300 dark:bg-slate-600",
                 )}
               />
             </div>

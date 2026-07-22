@@ -17,7 +17,7 @@ import type {
   WeekActivityDay,
 } from "@/types/quest";
 
-import { getClaimedQuestIds } from "./quest-storage";
+import { getClaimedQuestIds, notifyQuestStorageChange } from "./quest-storage";
 import { getNextQuestResetAt } from "./quest-time";
 import {
   buildQuestSummary,
@@ -149,5 +149,9 @@ export const claimQuestReward = async (questId: string): Promise<QuestClaimRespo
     throw new Error(payload?.error || "Không thể nhận thưởng nhiệm vụ.");
   }
 
-  return (await response.json()) as QuestClaimResponse;
+  const result = (await response.json()) as QuestClaimResponse;
+
+  notifyQuestStorageChange();
+
+  return result;
 };

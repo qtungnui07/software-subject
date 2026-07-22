@@ -1,6 +1,7 @@
 import { drizzle } from "drizzle-orm/postgres-js";
 import postgres from "postgres";
 
+import { DEFAULT_USER_AVATAR } from "@/constants/user-avatar";
 import * as schema from "./schema";
 import { canUseOfflineDatabaseFallback } from "@/lib/env/env-policy";
 
@@ -17,7 +18,7 @@ if (databaseUrl) {
     const mockUserProgress = {
         userId: "mock-user-id",
         userName: "User",
-        userImageSrc: "/logo.webp",
+        userImageSrc: DEFAULT_USER_AVATAR,
         activeCourseId: 1,
         hearts: 5,
         points: 100,
@@ -70,7 +71,7 @@ if (databaseUrl) {
     const mockQuery = new Proxy({}, {
         get(target, tableName) {
             return {
-                findFirst: async (options?: any) => {
+                findFirst: async () => {
                     console.log(`[Mock DB Query] findFirst on table: ${String(tableName)}`);
                     if (tableName === "userProgress") return mockUserProgress;
                     if (tableName === "courses") return mockCourses[0];
@@ -96,7 +97,7 @@ if (databaseUrl) {
                     }
                     return null;
                 },
-                findMany: async (options?: any) => {
+                findMany: async () => {
                     console.log(`[Mock DB Query] findMany on table: ${String(tableName)}`);
                     if (tableName === "courses") return mockCourses;
                     return [];
