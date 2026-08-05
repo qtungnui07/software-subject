@@ -473,11 +473,11 @@ export const isExerciseAnswerComplete = (
     case "match_pairs":
       return (
         answer.type === "match_pairs" &&
-        answer.pairs.length === exercise.correctPairs.length &&
+        answer.pairs.length === exercise.leftItems.length &&
         new Set(answer.pairs.map((pair) => pair.leftId)).size ===
-          exercise.correctPairs.length &&
+          exercise.leftItems.length &&
         new Set(answer.pairs.map((pair) => pair.rightId)).size ===
-          exercise.correctPairs.length
+          exercise.rightItems.length
       );
     case "arrange_dialogue":
       return (

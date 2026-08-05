@@ -30,6 +30,7 @@ export type SyncClerkUserInput = {
   name: string;
   email: string;
   imageSrc: string;
+  createIfMissing?: boolean;
 };
 
 export const signUpLocalUser = (input: SignUpInput) =>

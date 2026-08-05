@@ -22,7 +22,11 @@ import {
   type CourseProgressState,
 } from "@/lib/courses/course-progress";
 import { cn } from "@/lib/utils";
-import type { LearningNodeDefinition, SectionDefinition } from "@/types/course";
+import type {
+  CourseDefinition,
+  LearningNodeDefinition,
+  SectionDefinition,
+} from "@/types/course";
 
 const nodeGap = 168;
 const topPadding = 108;
@@ -40,17 +44,22 @@ const getNodeState = ({
   progress,
   section,
   currentNodeId,
+  course,
 }: {
   node: LearningNodeDefinition;
   progress: CourseProgressState;
   section: SectionDefinition;
   currentNodeId: string | null;
+  course: CourseDefinition;
 }): RoadmapNodeState => {
   const sectionUnlocked = isSectionUnlocked(progress, section.id);
 
   if (node.type === "chest") {
     if (progress.claimedRewardNodeIds.includes(node.id)) return "rewardClaimed";
-    if (sectionUnlocked && isNodePrerequisiteSatisfied(progress, node)) {
+    if (
+      sectionUnlocked &&
+      isNodePrerequisiteSatisfied(progress, node, course)
+    ) {
       return "rewardAvailable";
     }
     return "rewardLocked";
@@ -59,13 +68,13 @@ const getNodeState = ({
   if (node.type === "checkpoint") {
     if (progress.completedNodeIds.includes(node.id))
       return "checkpointCompleted";
-    if (sectionUnlocked && canAccessCourseNode(progress, node.id))
+    if (sectionUnlocked && canAccessCourseNode(progress, node.id, course))
       return "checkpointAvailable";
     return "checkpointLocked";
   }
 
   if (progress.completedNodeIds.includes(node.id)) return "completed";
-  if (sectionUnlocked && canAccessCourseNode(progress, node.id)) {
+  if (sectionUnlocked && canAccessCourseNode(progress, node.id, course)) {
     return node.id === currentNodeId ? "current" : "available";
   }
 
@@ -166,12 +175,17 @@ const isDisabled = (state: RoadmapNodeState) => {
 const buildRoadmapViews = (
   section: SectionDefinition,
   progress: CourseProgressState,
+  course: CourseDefinition,
   compact: boolean,
 ): { nodes: RoadmapNodeView[]; height: number } => {
   const orderedNodes = [...section.chapter.nodes].sort(
     (left, right) => left.order - right.order,
   );
-  const currentNodeId = getCurrentNodeIdForSection(progress, section.id);
+  const currentNodeId = getCurrentNodeIdForSection(
+    progress,
+    section.id,
+    course,
+  );
   const height =
     topPadding + bottomPadding + Math.max(0, orderedNodes.length - 1) * nodeGap;
   const offsetPattern = compact ? mobileOffsetPattern : desktopOffsetPattern;
@@ -179,7 +193,13 @@ const buildRoadmapViews = (
   return {
     height,
     nodes: orderedNodes.map((node, index) => {
-      const state = getNodeState({ node, progress, section, currentNodeId });
+      const state = getNodeState({
+        node,
+        progress,
+        section,
+        currentNodeId,
+        course,
+      });
       const checkpointScore =
         node.type === "checkpoint"
           ? (progress.checkpointScores[node.id] ?? 0)
@@ -204,6 +224,7 @@ const buildRoadmapViews = (
 };
 
 type Props = {
+  course: CourseDefinition;
   section: SectionDefinition;
   progress: CourseProgressState;
   todayMinutes: number;
@@ -212,6 +233,7 @@ type Props = {
 };
 
 export const CourseRoadmap = ({
+  course,
   section,
   progress,
   todayMinutes,
@@ -281,8 +303,8 @@ export const CourseRoadmap = ({
   }, [selectedNodeId]);
 
   const { nodes, height } = useMemo(
-    () => buildRoadmapViews(section, progress, isCompact),
-    [isCompact, progress, section],
+    () => buildRoadmapViews(section, progress, course, isCompact),
+    [course, isCompact, progress, section],
   );
   const selectedNode =
     nodes.find((view) => view.node.id === selectedNodeId) ?? null;

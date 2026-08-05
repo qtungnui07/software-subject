@@ -6,6 +6,7 @@ import { useEffect, useMemo, useState, useTransition } from "react";
 import { toast } from "sonner";
 
 import { Button } from "@/components/ui/button";
+import { isSvgAvatar } from "@/constants/user-avatar";
 
 type AdminUser = {
   id: string;
@@ -173,6 +174,7 @@ export const AdminUsers = () => {
               <thead>
                 <tr className="border-b-2 border-slate-100 dark:border-slate-800 text-xs font-black uppercase tracking-wide text-slate-400 dark:text-slate-500">
                   <th className="px-5 py-4">Tài khoản</th>
+                  <th className="px-5 py-4">Vai trò</th>
                   <th className="px-5 py-4">Kiểu đăng nhập</th>
                   <th className="px-5 py-4">User ID</th>
                   <th className="px-5 py-4">Ngày tạo</th>
@@ -180,26 +182,41 @@ export const AdminUsers = () => {
                 </tr>
               </thead>
               <tbody>
-                {filteredUsers.map((user) => (
-                  <tr key={user.id} className="border-b border-slate-100 dark:border-slate-800 last:border-b-0">
-                    <td className="px-5 py-4">
-                      <div className="flex items-center gap-3">
-                        <div className="relative size-12 overflow-hidden rounded-2xl border-2 border-slate-100 dark:border-slate-800 bg-slate-50 dark:bg-slate-900/50">
-                          <Image
-                            src={user.imageSrc}
-                            alt=""
-                            fill
-                            className="object-contain p-2"
-                            sizes="48px"
-                          />
+                {filteredUsers.map((user) => {
+                  const isAdmin = user.email === "admin@qtitpc.dev" || user.email.toLowerCase().includes("admin");
+
+                  return (
+                    <tr key={user.id} className="border-b border-slate-100 dark:border-slate-800 last:border-b-0">
+                      <td className="px-5 py-4">
+                        <div className="flex items-center gap-3">
+                          <div className="relative size-12 overflow-hidden rounded-2xl border-2 border-slate-100 dark:border-slate-800 bg-slate-50 dark:bg-slate-900/50">
+                            <Image
+                              src={user.imageSrc}
+                              alt=""
+                              fill
+                              className={isSvgAvatar(user.imageSrc) ? "object-contain p-2" : "object-cover p-0"}
+                              sizes="48px"
+                              unoptimized={user.imageSrc.startsWith("http") || user.imageSrc.startsWith("data:")}
+                            />
+                          </div>
+                          <div className="min-w-0">
+                            <p className="truncate text-sm font-black text-slate-800 dark:text-slate-200">{user.name}</p>
+                            <p className="mt-1 break-all text-xs font-bold text-slate-400 dark:text-slate-500">{user.email}</p>
+                          </div>
                         </div>
-                        <div className="min-w-0">
-                          <p className="truncate text-sm font-black text-slate-800 dark:text-slate-200">{user.name}</p>
-                          <p className="mt-1 break-all text-xs font-bold text-slate-400 dark:text-slate-500">{user.email}</p>
-                        </div>
-                      </div>
-                    </td>
-                    <td className="px-5 py-4">
+                      </td>
+                      <td className="px-5 py-4">
+                        <span
+                          className={
+                            isAdmin
+                              ? "rounded-full border-2 border-amber-200 bg-amber-100 dark:border-amber-900/60 dark:bg-amber-950/40 px-3 py-1 text-xs font-black uppercase text-amber-700 dark:text-amber-300"
+                              : "rounded-full border-2 border-slate-200 bg-slate-100 dark:border-slate-800 dark:bg-slate-900/40 px-3 py-1 text-xs font-black uppercase text-slate-600 dark:text-slate-400"
+                          }
+                        >
+                          {isAdmin ? "Admin" : "User"}
+                        </span>
+                      </td>
+                      <td className="px-5 py-4">
                       <span
                         className={
                           user.authProvider === "local"
@@ -235,11 +252,12 @@ export const AdminUsers = () => {
                       </Button>
                     </td>
                   </tr>
-                ))}
+                );
+              })}
 
                 {filteredUsers.length === 0 && (
                   <tr>
-                    <td colSpan={5} className="px-5 py-8 text-center text-sm font-bold text-slate-400 dark:text-slate-500">
+                    <td colSpan={6} className="px-5 py-8 text-center text-sm font-bold text-slate-400 dark:text-slate-500">
                       Không có tài khoản phù hợp.
                     </td>
                   </tr>

@@ -8,6 +8,7 @@ import { buildSectionsPageViewModels } from "@/lib/courses/sections-page-view-mo
 import { getCourseProgressForUser } from "@/services/course-progress-service";
 import { getOnboardingStateForUser } from "@/services/onboarding-service";
 import { getPlacementTestResultForUser } from "@/services/placement-test-service";
+import { getContentCourse } from "@/services/content-service";
 
 export const dynamic = "force-dynamic";
 
@@ -35,15 +36,17 @@ export default async function SectionsPage({ searchParams }: SectionsPageProps) 
     redirect("/courses");
   }
 
+  const contentCourse = await getContentCourse("english");
   const [progress, placementResult] = await Promise.all([
     getCourseProgressForUser(userId).catch(() =>
-      createDefaultCourseProgress("english"),
+      createDefaultCourseProgress(contentCourse),
     ),
     getPlacementTestResultForUser(userId).catch(() => null),
   ]);
   const sections = buildSectionsPageViewModels(
     progress,
     placementResult?.highestAssignedSectionId ?? null,
+    contentCourse,
   );
   const requestedSectionId = (await searchParams)?.requested;
   const validRequestedSectionId = sections.some(

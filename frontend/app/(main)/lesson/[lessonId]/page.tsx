@@ -2,12 +2,15 @@ import { notFound } from "next/navigation";
 
 import { auth } from "@/auth";
 import { CourseLessonDetail } from "@/components/lesson/course-lesson-detail";
-import { lessonNodes } from "@/constants/lessons";
 import { getUserProgress } from "@/db/queries";
 import { getLearningNodeById } from "@/lib/courses/course-catalog";
 import { createDefaultCourseProgress } from "@/lib/courses/course-progress";
 import { buildLessonDetailViewModel } from "@/lib/courses/lesson-detail-view-model";
 import { getCourseProgressForUser } from "@/services/course-progress-service";
+import {
+  getContentCourse,
+  getContentNode,
+} from "@/services/content-service";
 
 type Props = {
   params: Promise<{
@@ -15,39 +18,37 @@ type Props = {
   }>;
 };
 
-const resolveNodeId = (lessonId: string) => {
-  const legacyId = Number.parseInt(lessonId, 10);
-  const legacyLesson =
-    lessonNodes.find((node) => node.nodeId === lessonId) ??
-    lessonNodes.find((node) => node.id === legacyId);
-
-  return legacyLesson?.nodeId ?? lessonId;
-};
-
 const LessonDetailPage = async ({ params }: Props) => {
   const { lessonId } = await params;
-  const nodeId = resolveNodeId(lessonId);
-  const node = getLearningNodeById(nodeId);
+  const course = await getContentCourse("english");
+  const node = getLearningNodeById(course, lessonId);
 
   if (!node || node.type === "chest") {
     notFound();
   }
+  const nodeId = node.id;
 
-  const [session, userProgressData] = await Promise.all([
+  const [session, userProgressData, contentNode] = await Promise.all([
     auth(),
     getUserProgress().catch((error) => {
       console.error("Failed to load user progress:", error);
       return null;
     }),
+    getContentNode(nodeId),
   ]);
 
   const courseProgress = session?.user?.id
     ? await getCourseProgressForUser(session.user.id).catch((error) => {
         console.error("Failed to load course progress:", error);
-        return createDefaultCourseProgress("english");
+        return createDefaultCourseProgress(course);
       })
-    : createDefaultCourseProgress("english");
-  const detail = buildLessonDetailViewModel(node.id, courseProgress);
+    : createDefaultCourseProgress(course);
+  const detail = buildLessonDetailViewModel(
+    node.id,
+    courseProgress,
+    course,
+    contentNode,
+  );
 
   if (!detail) {
     notFound();

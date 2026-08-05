@@ -11,3 +11,8 @@ export const resolveUserAvatar = (imageSrc?: string | null): string => {
 
   return normalized;
 };
+
+export const isSvgAvatar = (imageSrc?: string | null): boolean => {
+  const resolved = resolveUserAvatar(imageSrc).toLowerCase();
+  return resolved.endsWith(".svg") || resolved.includes("image/svg+xml");
+};

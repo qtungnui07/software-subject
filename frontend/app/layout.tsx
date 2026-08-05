@@ -1,5 +1,4 @@
 import type { Metadata } from "next";
-import Script from "next/script";
 import { ClerkProvider } from "@clerk/nextjs";
 import { ToasterLoader } from "@/components/toaster-loader";
 import { ThemeListener } from "@/components/theme-listener";
@@ -51,6 +50,14 @@ export default function RootLayout({
         return;
       }
 
+      try {
+        if (sessionStorage.getItem("robogo-home-intro-seen") === "1") {
+          hideLoader();
+          return;
+        }
+        sessionStorage.setItem("robogo-home-intro-seen", "1");
+      } catch (e) {}
+
       let hasCompletedLoad = document.readyState === "complete";
       let hasCompletedIntro = false;
       let hasDismissed = false;
@@ -92,7 +99,7 @@ export default function RootLayout({
             { opacity: 1, transform: "translateY(-8px) rotate(3deg) scale(1.06)", filter: "blur(0)", offset: 0.72 },
             { opacity: 1, transform: "translateY(0) rotate(0deg) scale(1)", filter: "blur(0)" }
           ],
-          { duration: 820, easing: "cubic-bezier(0.34, 1.56, 0.64, 1)", fill: "forwards" }
+          { duration: 420, easing: "cubic-bezier(0.34, 1.56, 0.64, 1)", fill: "forwards" }
         ));
       }
 
@@ -104,8 +111,8 @@ export default function RootLayout({
             { opacity: 1, transform: "translateY(0) scale(1)", filter: "blur(0)" }
           ],
           {
-            duration: 680,
-            delay: 560 + index * 90,
+            duration: 360,
+            delay: 220 + index * 45,
             easing: "cubic-bezier(0.22, 1, 0.36, 1)",
             fill: "forwards"
           }
@@ -118,7 +125,7 @@ export default function RootLayout({
             { opacity: 0, transform: "translateY(12px)", filter: "blur(6px)" },
             { opacity: 0.62, transform: "translateY(0)", filter: "blur(0)" }
           ],
-          { duration: 620, delay: 1320, easing: "cubic-bezier(0.22, 1, 0.36, 1)", fill: "forwards" }
+          { duration: 300, delay: 600, easing: "cubic-bezier(0.22, 1, 0.36, 1)", fill: "forwards" }
         ));
       }
 
@@ -139,7 +146,7 @@ export default function RootLayout({
               { opacity: 1, filter: "blur(0)" },
               { opacity: 0, filter: "blur(18px)" }
             ],
-            { duration: 720, easing: "cubic-bezier(0.22, 1, 0.36, 1)", fill: "forwards" }
+            { duration: 300, easing: "cubic-bezier(0.22, 1, 0.36, 1)", fill: "forwards" }
           )
         ];
 
@@ -150,7 +157,7 @@ export default function RootLayout({
               { opacity: 1, transform: "translateY(-8px) rotate(180deg) scale(1.06)", filter: "blur(0)", offset: 0.46 },
               { opacity: 0, transform: "translateY(-18px) rotate(360deg) scale(0.82)", filter: "blur(10px)" }
             ],
-            { duration: 720, easing: "cubic-bezier(0.76, 0, 0.24, 1)", fill: "forwards" }
+            { duration: 300, easing: "cubic-bezier(0.76, 0, 0.24, 1)", fill: "forwards" }
           ));
         }
 
@@ -161,7 +168,7 @@ export default function RootLayout({
         hasCompletedLoad = true;
         hasCompletedIntro = true;
         dismiss();
-      }, 4400);
+      }, 1500);
 
       if (hasCompletedLoad) {
         window.requestAnimationFrame(dismiss);
@@ -287,9 +294,8 @@ export default function RootLayout({
               <small style={{ opacity: "0", transform: "translateY(12px)" }}>Learn smarter</small>
             </div>
           </div>
-          <Script
+          <script
             id="robogo-initial-home-loader-script"
-            strategy="afterInteractive"
             dangerouslySetInnerHTML={{ __html: initialHomeLoaderScript }}
           />
           <SessionResetGuard />

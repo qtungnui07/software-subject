@@ -2,10 +2,30 @@ import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
   distDir: process.env.NEXT_DIST_DIR || ".next",
-  allowedDevOrigins: ["robogo.qtitpc.dev", "duolingo.qtitpc.dev", "192.168.1.174"],
+  allowedDevOrigins: ["robogo.qtitpc.dev", "192.168.1.174"],
   compress: true,
   devIndicators: false,
   poweredByHeader: false,
+  images: {
+    formats: ["image/avif", "image/webp"],
+    minimumCacheTTL: 60 * 60 * 24 * 30,
+    remotePatterns: [
+      {
+        protocol: "https",
+        hostname: "**",
+      },
+      {
+        protocol: "http",
+        hostname: "**",
+      },
+    ],
+  },
+  experimental: {
+    cpus: 1,
+    staticGenerationMaxConcurrency: 1,
+    webpackBuildWorker: true,
+    workerThreads: true,
+  },
   async rewrites() {
     const remoteApiUrl = process.env.REMOTE_API_URL?.trim().replace(/\/$/, "");
 
@@ -54,16 +74,6 @@ const nextConfig: NextConfig = {
     }));
 
     return [...authAliases, ...logoAliases];
-  },
-  images: {
-    formats: ["image/avif", "image/webp"],
-    minimumCacheTTL: 60 * 60 * 24 * 30,
-    remotePatterns: [
-      {
-        protocol: "https",
-        hostname: "img.clerk.com",
-      },
-    ],
   },
   async headers() {
     return [

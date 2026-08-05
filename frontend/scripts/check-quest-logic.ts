@@ -1,8 +1,72 @@
 import {
-  DAILY_PERFECT_CHEST_ID,
-  buildQuestTodaySnapshot,
-  type QuestTodayStats,
-} from "../services/quest-service";
+  bonusQuestDefinitions,
+  dailyQuestDefinitions,
+} from "../constants/quests";
+import {
+  getCompletedQuestCount,
+  resolveBonusQuests,
+  resolveDailyQuests,
+} from "../lib/quests/quest-utils";
+import type { UserQuestSnapshot } from "../types/quest";
+
+const DAILY_PERFECT_CHEST_ID = "daily-perfect-chest";
+
+type QuestTodayStats = {
+  lessonsCompleted: number;
+  xpEarned: number;
+  minutesLearned: number;
+  bestAccuracy: number;
+};
+
+const buildQuestTodaySnapshot = ({
+  stats,
+  claimedQuestIds,
+}: {
+  stats: QuestTodayStats;
+  claimedQuestIds: string[];
+}) => {
+  const snapshot: UserQuestSnapshot = {
+    lessonsCompletedToday: stats.lessonsCompleted,
+    bestAccuracyToday: stats.bestAccuracy,
+    minutesLearnedToday: stats.minutesLearned,
+    xpEarnedToday: stats.xpEarned,
+    currentStreak: 0,
+    claimedQuestIds,
+  };
+  const quests = resolveDailyQuests(dailyQuestDefinitions, snapshot).map(
+    (quest) => ({
+      ...quest,
+      canClaim: quest.status === "completed",
+    }),
+  );
+  const bonusQuests = resolveBonusQuests(
+    bonusQuestDefinitions,
+    snapshot,
+    quests,
+  );
+  const dailyCompleted = getCompletedQuestCount(quests);
+  const perfectDayCompleted =
+    quests.length > 0 && dailyCompleted >= quests.length;
+  const chestClaimed = claimedQuestIds.includes(DAILY_PERFECT_CHEST_ID);
+  const chestStatus = !perfectDayCompleted
+    ? "locked"
+    : chestClaimed
+      ? "claimed"
+      : "ready";
+
+  return {
+    quests,
+    bonusQuests,
+    dailyCompleted,
+    dailyTotal: quests.length,
+    chest: {
+      id: DAILY_PERFECT_CHEST_ID,
+      status: chestStatus,
+      rewardXp: 30,
+      canClaim: chestStatus === "ready",
+    },
+  };
+};
 
 const assert = (condition: unknown, message: string) => {
   if (!condition) {

@@ -9,7 +9,9 @@ COPY backend/package.json backend/package-lock.json ./
 RUN npm ci --omit=dev --no-audit --no-fund
 COPY backend/src ./src
 COPY backend/scripts ./scripts
+COPY backend/migrations ./migrations
+COPY backend/data ./data
 
 EXPOSE 4000
 
-CMD ["node", "src/server.js"]
+CMD ["sh", "-c", "node scripts/migrate.js && node scripts/seed-content.js && node src/server.js"]

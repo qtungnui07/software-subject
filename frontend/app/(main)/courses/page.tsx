@@ -1,6 +1,7 @@
 export const dynamic = "force-dynamic";
 
-import { getCourses, getUserProgress } from "@/db/queries";
+import { getUserProgress } from "@/db/queries";
+import { getContentCourses } from "@/services/content-service";
 
 import { List } from "./list";
 
@@ -9,23 +10,22 @@ const CoursesPage = async () => {
         courses,
         userProgress,
     ] = await Promise.all([
-        getCourses(),
+        getContentCourses(),
         getUserProgress(),
     ]);
 
-    // CHỈNH SỬA TẠI ĐÂY: Đổi thành false nếu muốn mở lại các khóa học khác (Tiếng Nhật, Tiếng Pháp, v.v.)
-    const showOnlyEnglish = true; 
-
-    const filteredCourses = showOnlyEnglish
-        ? courses.filter((course: any) => course.title === "Tiếng Anh")
-        : courses;
+    const courseRows = courses.map((course) => ({
+        id: course.databaseId,
+        title: course.title,
+        imageSrc: course.imageSrc,
+    }));
 
     return (
         <div className="h-full max-w-228 px-3 mx-auto">
             <h1 className="text-2xl font-bold text-neutral-700">
                 
             </h1>
-            <List courses={filteredCourses} 
+            <List courses={courseRows}
             activeCourseId={userProgress?.activeCourseId}
             />
         </div>

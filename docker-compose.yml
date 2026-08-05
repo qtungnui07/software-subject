@@ -1,7 +1,9 @@
+name: robogo
+
 services:
   db:
     image: postgres:15
-    container_name: duolingo-db
+    container_name: robogo-db
     environment:
       - POSTGRES_USER=qtitpc
       - POSTGRES_PASSWORD=21107
@@ -10,18 +12,24 @@ services:
       - "5433:5432"
     volumes:
       - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U qtitpc -d duolingo"]
+      interval: 5s
+      timeout: 3s
+      retries: 12
     restart: unless-stopped
 
   backend:
     build:
       context: .
       dockerfile: backend/Dockerfile
-    container_name: duolingo-backend
+    container_name: robogo-backend
     ports:
       - "4000:4000"
     environment:
       - PORT=4000
       - DATABASE_URL=postgresql://qtitpc:21107@db:5432/duolingo
+      - BACKEND_API_KEY=${BACKEND_API_KEY:-robogo-local-backend-key}
       - FRONTEND_INTERNAL_URL=http://frontend:3000
       - APP_URL=${APP_URL:-https://robogo.qtitpc.dev}
       - SMTP_HOST=${SMTP_HOST:-smtp.resend.com}
@@ -31,12 +39,36 @@ services:
       - SMTP_PASS=${SMTP_PASS:-}
       - MAIL_FROM=${MAIL_FROM:-Robogo <noreply@qtitpc.dev>}
     depends_on:
+      db:
+        condition: service_healthy
+    healthcheck:
+      test:
+        [
+          "CMD",
+          "node",
+          "-e",
+          "fetch('http://127.0.0.1:4000/health').then(r=>{if(!r.ok)process.exit(1)}).catch(()=>process.exit(1))",
+        ]
+      interval: 10s
+      timeout: 3s
+      retries: 6
+    restart: unless-stopped
+
+  adminer:
+    image: adminer:5
+    container_name: robogo-adminer
+    ports:
+      - "${ADMINER_PORT:-8080}:8080"
+    environment:
+      - ADMINER_DEFAULT_SERVER=db
+      - ADMINER_DESIGN=pepa-linha-dark
+    depends_on:
       - db
     restart: unless-stopped
 
   frontend:
     image: node:22-slim
-    container_name: duolingo-frontend
+    container_name: robogo-frontend
     working_dir: /app
     ports:
       - "3000:3000"
@@ -46,14 +78,19 @@ services:
     environment:
       - NODE_ENV=production
       - BACKEND_URL=http://backend:4000
+      - BACKEND_API_KEY=${BACKEND_API_KEY:-robogo-local-backend-key}
       - DATABASE_URL=postgresql://qtitpc:21107@db:5432/duolingo
+      - INTERNAL_SYNC_SECRET=${INTERNAL_SYNC_SECRET:-robogo-local-sync-secret}
     env_file:
       - ./frontend/.env.local
     command: sh -c "npm run build && npm run start -- --hostname 0.0.0.0"
     depends_on:
-      - backend
-      - db
+      backend:
+        condition: service_healthy
+      db:
+        condition: service_healthy
     restart: unless-stopped
 
 volumes:
   pgdata:
+    name: software-subject_pgdata

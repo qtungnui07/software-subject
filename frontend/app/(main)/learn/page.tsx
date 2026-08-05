@@ -2,15 +2,12 @@ import { redirect } from "next/navigation";
 
 import { auth } from "@/auth";
 import { CourseLearnClient } from "@/components/learn/course-learn-client";
-import { chapterOneDemoScope } from "@/constants/lessons";
-import { englishCourse } from "@/data/courses/english-course";
 import { getUserProgress } from "@/db/queries";
-import { getInitialChapterOneProgress } from "@/lib/chapter-one-progress";
-import { projectCourseProgressToChapterOne } from "@/lib/courses/chapter-one-adapter";
 import { createDefaultCourseProgress } from "@/lib/courses/course-progress";
 import { getCourseProgressForUser } from "@/services/course-progress-service";
 import { getOnboardingStateForUser } from "@/services/onboarding-service";
 import { getStudyTime, type StudyTimeSummary } from "@/services/study-time-service";
+import { getContentCourse } from "@/services/content-service";
 
 type LearnPageProps = {
   searchParams?: Promise<{ section?: string; locked?: string }>;
@@ -18,6 +15,7 @@ type LearnPageProps = {
 
 const LearnPage = async ({ searchParams }: LearnPageProps) => {
   const session = await auth();
+  const course = await getContentCourse("english");
 
   if (session?.user?.id) {
     const onboarding = await getOnboardingStateForUser(session.user.id);
@@ -33,31 +31,29 @@ const LearnPage = async ({ searchParams }: LearnPageProps) => {
   }
 
   const activeCourse = userProgressData.activeCourse || {
-    title: chapterOneDemoScope.courseTitle,
-    imageSrc: "/globe.svg",
+    title: course.title,
+    imageSrc: course.imageSrc,
   };
   let studyTimeSummary: StudyTimeSummary | null = null;
-  let legacyProgress = getInitialChapterOneProgress();
-  let courseProgress = createDefaultCourseProgress("english");
+  let courseProgress = createDefaultCourseProgress(course);
 
   if (session?.user?.id) {
     const [studyResult, courseResult] = await Promise.all([
       getStudyTime(session.user.id).catch(() => null),
       getCourseProgressForUser(session.user.id).catch(() =>
-        createDefaultCourseProgress("english")
+        createDefaultCourseProgress(course)
       ),
     ]);
 
     studyTimeSummary = studyResult?.ok ? studyResult.data.summary : null;
     courseProgress = courseResult;
-    legacyProgress = projectCourseProgressToChapterOne(courseProgress);
   }
 
   const params = (await searchParams) ?? {};
   const requestedSectionId = params.section ?? params.locked;
 
   if (requestedSectionId) {
-    const requestedSectionExists = englishCourse.sections.some(
+    const requestedSectionExists = course.sections.some(
       (section) => section.id === requestedSectionId,
     );
     redirect(
@@ -75,8 +71,8 @@ const LearnPage = async ({ searchParams }: LearnPageProps) => {
       showAuthCard={!session?.user}
       initialStudyTimeSummary={studyTimeSummary}
       progressOwnerId={session?.user?.id ?? null}
-      initialLegacyProgressState={legacyProgress}
       initialCourseProgressState={courseProgress}
+      courseDefinition={course}
     />
   );
 };

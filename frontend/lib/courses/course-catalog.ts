@@ -1,4 +1,3 @@
-import { englishCourse } from "@/data/courses/english-course";
 import type {
   ChapterDefinition,
   CourseDefinition,
@@ -7,52 +6,40 @@ import type {
   SectionDefinition,
 } from "@/types/course";
 
-export const courseCatalog: CourseDefinition[] = [englishCourse];
-
-const resolveCourse = (courseId: string) => {
-  return courseCatalog.find(
-    (course) => course.id === courseId || course.legacyIds.includes(courseId)
-  );
-};
-
 export const getCourseById = (
+  course: CourseDefinition,
   courseId: CourseId | string
 ): CourseDefinition | undefined => {
-  return resolveCourse(courseId);
+  return course.id === courseId || course.legacyIds.includes(courseId)
+    ? course
+    : undefined;
 };
 
 export const getSectionById = (
+  course: CourseDefinition,
   sectionId: string
 ): SectionDefinition | undefined => {
-  for (const course of courseCatalog) {
-    const section = course.sections.find((item) => item.id === sectionId);
-    if (section) return section;
-  }
-
-  return undefined;
+  return course.sections.find((item) => item.id === sectionId);
 };
 
 export const getChapterById = (
+  course: CourseDefinition,
   chapterId: string
 ): ChapterDefinition | undefined => {
-  for (const course of courseCatalog) {
-    const section = course.sections.find(
-      (item) => item.chapter.id === chapterId
-    );
-    if (section) return section.chapter;
-  }
-
-  return undefined;
+  return course.sections.find((item) => item.chapter.id === chapterId)?.chapter;
 };
 
 export const getLearningNodeById = (
+  course: CourseDefinition,
   nodeId: string
 ): LearningNodeDefinition | undefined => {
-  for (const course of courseCatalog) {
-    for (const section of course.sections) {
-      const node = section.chapter.nodes.find((item) => item.id === nodeId);
-      if (node) return node;
-    }
+  for (const section of course.sections) {
+    const node = section.chapter.nodes.find(
+      (item) =>
+        item.id === nodeId ||
+        (item.legacyId !== undefined && String(item.legacyId) === nodeId),
+    );
+    if (node) return node;
   }
 
   return undefined;
@@ -60,23 +47,31 @@ export const getLearningNodeById = (
 
 
 export const getSectionForNode = (
+  course: CourseDefinition,
   nodeId: string
 ): SectionDefinition | undefined => {
-  for (const course of courseCatalog) {
-    for (const section of course.sections) {
-      if (section.chapter.nodes.some((item) => item.id === nodeId)) {
-        return section;
-      }
+  for (const section of course.sections) {
+    if (
+      section.chapter.nodes.some(
+        (item) =>
+          item.id === nodeId ||
+          (item.legacyId !== undefined && String(item.legacyId) === nodeId),
+      )
+    ) {
+      return section;
     }
   }
 
   return undefined;
 };
 
-export const getCourseNodes = (courseId: CourseId | string) => {
-  const course = getCourseById(courseId);
+export const getCourseNodes = (
+  course: CourseDefinition,
+  courseId: CourseId | string,
+) => {
+  const resolvedCourse = getCourseById(course, courseId);
 
   return (
-    course?.sections.flatMap((section) => section.chapter.nodes) ?? []
+    resolvedCourse?.sections.flatMap((section) => section.chapter.nodes) ?? []
   );
 };

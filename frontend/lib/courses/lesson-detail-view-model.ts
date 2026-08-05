@@ -1,5 +1,3 @@
-import { getEnglishLessonDetail } from "@/data/courses/english-lesson-details";
-import { getExercisesForLesson } from "@/lib/exercises/exercise-catalog";
 import {
   getCourseById,
   getLearningNodeById,
@@ -11,6 +9,7 @@ import { CHECKPOINT_UNLOCK_THRESHOLD } from "@/lib/courses/course-unlock-policy"
 import type { CourseProgressState } from "@/lib/courses/course-progress";
 import type { ExerciseSkill, ExerciseType } from "@/types/exercise";
 import type { LessonDetailViewModel } from "@/types/lesson-detail";
+import type { CourseDefinition } from "@/types/course";
 
 const skillLabels: Record<ExerciseSkill, string> = {
   vocabulary: "Từ vựng",
@@ -37,14 +36,15 @@ const unique = <T,>(items: T[]) => Array.from(new Set(items));
 const getLockedReason = (
   nodeId: string,
   progress: CourseProgressState,
+  course: CourseDefinition,
 ) => {
-  const node = getLearningNodeById(nodeId);
-  const section = getSectionForNode(nodeId);
+  const node = getLearningNodeById(course, nodeId);
+  const section = getSectionForNode(course, nodeId);
   if (!node || !section) return null;
 
   if (!progress.unlockedSectionIds.includes(section.id)) {
-    const course = getCourseById(section.courseId);
-    const previousSection = course?.sections.find(
+    const resolvedCourse = getCourseById(course, section.courseId);
+    const previousSection = resolvedCourse?.sections.find(
       (item) => item.order === section.order - 1,
     );
     return previousSection
@@ -53,7 +53,7 @@ const getLockedReason = (
   }
 
   if (!node.unlockAfterId) return "Bài học này hiện chưa sẵn sàng.";
-  const prerequisite = getLearningNodeById(node.unlockAfterId);
+  const prerequisite = getLearningNodeById(course, node.unlockAfterId);
   return prerequisite
     ? `Hoàn thành “${prerequisite.title}” để mở nội dung này.`
     : "Hoàn thành nội dung trước đó để mở bài học này.";
@@ -62,17 +62,39 @@ const getLockedReason = (
 export const buildLessonDetailViewModel = (
   nodeId: string,
   progress: CourseProgressState,
+  course: CourseDefinition,
+  remoteContent: {
+    title: string;
+    shortTitle: string;
+    description: string;
+    xp: number;
+    detail: {
+      overview: string;
+      objectives: string[];
+      focusSkills: ExerciseSkill[];
+      estimatedMinutes: number;
+      checkpointUnlocks?: string;
+    } | null;
+    exerciseSummary: {
+      count: number;
+      types: ExerciseType[];
+      skills: ExerciseSkill[];
+    };
+  },
 ): LessonDetailViewModel | null => {
-  const node = getLearningNodeById(nodeId);
-  const section = getSectionForNode(nodeId);
-  const detail = getEnglishLessonDetail(nodeId);
+  const node = getLearningNodeById(course, nodeId);
+  const section = getSectionForNode(course, nodeId);
+  const detail = remoteContent.detail;
 
   if (!node || !section || !detail || node.type === "chest") return null;
 
-  const exercises = getExercisesForLesson(node.id);
-  const access = getCourseNodeAccess(progress, node.id);
+  const access = getCourseNodeAccess(progress, node.id, course);
   const completed = progress.completedNodeIds.includes(node.id);
-  const currentNodeId = getCurrentNodeIdForSection(progress, section.id);
+  const currentNodeId = getCurrentNodeIdForSection(
+    progress,
+    section.id,
+    course,
+  );
   const isCheckpoint = node.type === "checkpoint";
   const bestCheckpointScore = isCheckpoint
     ? (progress.checkpointScores[node.id] ?? null)
@@ -126,19 +148,19 @@ export const buildLessonDetailViewModel = (
             ? "Tiếp tục học"
             : "Bắt đầu học";
 
-  const actualSkills = unique(exercises.map((exercise) => exercise.skill));
+  const actualSkills = unique(remoteContent.exerciseSummary.skills);
   const focusSkills = unique([
     ...detail.focusSkills.filter((skill) => actualSkills.includes(skill)),
     ...actualSkills,
   ]);
-  const exerciseTypes = unique(exercises.map((exercise) => exercise.type));
+  const exerciseTypes = unique(remoteContent.exerciseSummary.types);
 
   return {
     nodeId: node.id,
     nodeType: node.type,
-    title: node.title,
-    shortTitle: node.shortTitle,
-    description: node.description,
+    title: remoteContent.title,
+    shortTitle: remoteContent.shortTitle,
+    description: remoteContent.description,
     overview: detail.overview,
     objectives: detail.objectives,
     focusSkills: focusSkills.map((id) => ({ id, label: skillLabels[id] })),
@@ -146,9 +168,9 @@ export const buildLessonDetailViewModel = (
       id,
       label: exerciseTypeLabels[id],
     })),
-    exerciseCount: exercises.length,
+    exerciseCount: remoteContent.exerciseSummary.count,
     estimatedMinutes: detail.estimatedMinutes,
-    xp: node.xp,
+    xp: remoteContent.xp,
     section: {
       id: section.id,
       order: section.order,
@@ -168,7 +190,7 @@ export const buildLessonDetailViewModel = (
       : null,
     lockedReason: access.allowed
       ? null
-      : getLockedReason(node.id, progress),
+      : getLockedReason(node.id, progress, course),
     checkpoint: isCheckpoint
       ? {
           passingScore: CHECKPOINT_UNLOCK_THRESHOLD,

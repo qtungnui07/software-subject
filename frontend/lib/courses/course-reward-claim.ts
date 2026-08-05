@@ -10,7 +10,10 @@ import {
   normalizeCourseProgressState,
   type CourseProgressState,
 } from "@/lib/courses/course-progress";
-import type { CourseRewardDefinition } from "@/types/course";
+import type {
+  CourseDefinition,
+  CourseRewardDefinition,
+} from "@/types/course";
 
 export type CourseRewardClaimReason =
   | "updated"
@@ -42,9 +45,10 @@ const isSupportedReward = (reward: CourseRewardDefinition) => {
 export const claimCourseReward = (
   state: CourseProgressState,
   nodeId: string,
+  course: CourseDefinition,
 ): CourseRewardClaimMutationResult => {
-  const normalizedState = normalizeCourseProgressState(state, state.courseId);
-  const node = getLearningNodeById(nodeId);
+  const normalizedState = normalizeCourseProgressState(state, course);
+  const node = getLearningNodeById(course, nodeId);
 
   if (!node) {
     return {
@@ -66,7 +70,7 @@ export const claimCourseReward = (
     };
   }
 
-  const section = getSectionForNode(node.id);
+  const section = getSectionForNode(course, node.id);
   if (!section || !isSectionUnlocked(normalizedState, section.id)) {
     return {
       progress: normalizedState,
@@ -77,7 +81,7 @@ export const claimCourseReward = (
     };
   }
 
-  if (!isNodePrerequisiteSatisfied(normalizedState, node)) {
+  if (!isNodePrerequisiteSatisfied(normalizedState, node, course)) {
     return {
       progress: normalizedState,
       changed: false,
@@ -127,7 +131,7 @@ export const claimCourseReward = (
         claimedRewardNodeIds: [...normalizedState.claimedRewardNodeIds, node.id],
         updatedAt: new Date().toISOString(),
       },
-      normalizedState.courseId,
+      course,
     ),
     changed: true,
     reason: "updated",

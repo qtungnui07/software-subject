@@ -1,7 +1,6 @@
 import { NextResponse } from "next/server";
 
 import { auth } from "@/auth";
-import { englishPlacementQuestions } from "@/data/placement-tests/english-placement-test";
 import {
   adaptiveErrorResponse,
   adaptiveUnauthorizedResponse,
@@ -22,12 +21,11 @@ import {
   toPlacementGetResponse,
   toPlacementResultResponse,
 } from "@/lib/placement-test/placement-api-contract";
-import { toPublicPlacementQuestions } from "@/lib/placement-test/placement-public-question";
-import { PlacementSubmissionError } from "@/lib/placement-test/placement-submission";
 import {
   getPlacementTestResultForUser,
   submitPlacementTestForUser,
 } from "@/services/placement-test-service";
+import { getContentPlacementTest } from "@/services/content-service";
 
 export const dynamic = "force-dynamic";
 
@@ -45,11 +43,14 @@ export async function GET(request: Request) {
   }
 
   try {
-    const previousResult = await getPlacementTestResultForUser(userId);
+    const [previousResult, contentTest] = await Promise.all([
+      getPlacementTestResultForUser(userId),
+      getContentPlacementTest(),
+    ]);
     return NextResponse.json(
       {
         ...toPlacementGetResponse({
-          questions: toPublicPlacementQuestions(englishPlacementQuestions),
+          questions: contentTest.questions,
           previousResult,
         }),
         requestId,
@@ -132,21 +133,6 @@ export async function POST(request: Request) {
         error.issues[0] ?? "Dữ liệu bài làm không hợp lệ.",
         error.status,
         error.issues.map((message) => ({ message })),
-        requestId,
-      );
-    }
-
-    if (error instanceof PlacementSubmissionError) {
-      const versionIssue = error.issues.find(
-        (issue) => issue.field === "testVersion",
-      );
-      return adaptiveErrorResponse(
-        versionIssue ? "VERSION_CONFLICT" : "INVALID_REQUEST",
-        versionIssue?.message ??
-          error.issues[0]?.message ??
-          "Dữ liệu bài làm không hợp lệ.",
-        versionIssue ? 409 : 400,
-        error.issues,
         requestId,
       );
     }

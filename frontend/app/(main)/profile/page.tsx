@@ -4,15 +4,16 @@ import { redirect } from "next/navigation";
 
 import { Button } from "@/components/ui/button";
 import { auth } from "@/auth";
-import { resolveUserAvatar } from "@/constants/user-avatar";
+import { resolveUserAvatar, isSvgAvatar } from "@/constants/user-avatar";
+import { cn } from "@/lib/utils";
 import { ProfileForm } from "./profile-form";
 import { createDefaultCourseProgress } from "@/lib/courses/course-progress";
 import { getLearningProfileStats } from "@/lib/learning/profile-stats";
 import { getCourseProgressForUser } from "@/services/course-progress-service";
 import { getUserXpSummary } from "@/services/xp-service";
-import { ProfileLearningProgress } from "./profile-learning-progress";
 import { requireProfile, type Profile } from "@/services/profile-service";
 import { ProfileXpPanel } from "@/components/profile/profile-xp-panel";
+import { getContentCourse } from "@/services/content-service";
 
 const ProfilePage = async () => {
   const session = await auth();
@@ -22,6 +23,7 @@ const ProfilePage = async () => {
   }
 
   const user = session.user;
+  const contentCourse = await getContentCourse("english");
   const [profile, genericCourseProgress, xpSummary] = await Promise.all([
     requireProfile(user.id).catch((error): Profile | null => {
       console.error("Failed to load user profile:", error);
@@ -32,11 +34,14 @@ const ProfilePage = async () => {
         "Falling back to default course progress. Check that the local database schema is up to date.",
         error instanceof Error ? error.message : error
       );
-      return createDefaultCourseProgress();
+      return createDefaultCourseProgress(contentCourse);
     }),
     getUserXpSummary({ userId: user.id }).catch(() => null),
   ]);
-  const courseProgress = getLearningProfileStats(genericCourseProgress);
+  const courseProgress = getLearningProfileStats(
+    genericCourseProgress,
+    contentCourse,
+  );
 
   const displayName = profile?.name || user.name || "User";
   const avatarSrc = resolveUserAvatar(profile?.imageSrc || user.image);
@@ -52,7 +57,7 @@ const ProfilePage = async () => {
     },
     {
       label: "Bài học",
-      value: <ProfileLearningProgress variant="lessons" />,
+      value: `${courseProgress.completedLearningNodes} / ${courseProgress.totalLearningNodes}`,
       description: "Đã hoàn thành",
       icon: "📘",
       tone: "border-violet-100 bg-violet-50 text-violet-600 dark:border-violet-950/40 dark:bg-violet-950/20 dark:text-violet-400",
@@ -84,14 +89,19 @@ const ProfilePage = async () => {
 
           <div className="rounded-[28px] border-2 border-white bg-white/95 p-4 shadow-sm dark:border-slate-800 dark:bg-slate-900/95">
             <div className="flex items-center gap-4 lg:flex-col lg:text-center">
-              <div className="relative size-24 shrink-0 overflow-hidden rounded-[28px] border-4 border-sky-100 bg-white p-3 shadow-sm sm:size-28 dark:border-slate-800 dark:bg-slate-950">
+              <div
+                className={cn(
+                  "relative size-24 shrink-0 overflow-hidden rounded-[28px] border-4 border-sky-100 bg-white shadow-sm sm:size-28 dark:border-slate-800 dark:bg-slate-950",
+                  isSvgAvatar(avatarSrc) ? "p-3" : "p-0"
+                )}
+              >
                 <Image
                   src={avatarSrc}
                   alt={`${displayName} avatar`}
                   fill
-                  className="object-contain p-2"
+                  className={isSvgAvatar(avatarSrc) ? "object-contain p-2" : "object-cover"}
                   priority
-                  unoptimized={avatarSrc.startsWith("http")}
+                  unoptimized={avatarSrc.startsWith("http") || avatarSrc.startsWith("data:")}
                 />
               </div>
               <div>
@@ -149,18 +159,19 @@ const ProfilePage = async () => {
                       Tiến độ khóa học
                     </p>
                     <p className="mt-1 text-sm font-bold text-slate-500 dark:text-slate-400">
-                      <ProfileLearningProgress variant="lessonsWithLabel" />
+                      {courseProgress.completedLearningNodes} /{" "}
+                      {courseProgress.totalLearningNodes} bài học đã hoàn thành
                     </p>
                   </div>
                   <div className="rounded-2xl bg-white px-3 py-2 text-lg font-black text-sky-600 shadow-sm dark:bg-slate-950 dark:text-sky-400">
-                    <ProfileLearningProgress variant="percent" />
+                    {courseProgress.completionPercent}%
                   </div>
                 </div>
 
                 <div className="mt-4 h-4 overflow-hidden rounded-full bg-white shadow-inner dark:bg-slate-950">
                   <div
                     className="h-full rounded-full bg-sky-500 transition-all duration-700 ease-out"
-                    style={{ width: "var(--profile-course-progress-percent, 0%)" }}
+                    style={{ width: `${courseProgress.completionPercent}%` }}
                   />
                 </div>
               </div>

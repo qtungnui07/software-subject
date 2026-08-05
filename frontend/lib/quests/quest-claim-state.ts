@@ -4,7 +4,25 @@ import type {
   UserQuestSnapshot,
 } from "@/types/quest";
 
-import { buildQuestsPageData } from "./quest-adapter";
+import { notifyQuestStorageChange } from "./quest-storage";
+import { buildQuestSummary } from "./quest-utils";
+
+export const claimQuestReward = async (
+  questId: string,
+): Promise<QuestClaimResponse> => {
+  const response = await fetch("/api/quests/claim", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ questId }),
+  });
+  if (!response.ok) {
+    const payload = await response.json().catch(() => null);
+    throw new Error(payload?.error || "Không thể nhận thưởng nhiệm vụ.");
+  }
+  const result = (await response.json()) as QuestClaimResponse;
+  notifyQuestStorageChange();
+  return result;
+};
 
 const toSafeXp = (value: unknown) => {
   return typeof value === "number" && Number.isFinite(value)
@@ -44,8 +62,18 @@ export const applyQuestClaimResultToPageData = (
   };
   const lastSyncedAt = new Date().toISOString();
 
-  return buildQuestsPageData(snapshot, {
+  const dailyQuests = result.today.quests;
+  const bonusQuests = result.today.bonusQuests;
+  const weekActivity = currentData.summary.weekActivity;
+  return {
+    ...currentData,
+    dailyQuests,
+    bonusQuests,
+    summary: buildQuestSummary({ dailyQuests, snapshot, weekActivity }),
+    snapshot,
     dataSource: "api",
+    lastSyncedAt,
+    nextResetAt: result.today.nextResetAt || currentData.nextResetAt,
     syncStatus: {
       ...currentData.syncStatus,
       source: "api",
@@ -53,7 +81,5 @@ export const applyQuestClaimResultToPageData = (
       message: "Trạng thái nhận thưởng đã được đồng bộ với hệ thống.",
       lastSyncedAt,
     },
-    weekActivity: currentData.summary.weekActivity,
-    nextResetAt: result.today.nextResetAt || currentData.nextResetAt,
-  });
+  };
 };

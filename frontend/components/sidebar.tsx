@@ -14,7 +14,7 @@ import { useStudyTimeMinutes } from "@/components/use-study-time-summary";
 
 import { getStudyTier } from "@/lib/study-tier";
 import { cn } from "@/lib/utils";
-import { subscribeToQuestStorage } from "@/lib/quests";
+import { subscribeToQuestStorage } from "@/lib/quests/quest-storage";
 import type { QuestClaimChestState, ResolvedQuest } from "@/types/quest";
 
 type Props = {

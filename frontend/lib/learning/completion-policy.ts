@@ -1,4 +1,5 @@
 import { getLearningNodeById } from "@/lib/courses/course-catalog";
+import type { CourseDefinition } from "@/types/course";
 
 export const LESSON_COMPLETION_THRESHOLD = 60;
 export const CHECKPOINT_COMPLETION_THRESHOLD = 70;
@@ -32,8 +33,9 @@ export const isUuid = (value: unknown): value is string =>
 export const getLearningCompletionPolicy = (
   nodeId: string,
   accuracy: number,
+  course: CourseDefinition,
 ): LearningCompletionPolicyResult | null => {
-  const node = getLearningNodeById(nodeId);
+  const node = getLearningNodeById(course, nodeId);
   if (!node || node.type === "chest") return null;
 
   const passThreshold =

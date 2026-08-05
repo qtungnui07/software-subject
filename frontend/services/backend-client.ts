@@ -9,7 +9,7 @@ export type BackendResult<T> =
   | { ok: false; status: number; data: BackendErrorBody };
 
 type BackendRequestOptions = {
-  method?: "GET" | "POST" | "PATCH" | "DELETE";
+  method?: "GET" | "POST" | "PATCH" | "DELETE" | "PUT";
   userId?: string;
   body?: unknown;
   cache?: RequestCache;
@@ -19,7 +19,7 @@ type BackendRequestOptions = {
 const getBackendUrls = () =>
   process.env.BACKEND_URL
     ? [process.env.BACKEND_URL.replace(/\/$/, "")]
-    : ["http://duolingo-backend:4000", "http://127.0.0.1:4000"];
+    : ["http://127.0.0.1:4000"];
 
 const normalizeError = (data: unknown, fallback: string): BackendErrorBody => ({
   error:

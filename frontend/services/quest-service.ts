@@ -2,7 +2,6 @@ import "server-only";
 
 import { and, desc, eq, sql } from "drizzle-orm";
 
-import { bonusQuestDefinitions, dailyQuestDefinitions } from "@/constants/quests";
 import { resolveUserAvatar } from "@/constants/user-avatar";
 import db from "@/db/drizzle";
 import {
@@ -18,10 +17,12 @@ import {
   resolveDailyQuests,
 } from "@/lib/quests/quest-utils";
 import type {
+  QuestDefinition,
   ResolvedQuest,
   UserQuestSnapshot,
   WeekActivityDay,
 } from "@/types/quest";
+import { getContentQuestDefinitions } from "@/services/content-service";
 
 const VIETNAM_TIME_ZONE = "Asia/Ho_Chi_Minh";
 const VIETNAM_UTC_OFFSET_MINUTES = 7 * 60;
@@ -532,11 +533,13 @@ export const buildQuestTodaySnapshot = ({
   stats = emptyQuestTodayStats,
   claimedQuestIds = [],
   currentStreak = 0,
+  definitions,
 }: {
   date?: string;
   stats?: QuestTodayStats;
   claimedQuestIds?: string[];
   currentStreak?: number;
+  definitions: QuestDefinition[];
 }): QuestTodaySnapshot => {
   const normalizedClaimedQuestIds = normalizeClaimedQuestIds(claimedQuestIds);
   const normalizedStats: QuestTodayStats = {
@@ -554,11 +557,18 @@ export const buildQuestTodaySnapshot = ({
     claimedQuestIds: normalizedClaimedQuestIds,
   };
 
-  const quests = resolveDailyQuests(dailyQuestDefinitions, snapshot).map(
+  const activeDefinitions = definitions;
+  const activeDailyDefinitions = activeDefinitions.filter(
+    (definition) => definition.type === "daily",
+  );
+  const activeBonusDefinitions = activeDefinitions.filter(
+    (definition) => definition.type !== "daily",
+  );
+  const quests = resolveDailyQuests(activeDailyDefinitions, snapshot).map(
     normalizeQuestClaimState,
   );
   const bonusQuests = resolveBonusQuests(
-    bonusQuestDefinitions,
+    activeBonusDefinitions,
     snapshot,
     quests,
   ).map(normalizeQuestClaimState);
@@ -945,6 +955,7 @@ const persistQuestRewardClaim = async ({
   weekStartKey,
   xpRewardType,
   today,
+  definitions,
 }: {
   tx: any;
   input: Pick<ClaimQuestRewardInput, "userId" | "userName" | "userImageSrc">;
@@ -955,6 +966,7 @@ const persistQuestRewardClaim = async ({
   weekStartKey: string;
   xpRewardType: "quest_reward" | "quest_chest";
   today: QuestTodaySnapshot;
+  definitions: QuestDefinition[];
 }): Promise<ClaimQuestRewardResult> => {
   const currentState = await getCurrentQuestRewardXpState({
     tx,
@@ -1017,6 +1029,7 @@ const persistQuestRewardClaim = async ({
     stats: today.stats,
     claimedQuestIds: [...today.claimedQuestIds, questId],
     currentStreak: today.currentStreak,
+    definitions,
   });
 
   return {
@@ -1054,6 +1067,7 @@ export const claimDailyQuestReward = async ({
   }
 
   const weekStartKey = getVietnamWeekStartKey(dateKeyToVietnamMidnightUtc(dateKey));
+  const definitions = await getContentQuestDefinitions();
 
   return db.transaction(async (tx: any) => {
     const [stats, claimedQuestIds] = await Promise.all([
@@ -1064,6 +1078,7 @@ export const claimDailyQuestReward = async ({
       date: dateKey,
       stats,
       claimedQuestIds,
+      definitions,
     });
     const quest = today.quests.find((item) => item.id === questId);
 
@@ -1107,6 +1122,7 @@ export const claimDailyQuestReward = async ({
       weekStartKey,
       xpRewardType: "quest_reward",
       today,
+      definitions,
     });
   });
 };
@@ -1124,6 +1140,7 @@ export const claimDailyChestReward = async ({
   }
 
   const weekStartKey = getVietnamWeekStartKey(dateKeyToVietnamMidnightUtc(dateKey));
+  const definitions = await getContentQuestDefinitions();
 
   return db.transaction(async (tx: any) => {
     const [stats, claimedQuestIds] = await Promise.all([
@@ -1134,6 +1151,7 @@ export const claimDailyChestReward = async ({
       date: dateKey,
       stats,
       claimedQuestIds,
+      definitions,
     });
 
     if (today.chest.status === "claimed") {
@@ -1162,6 +1180,7 @@ export const claimDailyChestReward = async ({
       weekStartKey,
       xpRewardType: "quest_chest",
       today,
+      definitions,
     });
   });
 };
@@ -1171,10 +1190,11 @@ export const getQuestTodayState = async ({
   currentStreak = 0,
   dateKey = getVietnamDateKey(),
 }: GetQuestTodayStateInput): Promise<QuestTodayStateResult> => {
-  const [statsResult, claimsResult, weekResult] = await Promise.all([
+  const [statsResult, claimsResult, weekResult, definitions] = await Promise.all([
     getTodayQuestStats({ userId, dateKey }),
     getTodayRewardClaims({ userId, dateKey }),
     getRecentQuestWeekActivity({ userId, todayKey: dateKey }),
+    getContentQuestDefinitions(),
   ]);
 
   const today = buildQuestTodaySnapshot({
@@ -1182,6 +1202,7 @@ export const getQuestTodayState = async ({
     stats: statsResult.stats,
     claimedQuestIds: claimsResult.claimedQuestIds,
     currentStreak,
+    definitions,
   });
 
   const hasDbSource = [statsResult.source, claimsResult.source, weekResult.source].includes("db");

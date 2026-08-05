@@ -2,9 +2,10 @@
 
 import { CourseRoadmap } from "@/components/learn/course-roadmap";
 import type { CourseProgressState } from "@/lib/courses/course-progress";
-import type { SectionDefinition } from "@/types/course";
+import type { CourseDefinition, SectionDefinition } from "@/types/course";
 
 type Props = {
+  course: CourseDefinition;
   section: SectionDefinition;
   progress: CourseProgressState;
   todayMinutes: number;
@@ -12,6 +13,7 @@ type Props = {
 };
 
 export const SectionLearningPath = ({
+  course,
   section,
   progress,
   todayMinutes,
@@ -19,6 +21,7 @@ export const SectionLearningPath = ({
 }: Props) => {
   return (
     <CourseRoadmap
+      course={course}
       section={section}
       progress={progress}
       todayMinutes={todayMinutes}

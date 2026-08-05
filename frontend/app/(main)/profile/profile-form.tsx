@@ -1,11 +1,13 @@
 "use client";
 
-import { useState, useTransition } from "react";
+import { useRef, useState, useTransition } from "react";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
+import { Upload } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { DEFAULT_USER_AVATAR, resolveUserAvatar } from "@/constants/user-avatar";
+import { DEFAULT_USER_AVATAR, resolveUserAvatar, isSvgAvatar } from "@/constants/user-avatar";
+import { cn } from "@/lib/utils";
 
 type Props = {
   initialName: string;
@@ -29,8 +31,48 @@ const PRESET_AVATARS = showOnlyEnglishAvatars
   ? ALL_PRESET_AVATARS.filter((avatar) => avatar.label === "Robogo" || avatar.label === "Tiếng Anh")
   : ALL_PRESET_AVATARS;
 
+const MAX_AVATAR_BYTES = 10 * 1024 * 1024; // 10MB limit before client compression
+const ACCEPTED_AVATAR_TYPES = new Set(["image/jpeg", "image/png", "image/webp"]);
+
+const compressImageFile = (file: File, maxWidth = 350, maxHeight = 350, quality = 0.85): Promise<string> => {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onerror = () => reject(reader.error || new Error("Lỗi đọc file"));
+    reader.onload = () => {
+      const img = new window.Image();
+      img.onerror = () => reject(new Error("Lỗi tải hình ảnh"));
+      img.onload = () => {
+        let { width, height } = img;
+        if (width > maxWidth || height > maxHeight) {
+          if (width > height) {
+            height = Math.round((height * maxWidth) / width);
+            width = maxWidth;
+          } else {
+            width = Math.round((width * maxHeight) / height);
+            height = maxHeight;
+          }
+        }
+        const canvas = document.createElement("canvas");
+        canvas.width = width;
+        canvas.height = height;
+        const ctx = canvas.getContext("2d");
+        if (!ctx) {
+          resolve(reader.result as string);
+          return;
+        }
+        ctx.drawImage(img, 0, 0, width, height);
+        const dataUrl = canvas.toDataURL("image/webp", quality);
+        resolve(dataUrl);
+      };
+      img.src = reader.result as string;
+    };
+    reader.readAsDataURL(file);
+  });
+};
+
 export const ProfileForm = ({ initialName, initialImageSrc, email }: Props) => {
   const router = useRouter();
+  const fileInputRef = useRef<HTMLInputElement>(null);
   const normalizedInitialImageSrc = resolveUserAvatar(initialImageSrc);
   const [name, setName] = useState(initialName);
   const [selectedAvatar, setSelectedAvatar] = useState(normalizedInitialImageSrc);
@@ -40,6 +82,7 @@ export const ProfileForm = ({ initialName, initialImageSrc, email }: Props) => {
       : normalizedInitialImageSrc
   );
   const [isPending, startTransition] = useTransition();
+  const [isReadingAvatar, setIsReadingAvatar] = useState(false);
 
   const handleAvatarSelect = (src: string) => {
     setSelectedAvatar(src);
@@ -52,6 +95,32 @@ export const ProfileForm = ({ initialName, initialImageSrc, email }: Props) => {
       setSelectedAvatar(url.trim());
     } else {
       setSelectedAvatar(DEFAULT_USER_AVATAR);
+    }
+  };
+
+  const handleAvatarUpload = async (file?: File) => {
+    if (!file) return;
+
+    if (!ACCEPTED_AVATAR_TYPES.has(file.type)) {
+      toast.error("Vui lòng chọn ảnh JPG, PNG hoặc WebP.");
+      return;
+    }
+
+    if (file.size > MAX_AVATAR_BYTES) {
+      toast.error("Dung lượng ảnh không được vượt quá 10 MB.");
+      return;
+    }
+
+    setIsReadingAvatar(true);
+    try {
+      const compressedDataUrl = await compressImageFile(file);
+      setSelectedAvatar(compressedDataUrl);
+      setCustomAvatarUrl("");
+    } catch {
+      toast.error("Không thể đọc ảnh này. Vui lòng chọn ảnh khác.");
+    } finally {
+      setIsReadingAvatar(false);
+      if (fileInputRef.current) fileInputRef.current.value = "";
     }
   };
 
@@ -77,7 +146,12 @@ export const ProfileForm = ({ initialName, initialImageSrc, email }: Props) => {
         }
 
         router.refresh();
-        toast.success("Thông tin hồ sơ đã được cập nhật thành công!");
+
+        if (selectedAvatar !== normalizedInitialImageSrc) {
+          toast.success("Đã cập nhật ảnh đại diện thành công!");
+        } else {
+          toast.success("Thông tin hồ sơ đã được cập nhật thành công!");
+        }
       } catch (error: unknown) {
         toast.error(error instanceof Error ? error.message : "Đã xảy ra lỗi khi cập nhật hồ sơ.");
       }
@@ -125,13 +199,18 @@ export const ProfileForm = ({ initialName, initialImageSrc, email }: Props) => {
 
         {/* Current Active Preview */}
         <div className="flex items-center gap-x-4 rounded-2xl border-2 border-slate-100 dark:border-[#202f36] bg-slate-50/50 dark:bg-slate-900/30 p-4">
-          <div className="relative size-16 shrink-0 rounded-2xl bg-white dark:bg-slate-900 border-2 border-slate-200 dark:border-slate-800 overflow-hidden flex items-center justify-center p-1 shadow-sm">
+          <div
+            className={cn(
+              "relative size-16 shrink-0 rounded-2xl bg-white dark:bg-slate-900 border-2 border-slate-200 dark:border-slate-800 overflow-hidden flex items-center justify-center shadow-sm",
+              isSvgAvatar(selectedAvatar) ? "p-1" : "p-0"
+            )}
+          >
             <Image
               src={resolveUserAvatar(selectedAvatar)}
               alt="Avatar Preview"
               fill
-              className="object-contain"
-              unoptimized={selectedAvatar.startsWith("http")}
+              className={isSvgAvatar(selectedAvatar) ? "object-contain" : "object-cover"}
+              unoptimized={selectedAvatar.startsWith("http") || selectedAvatar.startsWith("data:")}
             />
           </div>
           <div>
@@ -171,6 +250,32 @@ export const ProfileForm = ({ initialName, initialImageSrc, email }: Props) => {
           })}
         </div>
 
+        <div className="space-y-2 pt-2">
+          <label className="text-xs font-black uppercase tracking-wider text-slate-400 dark:text-slate-500">
+            Tải ảnh từ thiết bị
+          </label>
+          <input
+            ref={fileInputRef}
+            type="file"
+            accept="image/jpeg,image/png,image/webp"
+            className="sr-only"
+            onChange={(event) => void handleAvatarUpload(event.target.files?.[0])}
+            disabled={isPending || isReadingAvatar}
+          />
+          <button
+            type="button"
+            onClick={() => fileInputRef.current?.click()}
+            disabled={isPending || isReadingAvatar}
+            className="flex w-full items-center justify-center gap-2 rounded-xl border-2 border-dashed border-sky-200 bg-sky-50/60 px-4 py-3 text-sm font-black text-sky-600 transition hover:border-sky-400 hover:bg-sky-50 disabled:cursor-not-allowed disabled:opacity-50 dark:border-sky-900/60 dark:bg-sky-950/20 dark:text-sky-400"
+          >
+            <Upload className="size-5" />
+            {isReadingAvatar ? "Đang đọc ảnh..." : "Chọn ảnh từ máy"}
+          </button>
+          <p className="text-xs font-bold text-slate-400 dark:text-slate-500">
+            Hỗ trợ JPG, PNG, WebP; dung lượng tối đa 600 KB.
+          </p>
+        </div>
+
         {/* Custom Avatar URL input */}
         <div className="space-y-2 pt-2">
           <label className="text-xs font-black uppercase tracking-wider text-slate-400 dark:text-slate-500">
@@ -191,7 +296,7 @@ export const ProfileForm = ({ initialName, initialImageSrc, email }: Props) => {
       <div className="pt-4">
         <Button
           type="submit"
-          disabled={isPending}
+          disabled={isPending || isReadingAvatar}
           variant="primary"
           className="w-full py-6 text-base shadow-[0_4px_0_#106ba3] hover:shadow-[0_4px_0_#106ba3] active:translate-y-1 active:shadow-none transition-all duration-100"
         >

@@ -1,6 +1,8 @@
-import { chapterOneDemoScope } from "@/constants/chapter-one";
+import {
+  chapterOneDemoScope,
+  chapterOneNodes,
+} from "@/constants/chapter-one";
 import { STREAK_FREEZE_REWARD } from "@/constants/course-rewards";
-import { getAdaptedChapterOneNodes } from "@/lib/courses/chapter-one-adapter";
 import type {
   CourseDefinition,
   LearningNodeDefinition,
@@ -73,6 +75,24 @@ const createReadySectionNodes = (
   ];
 };
 
+const createSectionOneNodes = (): LearningNodeDefinition[] =>
+  chapterOneNodes.map((node) => ({
+    id: node.id,
+    legacyId: node.legacyId,
+    type: node.type,
+    title: node.title,
+    shortTitle: node.shortTitle,
+    description: node.description,
+    order: node.order,
+    unlockAfterId: node.unlockAfterId,
+    href: node.href,
+    xp: node.xp,
+    countsTowardProgress: node.countsTowardProgress,
+    contentStatus: "ready",
+    rewards: node.rewards,
+    roadmapPosition: { x: node.x, y: node.y },
+  }));
+
 const sectionOne: SectionDefinition = {
   id: "english-section-1",
   courseId: "english",
@@ -88,7 +108,7 @@ const sectionOne: SectionDefinition = {
     title: chapterOneDemoScope.chapterTitle,
     description:
       "Học lời chào, giới thiệu bản thân và các mẫu hội thoại nền tảng.",
-    nodes: getAdaptedChapterOneNodes(),
+    nodes: createSectionOneNodes(),
   },
 };
 

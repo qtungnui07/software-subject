@@ -19,6 +19,7 @@ import {
   getCourseProgressForUser,
   saveCourseProgressForUser,
 } from "@/services/course-progress-service";
+import { getContentCourse } from "@/services/content-service";
 import { getUserStreak } from "@/db/queries";
 import type { CourseId, CourseRewardDefinition } from "@/types/course";
 
@@ -99,17 +100,19 @@ const persistCourseProgressAndReward = async ({
   userId,
   progress,
   reward,
+  course,
 }: {
   userId: string;
   progress: CourseProgressState;
   reward: CourseRewardDefinition;
+  course: Awaited<ReturnType<typeof getContentCourse>>;
 }) => {
   const nextState = normalizeCourseProgressState(
     {
       ...progress,
       updatedAt: new Date().toISOString(),
     },
-    progress.courseId,
+    course,
   );
 
   if (!process.env.DATABASE_URL) {
@@ -161,7 +164,10 @@ const persistCourseProgressAndReward = async ({
       });
 
     if (nextState.courseId === "english") {
-      const legacyState = projectCourseProgressToChapterOne(nextState);
+      const legacyState = projectCourseProgressToChapterOne(
+        nextState,
+        course,
+      );
 
       await tx
         .insert(chapterOneProgress)
@@ -268,8 +274,11 @@ export const claimCourseRewardForUser = async ({
     );
   }
 
-  const progress = await getCourseProgressForUser(userId, courseId);
-  const claim = claimCourseReward(progress, nodeId);
+  const [progress, course] = await Promise.all([
+    getCourseProgressForUser(userId, courseId),
+    getContentCourse(courseId),
+  ]);
+  const claim = claimCourseReward(progress, nodeId, course);
 
   if (!claim.reward) {
     throw toClaimError(claim.reason, nodeId);
@@ -297,6 +306,7 @@ export const claimCourseRewardForUser = async ({
     userId,
     progress: claim.progress,
     reward: claim.reward,
+    course,
   });
 
   return {

@@ -53,7 +53,7 @@ export const MatchPairsExerciseView = ({
   );
   const correctByLeftId = useMemo(
     () =>
-      new Map(exercise.correctPairs.map((pair) => [pair.leftId, pair.rightId])),
+      new Map((exercise.correctPairs ?? []).map((pair) => [pair.leftId, pair.rightId])),
     [exercise.correctPairs],
   );
 
@@ -79,7 +79,7 @@ export const MatchPairsExerciseView = ({
   };
 
   const correctCount = result
-    ? exercise.correctPairs.filter(
+    ? (exercise.correctPairs ?? []).filter(
         (pair) => pairByLeftId.get(pair.leftId) === pair.rightId,
       ).length
     : 0;
@@ -248,12 +248,12 @@ export const MatchPairsExerciseView = ({
         <p
           className={cn(
             "rounded-2xl px-4 py-3 text-sm font-black",
-            correctCount === exercise.correctPairs.length
+            correctCount === exercise.leftItems.length
               ? "bg-green-50 text-green-700 dark:bg-green-950/20 dark:text-green-300"
               : "bg-amber-50 text-amber-700 dark:bg-amber-950/20 dark:text-amber-300",
           )}
         >
-          Bạn đã nối đúng {correctCount}/{exercise.correctPairs.length} cặp.
+          Bạn đã nối đúng {correctCount}/{exercise.leftItems.length} cặp.
         </p>
       ) : pairs.length > 0 && !disabled ? (
         <Button

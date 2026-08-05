@@ -25,7 +25,8 @@ import {
   selectCourseSection,
   type CourseProgressMutationResult,
 } from "@/lib/courses/course-unlock-policy";
-import type { CourseId } from "@/types/course";
+import { getContentCourse } from "@/services/content-service";
+import type { CourseDefinition, CourseId } from "@/types/course";
 
 const offlineProgressStore = new Map<string, CourseProgressState>();
 
@@ -80,11 +81,11 @@ const parseJsonObject = (value: unknown) => {
 
 const toCourseProgressState = (
   row: StoredCourseProgress,
-  courseId: CourseId
+  course: CourseDefinition,
 ): CourseProgressState => {
   return normalizeCourseProgressState(
     {
-      courseId,
+      courseId: course.id,
       currentSectionId: row.currentSectionId,
       unlockedSectionIds: parseJsonArray(row.unlockedSectionIds),
       completedNodeIds: parseJsonArray(row.completedNodeIds),
@@ -114,7 +115,7 @@ const toCourseProgressState = (
           ? row.updatedAt.toISOString()
           : new Date().toISOString(),
     },
-    courseId
+    course,
   );
 };
 
@@ -141,14 +142,15 @@ const hasSameProgressData = (
 
 const persistCourseProgress = async (
   userId: string,
-  state: CourseProgressState
+  state: CourseProgressState,
+  course: CourseDefinition,
 ) => {
   const nextState = normalizeCourseProgressState(
     {
       ...state,
       updatedAt: new Date().toISOString(),
     },
-    state.courseId
+    course,
   );
 
   if (!process.env.DATABASE_URL) {
@@ -218,11 +220,12 @@ const getLegacyChapterOneProgress = async (userId: string) => {
 
 const syncChapterOneProgress = async (
   userId: string,
-  state: CourseProgressState
+  state: CourseProgressState,
+  course: CourseDefinition,
 ) => {
   if (!process.env.DATABASE_URL) return;
 
-  const legacyState = projectCourseProgressToChapterOne(state);
+  const legacyState = projectCourseProgressToChapterOne(state, course);
 
   await db
     .insert(chapterOneProgress)
@@ -255,10 +258,12 @@ export const getCourseProgressForUser = async (
     return response.progress;
   }
 
+  const course = await getContentCourse(courseId);
+
   if (!process.env.DATABASE_URL) {
     return cloneState(
       offlineProgressStore.get(getOfflineKey(userId, courseId)) ??
-        createDefaultCourseProgress(courseId)
+        createDefaultCourseProgress(course)
     );
   }
 
@@ -268,7 +273,7 @@ export const getCourseProgressForUser = async (
       eq(courseProgressTable.courseId, courseId)
     ),
   })) as StoredCourseProgress | undefined;
-  const existingState = row ? toCourseProgressState(row, courseId) : null;
+  const existingState = row ? toCourseProgressState(row, course) : null;
   const shouldRepairCurrentSection = Boolean(
     row &&
       existingState &&
@@ -277,10 +282,10 @@ export const getCourseProgressForUser = async (
 
   if (courseId !== "english") {
     if (existingState && shouldRepairCurrentSection) {
-      return persistCourseProgress(userId, existingState);
+      return persistCourseProgress(userId, existingState, course);
     }
 
-    return existingState ?? createDefaultCourseProgress(courseId);
+    return existingState ?? createDefaultCourseProgress(course);
   }
 
   const legacyProgress = await getLegacyChapterOneProgress(userId);
@@ -293,17 +298,19 @@ export const getCourseProgressForUser = async (
 
   if (!legacyProgress || !hasLegacyProgress) {
     if (existingState && shouldRepairCurrentSection) {
-      return persistCourseProgress(userId, existingState);
+      return persistCourseProgress(userId, existingState, course);
     }
 
-    return existingState ?? createDefaultCourseProgress(courseId);
+    return existingState ?? createDefaultCourseProgress(course);
   }
 
   const mergedState = normalizeCourseProgressState(
     migrateChapterOneProgressToCourseProgress(
       legacyProgress,
-      existingState ?? undefined
-    )
+      course,
+      existingState ?? undefined,
+    ),
+    course,
   );
 
   if (
@@ -311,7 +318,7 @@ export const getCourseProgressForUser = async (
     shouldRepairCurrentSection ||
     !hasSameProgressData(existingState, mergedState)
   ) {
-    return persistCourseProgress(userId, mergedState);
+    return persistCourseProgress(userId, mergedState, course);
   }
 
   return existingState;
@@ -321,10 +328,11 @@ export const saveCourseProgressForUser = async (
   userId: string,
   state: CourseProgressState
 ) => {
-  const nextState = await persistCourseProgress(userId, state);
+  const course = await getContentCourse(state.courseId);
+  const nextState = await persistCourseProgress(userId, state, course);
 
   if (nextState.courseId === "english") {
-    await syncChapterOneProgress(userId, nextState);
+    await syncChapterOneProgress(userId, nextState, course);
   }
 
   return nextState;
@@ -347,8 +355,14 @@ export const selectCurrentSectionForUser = async (
   sectionId: string,
   courseId: CourseId = "english"
 ) => {
-  const progress = await getCourseProgressForUser(userId, courseId);
-  return persistMutation(userId, selectCourseSection(progress, sectionId));
+  const [progress, course] = await Promise.all([
+    getCourseProgressForUser(userId, courseId),
+    getContentCourse(courseId),
+  ]);
+  return persistMutation(
+    userId,
+    selectCourseSection(progress, sectionId, course),
+  );
 };
 
 export const completeCourseNodeForUser = async (
@@ -356,8 +370,11 @@ export const completeCourseNodeForUser = async (
   nodeId: string,
   courseId: CourseId = "english"
 ) => {
-  const progress = await getCourseProgressForUser(userId, courseId);
-  return persistMutation(userId, completeCourseNode(progress, nodeId));
+  const [progress, course] = await Promise.all([
+    getCourseProgressForUser(userId, courseId),
+    getContentCourse(courseId),
+  ]);
+  return persistMutation(userId, completeCourseNode(progress, nodeId, course));
 };
 
 export const recordCheckpointScoreForUser = async (
@@ -366,10 +383,13 @@ export const recordCheckpointScoreForUser = async (
   score: number,
   courseId: CourseId = "english"
 ) => {
-  const progress = await getCourseProgressForUser(userId, courseId);
+  const [progress, course] = await Promise.all([
+    getCourseProgressForUser(userId, courseId),
+    getContentCourse(courseId),
+  ]);
   return persistMutation(
     userId,
-    recordCheckpointScore(progress, checkpointId, score)
+    recordCheckpointScore(progress, checkpointId, score, course),
   );
 };
 
@@ -378,8 +398,15 @@ export const applyPlacementUnlockForUser = async (
   assignedSectionId: string,
   courseId: CourseId = "english"
 ) => {
-  const progress = await getCourseProgressForUser(userId, courseId);
-  const nextProgress = applyPlacementUnlock(progress, assignedSectionId);
+  const [progress, course] = await Promise.all([
+    getCourseProgressForUser(userId, courseId),
+    getContentCourse(courseId),
+  ]);
+  const nextProgress = applyPlacementUnlock(
+    progress,
+    assignedSectionId,
+    course,
+  );
 
   if (hasSameProgressData(progress, nextProgress)) return progress;
   return saveCourseProgressForUser(userId, nextProgress);
@@ -390,10 +417,13 @@ export const getCourseNodeAccessForUser = async (
   nodeId: string,
   courseId: CourseId = "english"
 ) => {
-  const progress = await getCourseProgressForUser(userId, courseId);
+  const [progress, course] = await Promise.all([
+    getCourseProgressForUser(userId, courseId),
+    getContentCourse(courseId),
+  ]);
   return {
     progress,
-    access: getCourseNodeAccess(progress, nodeId),
+    access: getCourseNodeAccess(progress, nodeId, course),
   };
 };
 

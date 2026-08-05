@@ -1,9 +1,12 @@
 import {
-  getCourseById,
   getCourseNodes,
   getSectionById,
 } from "@/lib/courses/course-catalog";
-import type { CourseId, LearningNodeDefinition } from "@/types/course";
+import type {
+  CourseDefinition,
+  CourseId,
+  LearningNodeDefinition,
+} from "@/types/course";
 import type { OnboardingChoice, OnboardingStatus } from "@/types/onboarding";
 
 export type CourseProgressState = {
@@ -68,13 +71,10 @@ const normalizeCheckpointScores = (
 };
 
 export const createDefaultCourseProgress = (
-  courseId: CourseId = "english"
+  course: CourseDefinition,
 ): CourseProgressState => {
-  const course = getCourseById(courseId);
-  if (!course) throw new Error(`Unknown course: ${courseId}`);
-
   const firstSection = [...course.sections].sort((a, b) => a.order - b.order)[0];
-  if (!firstSection) throw new Error(`Course ${courseId} has no section.`);
+  if (!firstSection) throw new Error(`Course ${course.id} has no section.`);
 
   return {
     courseId: course.id,
@@ -92,16 +92,20 @@ export const createDefaultCourseProgress = (
 
 export const normalizeCourseProgressState = (
   state: Partial<CourseProgressState>,
-  fallbackCourseId: CourseId = "english"
+  course: CourseDefinition,
 ): CourseProgressState => {
-  const requestedCourseId = state.courseId ?? fallbackCourseId;
-  const course = getCourseById(requestedCourseId) ?? getCourseById(fallbackCourseId);
-  if (!course) throw new Error(`Unknown course: ${requestedCourseId}`);
+  const requestedCourseId = state.courseId ?? course.id;
+  if (
+    requestedCourseId !== course.id &&
+    !course.legacyIds.includes(requestedCourseId)
+  ) {
+    throw new Error(`Unknown course: ${requestedCourseId}`);
+  }
 
-  const defaultState = createDefaultCourseProgress(course.id);
+  const defaultState = createDefaultCourseProgress(course);
   const sectionIds = new Set(course.sections.map((section) => section.id));
   const orderedSections = [...course.sections].sort((a, b) => a.order - b.order);
-  const nodes = getCourseNodes(course.id);
+  const nodes = getCourseNodes(course, course.id);
   const completedIds = new Set(
     nodes.filter((node) => node.type !== "chest").map((node) => node.id)
   );
@@ -179,26 +183,31 @@ export const normalizeCourseProgressState = (
 
 export const unlockCourseSection = (
   state: CourseProgressState,
-  sectionId: string
+  sectionId: string,
+  course: CourseDefinition,
 ) => {
-  const section = getSectionById(sectionId);
+  const section = getSectionById(course, sectionId);
   if (!section || section.courseId !== state.courseId) {
-    return normalizeCourseProgressState(state);
+    return normalizeCourseProgressState(state, course);
   }
 
-  return normalizeCourseProgressState({
-    ...state,
-    currentSectionId: sectionId,
-    unlockedSectionIds: [...state.unlockedSectionIds, sectionId],
-    updatedAt: new Date().toISOString(),
-  });
+  return normalizeCourseProgressState(
+    {
+      ...state,
+      currentSectionId: sectionId,
+      unlockedSectionIds: [...state.unlockedSectionIds, sectionId],
+      updatedAt: new Date().toISOString(),
+    },
+    course,
+  );
 };
 
 export const getCurrentNodeIdForSection = (
   state: CourseProgressState,
-  sectionId: string
+  sectionId: string,
+  course: CourseDefinition,
 ) => {
-  const section = getSectionById(sectionId);
+  const section = getSectionById(course, sectionId);
   if (!section || section.courseId !== state.courseId) return null;
 
   for (const node of [...section.chapter.nodes].sort((a, b) => a.order - b.order)) {
@@ -211,9 +220,10 @@ export const getCurrentNodeIdForSection = (
 };
 
 export const getCourseProgressSummary = (
-  state: CourseProgressState
+  state: CourseProgressState,
+  course: CourseDefinition,
 ): CourseProgressSummary => {
-  const nodes = getCourseNodes(state.courseId).filter(
+  const nodes = getCourseNodes(course, state.courseId).filter(
     (node) => node.countsTowardProgress
   );
   const completedNodeIds = new Set(state.completedNodeIds);

@@ -2,13 +2,10 @@ import "server-only";
 
 import { auth } from "@/auth";
 import {
-  defaultQuestSnapshotPreset,
-  questSnapshotPresets,
   QUEST_TIMEZONE,
-  type QuestSnapshotPresetName,
 } from "@/constants/quests";
 import { getRecentStreakLogs, getUserStreak } from "@/db/queries";
-import { buildQuestsPageData } from "@/lib/quests/quest-adapter";
+import { buildQuestSummary } from "@/lib/quests/quest-utils";
 import { DEFAULT_STREAK_TIME_ZONE, getDateKey, normalizeDateKey } from "@/lib/streak";
 import { getQuestTodayState, type QuestTodayStateResult } from "@/services/quest-service";
 import { getUserXpSummary, type UserXpProfileSummary } from "@/services/xp-service";
@@ -16,6 +13,7 @@ import type {
   QuestDataSource,
   QuestSyncStatus,
   QuestsPageData,
+  ResolvedQuest,
   UserQuestSnapshot,
   WeekActivityDay,
 } from "@/types/quest";
@@ -83,11 +81,13 @@ const getCurrentQuestUser = async (): Promise<QuestIntegrationUser | null> => {
   return null;
 };
 
-const getFallbackSnapshot = (presetName: QuestSnapshotPresetName): UserQuestSnapshot => {
-  return {
-    ...questSnapshotPresets[presetName],
-    claimedQuestIds: [],
-  };
+const emptySnapshot: UserQuestSnapshot = {
+  lessonsCompletedToday: 0,
+  bestAccuracyToday: 0,
+  minutesLearnedToday: 0,
+  xpEarnedToday: 0,
+  currentStreak: 0,
+  claimedQuestIds: [],
 };
 
 const normalizeLogDate = (value: unknown) => {
@@ -209,21 +209,55 @@ const getSyncStatus = ({
   };
 };
 
-export const getIntegratedQuestsPageData = async (
-  presetName: QuestSnapshotPresetName = defaultQuestSnapshotPreset,
-): Promise<QuestsPageData> => {
-  const fallbackSnapshot = getFallbackSnapshot(presetName);
+const buildPageData = ({
+  dailyQuests,
+  bonusQuests,
+  snapshot,
+  dataSource,
+  syncStatus,
+  weekActivity,
+  nextResetAt,
+}: {
+  dailyQuests: ResolvedQuest[];
+  bonusQuests: ResolvedQuest[];
+  snapshot: UserQuestSnapshot;
+  dataSource: QuestDataSource;
+  syncStatus: QuestSyncStatus;
+  weekActivity: WeekActivityDay[];
+  nextResetAt: string;
+}): QuestsPageData => ({
+  dailyQuests,
+  bonusQuests,
+  summary: buildQuestSummary({ dailyQuests, snapshot, weekActivity }),
+  snapshot,
+  timezone: QUEST_TIMEZONE,
+  nextResetAt,
+  resetTimeLabel: "00:00",
+  dataSource,
+  lastSyncedAt: syncStatus.lastSyncedAt,
+  syncStatus,
+});
+
+export const getIntegratedQuestsPageData = async (): Promise<QuestsPageData> => {
   const user = await getCurrentQuestUser();
 
   if (!user) {
-    return buildQuestsPageData(fallbackSnapshot, {
+    const syncStatus = getSyncStatus({
+      source: "fallback",
+      hasXpSummary: false,
+      hasStreak: false,
+      hasQuestService: false,
+    });
+    return buildPageData({
+      dailyQuests: [],
+      bonusQuests: [],
+      snapshot: emptySnapshot,
       dataSource: "fallback",
-      syncStatus: getSyncStatus({
-        source: "fallback",
-        hasXpSummary: false,
-        hasStreak: false,
-        hasQuestService: false,
-      }),
+      syncStatus,
+      weekActivity: buildEmptyWeekActivity(
+        getDateKey(new Date(), QUEST_TIMEZONE),
+      ),
+      nextResetAt: new Date().toISOString(),
     });
   }
 
@@ -299,16 +333,21 @@ export const getIntegratedQuestsPageData = async (
     ? questTodayState.weekActivity
     : buildWeekActivityFromLogs(recentActivity, todayKey);
 
-  return buildQuestsPageData(snapshot, {
+  const syncStatus = getSyncStatus({
+    source: dataSource,
+    isDemoUser: user.isDemoUser,
+    hasXpSummary,
+    hasStreak,
+    hasQuestService,
+  });
+  return buildPageData({
+    dailyQuests: questTodayState?.today.quests ?? [],
+    bonusQuests: questTodayState?.today.bonusQuests ?? [],
+    snapshot,
     dataSource,
-    syncStatus: getSyncStatus({
-      source: dataSource,
-      isDemoUser: user.isDemoUser,
-      hasXpSummary,
-      hasStreak,
-      hasQuestService,
-    }),
+    syncStatus,
     weekActivity,
-    nextResetAt: questTodayState?.today.nextResetAt,
+    nextResetAt:
+      questTodayState?.today.nextResetAt ?? new Date().toISOString(),
   });
 };

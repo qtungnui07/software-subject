@@ -10,4 +10,17 @@ if [ ! -d "$BACKEND_DIR/node_modules/postgres" ] || [ ! -d "$BACKEND_DIR/node_mo
 fi
 
 NODE_PATH="$BACKEND_DIR/node_modules:$ROOT_DIR/frontend/node_modules${NODE_PATH:+:$NODE_PATH}" \
-  npm --prefix "$BACKEND_DIR" start
+  sh -c '
+    attempts=0
+    until npm --prefix "$1" run migrate; do
+      attempts=$((attempts + 1))
+      if [ "$attempts" -ge 15 ]; then
+        echo "Database did not become ready after 15 attempts" >&2
+        exit 1
+      fi
+      echo "Database is not ready yet; retrying migration in 2 seconds..."
+      sleep 2
+    done
+    npm --prefix "$1" run seed:content
+    npm --prefix "$1" start
+  ' sh "$BACKEND_DIR"

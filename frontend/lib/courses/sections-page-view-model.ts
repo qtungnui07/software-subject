@@ -2,6 +2,7 @@ import { getCourseById } from "@/lib/courses/course-catalog";
 import type { CourseProgressState } from "@/lib/courses/course-progress";
 import type { PlacementSectionId } from "@/types/placement-test";
 import type { SectionPageItem } from "@/types/sections-page";
+import type { CourseDefinition } from "@/types/course";
 
 const levelLabels = {
   beginner: "Cơ bản",
@@ -15,8 +16,11 @@ const percent = (value: number, total: number) =>
 export const buildSectionsPageViewModels = (
   state: CourseProgressState,
   recommendedSectionId?: PlacementSectionId | null,
+  contentCourse?: CourseDefinition,
 ): SectionPageItem[] => {
-  const course = getCourseById(state.courseId);
+  const course = contentCourse
+    ? getCourseById(contentCourse, state.courseId)
+    : undefined;
   if (!course) return [];
 
   return course.sections.map((section, index) => {

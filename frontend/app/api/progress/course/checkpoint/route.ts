@@ -13,7 +13,7 @@ import {
 import { normalizeAfkCount } from "@/lib/study-session-policy";
 import {
   CheckpointSubmissionError,
-  submitSectionOneCheckpointForUser,
+  submitCheckpointForUser,
 } from "@/services/checkpoint-submission-service";
 import { LearningCompletionError } from "@/services/learning-completion-service";
 import type {
@@ -106,7 +106,7 @@ export async function POST(request: Request) {
   }
 
   try {
-    const result = await submitSectionOneCheckpointForUser({
+    const result = await submitCheckpointForUser({
       userId: user.id,
       userName: user.name,
       userImageSrc: user.image,

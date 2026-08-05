@@ -9,3 +9,5 @@ dist/
 .env.test.local
 .env.production.local
 *.log
+*.docx
+*.DOCX

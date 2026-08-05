@@ -6,6 +6,7 @@ const postgresModule = require("postgres");
 const nodemailer = require("nodemailer");
 const postgres = postgresModule.default || postgresModule;
 const { DEFAULT_USER_AVATAR, resolveUserAvatar } = require("./user-avatar");
+const { createContentStore } = require("./content-store");
 
 const loadEnvFile = (filePath) => {
   if (!fs.existsSync(filePath)) {
@@ -36,6 +37,7 @@ const frontendInternalUrl = String(
 ).replace(/\/$/, "");
 
 const sql = databaseUrl ? postgres(databaseUrl, { max: 5 }) : null;
+const contentStore = sql ? createContentStore(sql) : null;
 const VIETNAM_TIME_ZONE = "Asia/Ho_Chi_Minh";
 const reminderCheckIntervalMs = Math.max(
   30_000,
@@ -375,7 +377,13 @@ const signInLocalUser = async (payload) => {
     limit 1
   `;
 
-  if (!user || !user.password_hash || !verifyPassword(password, user.password_hash)) {
+  if (!user) {
+    const error = new Error("Account not found");
+    error.status = 404;
+    throw error;
+  }
+
+  if (!user.password_hash || !verifyPassword(password, user.password_hash)) {
     const error = new Error("Invalid email or password");
     error.status = 401;
     throw error;
@@ -398,6 +406,7 @@ const syncUser = async (payload) => {
   const email = String(payload.email || "").trim().toLowerCase();
   const name = String(payload.name || "User").trim() || "User";
   const imageSrc = resolveUserAvatar(payload.imageSrc);
+  const createIfMissing = payload.createIfMissing === true;
 
   if (!clerkUserId || !email) {
     const error = new Error("clerkUserId and email are required");
@@ -458,6 +467,12 @@ const syncUser = async (payload) => {
       });
 
       return user;
+    }
+
+    if (!createIfMissing) {
+      const error = new Error("Account not found");
+      error.status = 404;
+      throw error;
     }
 
     const [user] = await transaction`
@@ -860,7 +875,11 @@ const updateProfile = async (userId, payload) => {
     throw error;
   }
 
-  if (imageSrc.length > 2048 || (!imageSrc.startsWith("/") && !/^https?:\/\//i.test(imageSrc))) {
+  const isUploadedImage = /^data:image\/(?:jpeg|png|webp);base64,[a-z0-9+/=]+$/i.test(imageSrc);
+  if (
+    imageSrc.length > 850_000 ||
+    (!imageSrc.startsWith("/") && !/^https?:\/\//i.test(imageSrc) && !isUploadedImage)
+  ) {
     const error = new Error("Invalid image source");
     error.status = 400;
     throw error;
@@ -909,7 +928,7 @@ const server = http.createServer(async (req, res) => {
       logRequest(req, 200);
       sendJson(res, 200, {
         ok: true,
-        service: "duolingo-backend",
+        service: "robogo-backend",
         databaseConfigured: Boolean(databaseUrl),
       });
       return;
@@ -929,6 +948,174 @@ const server = http.createServer(async (req, res) => {
       const [row] = await sql`select count(*)::int as count from users`;
       logRequest(req, 200, `count=${row.count}`);
       sendJson(res, 200, row);
+      return;
+    }
+
+    if (req.method === "GET" && url.pathname === "/content/summary") {
+      requireApiKey(req);
+      requireDatabase();
+      sendJson(res, 200, {
+        ok: true,
+        summary: await contentStore.getContentSummary(),
+      });
+      return;
+    }
+
+    if (req.method === "GET" && url.pathname === "/content/courses") {
+      requireApiKey(req);
+      requireDatabase();
+      sendJson(res, 200, { ok: true, courses: await contentStore.getCourses() });
+      return;
+    }
+
+    if (req.method === "GET" && url.pathname.startsWith("/content/courses/")) {
+      requireApiKey(req);
+      requireDatabase();
+      const courseId = decodeURIComponent(url.pathname.split("/").pop());
+      const course = await contentStore.getCourse(courseId);
+      sendJson(
+        res,
+        course ? 200 : 404,
+        course ? { ok: true, course } : { error: "Course not found" },
+      );
+      return;
+    }
+
+    const nodeExercisesMatch = url.pathname.match(
+      /^\/content\/nodes\/([^/]+)\/exercises$/,
+    );
+    if (req.method === "GET" && nodeExercisesMatch) {
+      requireApiKey(req);
+      requireDatabase();
+      const nodeId = decodeURIComponent(nodeExercisesMatch[1]);
+      const includeAnswers = url.searchParams.get("includeAnswers") === "true";
+      const exercises = await contentStore.getExercises(nodeId, includeAnswers);
+      sendJson(res, 200, { ok: true, exercises });
+      return;
+    }
+
+    const nodeMatch = url.pathname.match(/^\/content\/nodes\/([^/]+)$/);
+    if (req.method === "GET" && nodeMatch) {
+      requireApiKey(req);
+      requireDatabase();
+      const node = await contentStore.getNode(decodeURIComponent(nodeMatch[1]));
+      sendJson(
+        res,
+        node ? 200 : 404,
+        node ? { ok: true, node } : { error: "Learning node not found" },
+      );
+      return;
+    }
+
+    if (req.method === "PUT" && nodeMatch) {
+      requireApiKey(req);
+      requireDatabase();
+      const nodeId = decodeURIComponent(nodeMatch[1]);
+      const body = await readJson(req);
+      const updatedNode = await contentStore.updateNode(nodeId, body);
+      sendJson(
+        res,
+        updatedNode ? 200 : 404,
+        updatedNode ? { ok: true, node: updatedNode } : { error: "Learning node not found" },
+      );
+      return;
+    }
+
+    const updateExerciseMatch = url.pathname.match(/^\/content\/exercises\/([^/]+)$/);
+    if (req.method === "PUT" && updateExerciseMatch) {
+      requireApiKey(req);
+      requireDatabase();
+      const exerciseId = decodeURIComponent(updateExerciseMatch[1]);
+      const body = await readJson(req);
+      const updatedExercise = await contentStore.updateExercise(exerciseId, body);
+      sendJson(
+        res,
+        updatedExercise ? 200 : 404,
+        updatedExercise ? { ok: true, exercise: updatedExercise } : { error: "Exercise not found" },
+      );
+      return;
+    }
+
+    const exerciseCheckMatch = url.pathname.match(
+      /^\/content\/exercises\/([^/]+)\/check$/,
+    );
+    if (req.method === "POST" && exerciseCheckMatch) {
+      requireApiKey(req);
+      requireDatabase();
+      const body = await readJson(req);
+      const result = await contentStore.checkExercise(
+        decodeURIComponent(exerciseCheckMatch[1]),
+        body.answer,
+      );
+      sendJson(
+        res,
+        result ? 200 : 404,
+        result ? { ok: true, result } : { error: "Exercise not found" },
+      );
+      return;
+    }
+
+    const checkpointMatch = url.pathname.match(
+      /^\/content\/checkpoints\/([^/]+)$/,
+    );
+    if (req.method === "GET" && checkpointMatch) {
+      requireApiKey(req);
+      requireDatabase();
+      const checkpoint = await contentStore.getCheckpoint(
+        decodeURIComponent(checkpointMatch[1]),
+      );
+      sendJson(
+        res,
+        checkpoint ? 200 : 404,
+        checkpoint
+          ? { ok: true, checkpoint }
+          : { error: "Checkpoint not found" },
+      );
+      return;
+    }
+
+    if (
+      req.method === "POST" &&
+      url.pathname === "/content/checkpoints/grade"
+    ) {
+      requireApiKey(req);
+      requireDatabase();
+      sendJson(res, 200, {
+        ok: true,
+        score: await contentStore.gradeCheckpoint(await readJson(req)),
+      });
+      return;
+    }
+
+    if (req.method === "GET" && url.pathname === "/content/placement-test") {
+      requireApiKey(req);
+      requireDatabase();
+      const test = await contentStore.getPlacementTest(
+        url.searchParams.get("courseId") || "english",
+      );
+      sendJson(
+        res,
+        test ? 200 : 404,
+        test ? { ok: true, test } : { error: "Placement test not found" },
+      );
+      return;
+    }
+
+    if (req.method === "POST" && url.pathname === "/content/placement-test/grade") {
+      requireApiKey(req);
+      requireDatabase();
+      const score = await contentStore.gradePlacementTest(await readJson(req));
+      sendJson(res, 200, { ok: true, score });
+      return;
+    }
+
+    if (req.method === "GET" && url.pathname === "/content/quests") {
+      requireApiKey(req);
+      requireDatabase();
+      sendJson(res, 200, {
+        ok: true,
+        quests: await contentStore.getQuestDefinitions(),
+      });
       return;
     }
 
@@ -1072,7 +1259,7 @@ process.on("SIGINT", shutdown);
 process.on("SIGTERM", shutdown);
 
 server.listen(port, "0.0.0.0", () => {
-  console.log(`duolingo-backend listening on 0.0.0.0:${port}`);
+  console.log(`robogo-backend listening on 0.0.0.0:${port}`);
   if (mailTransport) {
     console.log(`study email reminders enabled from=${mailFrom}`);
     void sendStudyReminders();

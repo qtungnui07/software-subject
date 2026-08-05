@@ -14,7 +14,7 @@ import {
   TrendingUp,
   X,
 } from "lucide-react";
-import { resolveUserAvatar } from "@/constants/user-avatar";
+import { resolveUserAvatar, isSvgAvatar } from "@/constants/user-avatar";
 import { cn } from "@/lib/utils";
 import { FeedWrapper } from "@/components/feed-wrapper";
 import { StickyWrapper } from "@/components/sticky-wrapper";
@@ -774,7 +774,8 @@ export const LeaderboardClient: React.FC<LeaderboardClientProps> = ({
                               alt={competitor.name}
                               fill
                               sizes="48px"
-                              className="object-contain p-1"
+                              className={isSvgAvatar(competitor.avatarUrl) ? "object-contain p-1" : "object-cover p-0"}
+                              unoptimized={competitor.avatarUrl.startsWith("http") || competitor.avatarUrl.startsWith("data:")}
                             />
                           </div>
                         ) : (
@@ -908,13 +909,16 @@ export const LeaderboardClient: React.FC<LeaderboardClientProps> = ({
           {/* Preview */}
           <div className="my-5 flex justify-center">
             <div className="relative p-2.5">
-              <div className="h-20 w-20 rounded-full border-2 border-dashed border-sky-300 flex items-center justify-center bg-slate-50 dark:border-sky-950 dark:bg-slate-950 relative p-1 shadow-inner select-none">
+              <div className={cn(
+                "h-20 w-20 rounded-full border-2 border-dashed border-sky-300 flex items-center justify-center bg-slate-50 dark:border-sky-950 dark:bg-slate-950 relative overflow-hidden shadow-inner select-none",
+                isSvgAvatar(initialUserImageSrc) ? "p-1" : "p-0"
+              )}>
                 <Image
                   src={resolveUserAvatar(initialUserImageSrc)}
                   alt="Avatar"
-                  width={60}
-                  height={60}
-                  className="object-contain p-1"
+                  fill
+                  className={isSvgAvatar(initialUserImageSrc) ? "object-contain p-1" : "object-cover"}
+                  unoptimized={initialUserImageSrc.startsWith("http") || initialUserImageSrc.startsWith("data:")}
                 />
               </div>
               <div

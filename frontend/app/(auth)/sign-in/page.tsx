@@ -48,7 +48,13 @@ export default function SignInPage() {
   const router = useRouter();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [error, setError] = useState<string | undefined>(undefined);
+  const [error, setError] = useState<string | undefined>(() => {
+    if (typeof window === "undefined") return undefined;
+    return new URLSearchParams(window.location.search).get("error") === "account_not_found"
+      ? "Tài khoản này chưa tồn tại trong hệ thống. Vui lòng đăng ký để tiếp tục."
+      : undefined;
+  });
+  const [socialPending, setSocialPending] = useState<"google" | "facebook" | null>(null);
   const [isPending, startTransition] = useTransition();
 
   const handleSignIn = async (e: React.FormEvent) => {
@@ -87,24 +93,44 @@ export default function SignInPage() {
 
         if (!response.ok) {
           const data = await response.json().catch(() => null);
+          if (response.status === 404) {
+            setError("Tài khoản này chưa tồn tại trong hệ thống. Vui lòng đăng ký để tiếp tục.");
+            return;
+          }
           throw new Error(data?.error || "Email hoặc mật khẩu không đúng.");
         }
 
-        router.push(getSafeRedirectPath());
-        router.refresh();
+        router.push(
+          `/auth/login-success?redirect=${encodeURIComponent(getSafeRedirectPath())}`
+        );
       } catch (err: unknown) {
         setError(getErrorMessage(err, "Đăng nhập thất bại. Vui lòng kiểm tra lại thông tin."));
       }
     });
   };
 
-  const handleSocialLogin = (strategy: "oauth_google" | "oauth_facebook") => {
-    if (!isLoaded) return;
-    signIn.authenticateWithRedirect({
-      strategy,
-      redirectUrl: window.location.origin + "/sso-callback",
-      redirectUrlComplete: window.location.origin + getSafeRedirectPath(),
-    });
+  const handleSocialLogin = async (strategy: "oauth_google" | "oauth_facebook") => {
+    setError(undefined);
+
+    if (!isLoaded) {
+      setError("Clerk chưa tải xong. Vui lòng đợi vài giây rồi thử lại.");
+      return;
+    }
+
+    setSocialPending(strategy === "oauth_google" ? "google" : "facebook");
+
+    try {
+      const destination = getSafeRedirectPath();
+      const completeUrl = `/auth/social-complete?mode=sign-in&redirect=${encodeURIComponent(destination)}`;
+      await signIn.authenticateWithRedirect({
+        strategy,
+        redirectUrl: "/sso-callback",
+        redirectUrlComplete: completeUrl,
+      });
+    } catch (err: unknown) {
+      setSocialPending(null);
+      setError(getErrorMessage(err, "Không thể mở đăng nhập bằng mạng xã hội."));
+    }
   };
 
   return (
@@ -124,6 +150,7 @@ export default function SignInPage() {
         <button
           type="button"
           onClick={() => handleSocialLogin("oauth_google")}
+          disabled={socialPending !== null}
           className="flex items-center justify-center gap-2.5 py-3 px-4 rounded-2xl border-2 border-slate-200 dark:border-slate-800 hover:bg-slate-50 dark:hover:bg-slate-800/50 hover:border-slate-300 dark:hover:border-slate-700 font-bold transition-all duration-200 active:scale-[0.98] cursor-pointer animate-in fade-in slide-in-from-bottom-2 duration-350 delay-100 ease-out fill-mode-both"
         >
           <svg className="w-5 h-5 shrink-0" viewBox="0 0 24 24">
@@ -132,17 +159,22 @@ export default function SignInPage() {
               d="M12.24 10.285V14.4h6.887c-.648 2.41-2.519 4.114-5.136 4.114A5.59 5.59 0 0 1 8.4 12.925a5.59 5.59 0 0 1 5.591-5.59c1.454 0 2.782.553 3.79 1.455l3.228-3.228C19.043 3.753 16.697 2.7 13.99 2.7 8.362 2.7 3.8 7.263 3.8 12.89s4.562 10.19 10.19 10.19c5.877 0 9.773-4.132 9.773-9.94 0-.67-.06-1.31-.173-1.855H12.24Z"
             />
           </svg>
-          <span className="text-slate-700 dark:text-slate-300 text-sm">Google</span>
+          <span className="text-slate-700 dark:text-slate-300 text-sm">
+            {socialPending === "google" ? "Đang mở..." : "Google"}
+          </span>
         </button>
         <button
           type="button"
           onClick={() => handleSocialLogin("oauth_facebook")}
+          disabled={socialPending !== null}
           className="flex items-center justify-center gap-2.5 py-3 px-4 rounded-2xl border-2 border-slate-200 dark:border-slate-800 hover:bg-slate-50 dark:hover:bg-slate-800/50 hover:border-slate-300 dark:hover:border-slate-700 font-bold transition-all duration-200 active:scale-[0.98] cursor-pointer animate-in fade-in slide-in-from-bottom-2 duration-350 delay-100 ease-out fill-mode-both"
         >
           <svg className="w-5 h-5 fill-[#1877F2] shrink-0" viewBox="0 0 24 24">
             <path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z" />
           </svg>
-          <span className="text-slate-700 dark:text-slate-300 text-sm">Facebook</span>
+          <span className="text-slate-700 dark:text-slate-300 text-sm">
+            {socialPending === "facebook" ? "Đang mở..." : "Facebook"}
+          </span>
         </button>
       </div>
 
@@ -261,7 +293,7 @@ export default function SignInPage() {
       <p className="mt-8 text-center text-base font-bold text-slate-500 dark:text-slate-400">
         Chưa có tài khoản?{" "}
         <Link
-          href="/sign-up"
+          href={error?.includes("chưa tồn tại") ? "/sign-up?from=missing-account" : "/sign-up"}
           className="text-[#1D9BF0] hover:text-[#1486CC] dark:text-sky-400 dark:hover:text-sky-300 font-black transition-colors underline decoration-2 underline-offset-4 ml-1"
         >
           Đăng ký ngay

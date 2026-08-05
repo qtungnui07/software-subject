@@ -1,13 +1,7 @@
 import "server-only";
 
-import {
-  SECTION_ONE_CHECKPOINT_ID,
-  SECTION_ONE_CHECKPOINT_PASS_THRESHOLD,
-  sectionOneCheckpointAssessments,
-  sectionOneCheckpointExercises,
-} from "@/data/exercises/english/section-1/checkpoint";
+import { getLearningNodeById, getSectionForNode } from "@/lib/courses/course-catalog";
 import { canAttemptCheckpoint } from "@/lib/courses/course-unlock-policy";
-import { scoreCheckpointSubmission } from "@/lib/checkpoints/checkpoint-scoring";
 import {
   getCourseProgressForUser,
   recordCheckpointScoreForUser,
@@ -16,6 +10,10 @@ import {
   completeLearningNodeForUser,
   LearningCompletionError,
 } from "@/services/learning-completion-service";
+import {
+  getContentCourse,
+  gradeContentCheckpoint,
+} from "@/services/content-service";
 import type {
   CheckpointSubmission,
   CheckpointSubmissionResult,
@@ -36,14 +34,6 @@ export class CheckpointSubmissionError extends Error {
 }
 
 const validateSubmission = (submission: CheckpointSubmission) => {
-  if (submission.checkpointId !== SECTION_ONE_CHECKPOINT_ID) {
-    throw new CheckpointSubmissionError(
-      "INVALID_CHECKPOINT",
-      "Checkpoint không hợp lệ.",
-      404,
-    );
-  }
-
   if (!Array.isArray(submission.answers)) {
     throw new CheckpointSubmissionError(
       "INVALID_SUBMISSION",
@@ -51,10 +41,6 @@ const validateSubmission = (submission: CheckpointSubmission) => {
       400,
     );
   }
-
-  const knownIds = new Set(
-    sectionOneCheckpointExercises.map((exercise) => exercise.id),
-  );
   const submittedIds = submission.answers.map((entry) => entry.exerciseId);
   const uniqueIds = new Set(submittedIds);
 
@@ -65,31 +51,27 @@ const validateSubmission = (submission: CheckpointSubmission) => {
       400,
     );
   }
-
-  if (submittedIds.some((exerciseId) => !knownIds.has(exerciseId))) {
-    throw new CheckpointSubmissionError(
-      "INVALID_SUBMISSION",
-      "Submission chứa câu hỏi không thuộc checkpoint.",
-      400,
-    );
-  }
 };
 
-const getGateAccuracy = (score: number, passed: boolean) => {
+const getGateAccuracy = (
+  score: number,
+  passed: boolean,
+  passThreshold: number,
+) => {
   if (passed) {
     return Math.max(
-      SECTION_ONE_CHECKPOINT_PASS_THRESHOLD,
+      passThreshold,
       Math.floor(score),
     );
   }
 
   return Math.min(
-    SECTION_ONE_CHECKPOINT_PASS_THRESHOLD - 1,
+    passThreshold - 1,
     Math.floor(score),
   );
 };
 
-export const submitSectionOneCheckpointForUser = async ({
+export const submitCheckpointForUser = async ({
   userId,
   userName,
   userImageSrc,
@@ -101,9 +83,18 @@ export const submitSectionOneCheckpointForUser = async ({
   submission: CheckpointSubmission;
 }): Promise<CheckpointSubmissionResult> => {
   validateSubmission(submission);
+  const course = await getContentCourse("english");
+  const checkpoint = getLearningNodeById(course, submission.checkpointId);
+  if (!checkpoint || checkpoint.type !== "checkpoint") {
+    throw new CheckpointSubmissionError(
+      "INVALID_CHECKPOINT",
+      "Checkpoint không hợp lệ.",
+      404,
+    );
+  }
 
   const progressBefore = await getCourseProgressForUser(userId, "english");
-  if (!canAttemptCheckpoint(progressBefore, SECTION_ONE_CHECKPOINT_ID)) {
+  if (!canAttemptCheckpoint(progressBefore, checkpoint.id, course)) {
     throw new CheckpointSubmissionError(
       "LOCKED_CHECKPOINT",
       "Bạn cần hoàn thành đủ sáu lesson trước khi làm checkpoint.",
@@ -111,20 +102,18 @@ export const submitSectionOneCheckpointForUser = async ({
     );
   }
 
-  const scored = scoreCheckpointSubmission({
-    checkpointId: SECTION_ONE_CHECKPOINT_ID,
-    exercises: sectionOneCheckpointExercises,
-    assessments: sectionOneCheckpointAssessments,
-    answers: submission.answers,
-    passThreshold: SECTION_ONE_CHECKPOINT_PASS_THRESHOLD,
-  });
+  const scored = await gradeContentCheckpoint(submission);
 
   const completion = await completeLearningNodeForUser({
     userId,
     userName,
     userImageSrc,
-    nodeId: SECTION_ONE_CHECKPOINT_ID,
-    accuracy: getGateAccuracy(scored.score, scored.passed),
+    nodeId: checkpoint.id,
+    accuracy: getGateAccuracy(
+      scored.score,
+      scored.passed,
+      scored.passThreshold,
+    ),
     durationSeconds: submission.durationSeconds,
     afkCount: submission.afkCount,
     idempotencyKey: submission.idempotencyKey,
@@ -132,7 +121,7 @@ export const submitSectionOneCheckpointForUser = async ({
 
   const exactScoreMutation = await recordCheckpointScoreForUser(
     userId,
-    SECTION_ONE_CHECKPOINT_ID,
+    checkpoint.id,
     scored.score,
     "english",
   );
@@ -149,10 +138,14 @@ export const submitSectionOneCheckpointForUser = async ({
   }
 
   const progress = exactScoreMutation.progress;
-  const bestScore = progress.checkpointScores[SECTION_ONE_CHECKPOINT_ID] ?? 0;
-  const sectionTwoUnlocked = progress.unlockedSectionIds.includes(
-    "english-section-2",
-  );
+  const bestScore = progress.checkpointScores[checkpoint.id] ?? 0;
+  const section = getSectionForNode(course, checkpoint.id);
+  const nextSection = section
+    ? course.sections.find((candidate) => candidate.order === section.order + 1)
+    : null;
+  const sectionTwoUnlocked = nextSection
+    ? progress.unlockedSectionIds.includes(nextSection.id)
+    : false;
 
   return {
     success: true,
@@ -165,7 +158,7 @@ export const submitSectionOneCheckpointForUser = async ({
       ...completion,
       accuracy: scored.score,
       passed: scored.passed,
-      passThreshold: SECTION_ONE_CHECKPOINT_PASS_THRESHOLD,
+      passThreshold: scored.passThreshold,
       progress,
     },
   };

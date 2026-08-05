@@ -1,8 +1,12 @@
 import { getCourseById, getSectionById } from "@/lib/courses/course-catalog";
 import type { CourseProgressState } from "@/lib/courses/course-progress";
+import type { CourseDefinition } from "@/types/course";
 
-export const getLearningProfileStats = (progress: CourseProgressState) => {
-  const course = getCourseById(progress.courseId);
+export const getLearningProfileStats = (
+  progress: CourseProgressState,
+  contentCourse: CourseDefinition,
+) => {
+  const course = getCourseById(contentCourse, progress.courseId);
   const learningNodes =
     course?.sections.flatMap((section) =>
       section.chapter.nodes.filter((node) => node.type !== "chest"),
@@ -16,7 +20,10 @@ export const getLearningProfileStats = (progress: CourseProgressState) => {
     totalLearningNodes === 0
       ? 0
       : Math.round((completedLearningNodes / totalLearningNodes) * 100);
-  const currentSection = getSectionById(progress.currentSectionId);
+  const currentSection = getSectionById(
+    contentCourse,
+    progress.currentSectionId,
+  );
 
   return {
     completedLearningNodes,

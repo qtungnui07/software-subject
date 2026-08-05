@@ -30,6 +30,7 @@ import { enqueueLearningSyncJobs } from "@/services/learning-sync-recovery-servi
 import { recordLearningStreak } from "@/services/streak-service";
 import { completeLessonXp } from "@/services/xp-service";
 import type { LearningCompletionResult } from "@/types/learning-completion";
+import { getContentCourse } from "@/services/content-service";
 
 export type CompleteLearningNodeInput = {
   userId: string;
@@ -69,8 +70,9 @@ const completeLearningNodeOnce = async (
     );
   }
 
-  const policy = getLearningCompletionPolicy(input.nodeId, accuracy);
-  const node = getLearningNodeById(input.nodeId);
+  const course = await getContentCourse("english");
+  const policy = getLearningCompletionPolicy(input.nodeId, accuracy, course);
+  const node = getLearningNodeById(course, input.nodeId);
   if (!policy || !node || node.type === "chest") {
     throw new LearningCompletionError(
       "INVALID_NODE",

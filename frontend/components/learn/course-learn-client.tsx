@@ -14,26 +14,12 @@ import { StudyTimeCard } from "@/components/study-time-card";
 import { StickyWrapper } from "@/components/sticky-wrapper";
 import { Button } from "@/components/ui/button";
 import { UserProgress } from "@/components/user-progress";
-import { chapterOneDemoScope, chapterOneNodes } from "@/constants/chapter-one";
-import { englishCourse } from "@/data/courses/english-course";
 import type { ProgressLesson, ProgressUnit } from "@/data/progress-data";
-import {
-  getChapterOneNodeStatus,
-  getChapterOneProgress,
-  saveChapterOneProgress,
-  setChapterOneProgressOwner,
-  subscribeChapterOneProgress,
-  type ChapterOneNodeStatus,
-  type ChapterOneProgressState,
-} from "@/lib/chapter-one-progress";
 import { canAccessCourseNode } from "@/lib/courses/course-unlock-policy";
-import {
-  migrateChapterOneProgressToCourseProgress,
-  projectCourseProgressToChapterOne,
-} from "@/lib/courses/chapter-one-adapter";
 import type { CourseProgressState } from "@/lib/courses/course-progress";
 import { getCourseProgressSummary } from "@/lib/progress-utils";
 import type { StudyTimeSummary } from "@/services/study-time-service";
+import type { CourseDefinition } from "@/types/course";
 
 const learnTransitionStorageKey = "robogo-learn-transition";
 const learnPopupSeenStorageKey = "robogo-learn-popup-seen";
@@ -58,53 +44,22 @@ type ActiveCoursePreview = {
 };
 
 type Props = {
+  courseDefinition: CourseDefinition;
   activeCourse: ActiveCoursePreview;
   hearts: number;
   points: number;
   showAuthCard: boolean;
   initialStudyTimeSummary: StudyTimeSummary | null;
   progressOwnerId: string | null;
-  initialLegacyProgressState: ChapterOneProgressState;
   initialCourseProgressState: CourseProgressState;
 };
 
-const getLegacyLessonStatus = (
-  nodeId: string,
-  state: ChapterOneProgressState,
-): ProgressLesson["status"] => {
-  const status: ChapterOneNodeStatus = getChapterOneNodeStatus(nodeId, state);
-  return status === "available" ? "available" : status;
-};
-
-const buildLegacyProgressUnits = (
-  state: ChapterOneProgressState,
-): ProgressUnit[] => [
-  {
-    id: 1,
-    title: `${chapterOneDemoScope.unitTitle}: ${chapterOneDemoScope.chapterTitle}`,
-    description: "Hoàn thành 6 bài học và checkpoint cuối chương.",
-    iconSrc: "/learn.svg",
-    lessons: chapterOneNodes
-      .filter((node) => node.countsTowardProgress)
-      .map((node) => ({
-        id: node.legacyId,
-        title: node.title,
-        description: node.description,
-        type: node.type === "checkpoint" ? "boss" : "lesson",
-        status: getLegacyLessonStatus(node.id, state),
-        href: `/lesson/${node.id}`,
-        objectives: ["Hoàn thành bài học.", "Mở khóa node tiếp theo."],
-        estimatedMinutes: node.type === "checkpoint" ? 12 : 7,
-        xpReward: node.xp,
-      })),
-  },
-];
-
 const buildGenericProgressUnits = (
+  course: CourseDefinition,
   sectionId: string,
   state: CourseProgressState,
 ): ProgressUnit[] => {
-  const section = englishCourse.sections.find((item) => item.id === sectionId);
+  const section = course.sections.find((item) => item.id === sectionId);
   if (!section) return [];
 
   return [
@@ -117,7 +72,8 @@ const buildGenericProgressUnits = (
         .filter((node) => node.countsTowardProgress)
         .map((node) => {
           const completed = state.completedNodeIds.includes(node.id);
-          const current = !completed && canAccessCourseNode(state, node.id);
+          const current =
+            !completed && canAccessCourseNode(state, node.id, course);
           return {
             id: node.order,
             title: node.title,
@@ -135,18 +91,15 @@ const buildGenericProgressUnits = (
 };
 
 export const CourseLearnClient = ({
+  courseDefinition,
   activeCourse,
   hearts,
   showAuthCard,
   initialStudyTimeSummary,
   progressOwnerId,
-  initialLegacyProgressState,
   initialCourseProgressState,
 }: Props) => {
   const shellRef = useRef<HTMLDivElement>(null);
-  const [legacyProgress, setLegacyProgress] = useState<ChapterOneProgressState>(
-    initialLegacyProgressState,
-  );
   const [courseProgress, setCourseProgress] = useState<CourseProgressState>(
     initialCourseProgressState,
   );
@@ -180,14 +133,6 @@ export const CourseLearnClient = ({
   }, []);
 
   useEffect(() => {
-    setChapterOneProgressOwner(progressOwnerId);
-    saveChapterOneProgress(initialLegacyProgressState);
-    const syncProgress = () => setLegacyProgress(getChapterOneProgress());
-    syncProgress();
-    return subscribeChapterOneProgress(syncProgress);
-  }, [initialLegacyProgressState, progressOwnerId]);
-
-  useEffect(() => {
     if (!progressOwnerId) return;
 
     let isMounted = true;
@@ -208,11 +153,6 @@ export const CourseLearnClient = ({
         if (!isMounted || !data.progress) return;
 
         setCourseProgress(data.progress);
-        const nextLegacyProgress = projectCourseProgressToChapterOne(
-          data.progress,
-        );
-        saveChapterOneProgress(nextLegacyProgress);
-        setLegacyProgress(nextLegacyProgress);
       } catch (error) {
         console.warn("Could not refresh course progress:", error);
       }
@@ -226,25 +166,18 @@ export const CourseLearnClient = ({
   }, [progressOwnerId]);
 
   const selectedSection =
-    englishCourse.sections.find(
+    courseDefinition.sections.find(
       (section) => section.id === courseProgress.currentSectionId,
-    ) ?? englishCourse.sections[0];
-  const selectedRoadmapProgress = useMemo(
-    () =>
-      selectedSection.id === "english-section-1"
-        ? migrateChapterOneProgressToCourseProgress(
-            legacyProgress,
-            courseProgress,
-          )
-        : courseProgress,
-    [courseProgress, legacyProgress, selectedSection.id],
-  );
+    ) ?? courseDefinition.sections[0];
+  const selectedRoadmapProgress = courseProgress;
   const progressUnits = useMemo(
     () =>
-      selectedSection.id === "english-section-1"
-        ? buildLegacyProgressUnits(legacyProgress)
-        : buildGenericProgressUnits(selectedSection.id, courseProgress),
-    [courseProgress, legacyProgress, selectedSection.id],
+      buildGenericProgressUnits(
+        courseDefinition,
+        selectedSection.id,
+        courseProgress,
+      ),
+    [courseDefinition, courseProgress, selectedSection.id],
   );
   const progressSummary = useMemo(
     () => getCourseProgressSummary(progressUnits),
@@ -270,9 +203,6 @@ export const CourseLearnClient = ({
     }
 
     setCourseProgress(data.progress);
-    const nextLegacyProgress = projectCourseProgressToChapterOne(data.progress);
-    saveChapterOneProgress(nextLegacyProgress);
-    setLegacyProgress(nextLegacyProgress);
   };
 
   return (
@@ -284,7 +214,7 @@ export const CourseLearnClient = ({
         <section className="rounded-[28px] border-2 border-sky-100 bg-white shadow-sm dark:border-[#202f36] dark:bg-[#182226]">
           <div className="sticky top-[56px] z-40 rounded-t-[26px] bg-white/95 px-4 pb-4 pt-4 backdrop-blur dark:bg-[#182226]/95 sm:px-6 lg:top-0 lg:pt-6">
             <Header
-              courseTitle={chapterOneDemoScope.courseTitle}
+              courseTitle={courseDefinition.title}
               sectionLabel={selectedSection.title}
               chapterTitle={selectedSection.chapter.title}
             />
@@ -302,6 +232,7 @@ export const CourseLearnClient = ({
           </div>
           <div className="px-4 pb-7 pt-2 sm:px-6 sm:pb-9">
             <SectionLearningPath
+              course={courseDefinition}
               section={selectedSection}
               progress={selectedRoadmapProgress}
               todayMinutes={todayMinutes}

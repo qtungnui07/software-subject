@@ -26,7 +26,7 @@ export const ArrangeDialogueExerciseView = ({
 }: Props) => {
   const selectedIds = answer?.lineIds ?? [];
   const selectedSet = new Set(selectedIds);
-  const requiredCount = exercise.correctOrder.length;
+  const requiredCount = exercise.lines.length;
   const availableLines = exercise.lines.filter((line) => !selectedSet.has(line.id));
 
   const updateOrder = (lineIds: string[]) => {
@@ -83,7 +83,9 @@ export const ArrangeDialogueExerciseView = ({
             selectedIds.map((lineId, index) => {
               const line = exercise.lines.find((item) => item.id === lineId);
               if (!line) return null;
-              const isCorrectPosition = Boolean(result && exercise.correctOrder[index] === lineId);
+              const isCorrectPosition = Boolean(
+                result && exercise.correctOrder?.[index] === lineId,
+              );
               const isWrongPosition = Boolean(result && !isCorrectPosition);
 
               return (

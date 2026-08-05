@@ -7,9 +7,9 @@ import db from "@/db/drizzle";
 import { placementTestResults } from "@/db/schema";
 import { PlacementMemoryResultStore } from "@/lib/placement-test/placement-result-store";
 import { getHigherPlacementSection } from "@/lib/placement-test/placement-scoring";
-import { gradePlacementSubmission } from "@/lib/placement-test/placement-submission";
 import { applyPlacementUnlockForUser } from "@/services/course-progress-service";
 import { completePlacementOnboardingForUser } from "@/services/onboarding-service";
+import { gradeContentPlacementTest } from "@/services/content-service";
 import type {
   PlacementScoredAnswer,
   PlacementSectionId,
@@ -139,7 +139,7 @@ export const submitPlacementTestForUser = async (
   userId: string,
   submission: PlacementTestSubmission
 ) => {
-  const score = gradePlacementSubmission(submission);
+  const score = await gradeContentPlacementTest(submission);
   const completedAt = new Date().toISOString();
 
   if (!process.env.DATABASE_URL) {

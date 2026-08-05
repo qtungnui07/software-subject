@@ -6,7 +6,6 @@ import {
   useEffect,
   useRef,
   useState,
-  useSyncExternalStore,
   type ReactNode,
 } from "react";
 import {
@@ -28,7 +27,6 @@ import {
 } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
-import { type QuestSnapshotPresetName } from "@/constants/quests";
 import {
   getChestProgressText,
   getChestStatusLabel,
@@ -42,12 +40,7 @@ import {
 import {
   applyQuestClaimResultToPageData,
   claimQuestReward,
-  clearQuestStorage,
-  getQuestServerSnapshot,
-  getQuestStorageSnapshot,
-  getQuestsPageDataFromSnapshotSync,
-  subscribeToQuestStorage,
-} from "@/lib/quests";
+} from "@/lib/quests/quest-claim-state";
 import {
   getQuestResetCountdown,
   QUEST_COUNTDOWN_PLACEHOLDER,
@@ -55,7 +48,6 @@ import {
 } from "@/lib/quests/quest-time";
 import { cn } from "@/lib/utils";
 import type {
-  QuestDemoState,
   QuestMetric,
   QuestsPageData,
   QuestStatus,
@@ -65,8 +57,6 @@ import type {
 
 type QuestsClientProps = {
   initialData: QuestsPageData;
-  demoState?: QuestDemoState;
-  presetName?: QuestSnapshotPresetName;
 };
 
 type ToastState = {
@@ -207,9 +197,6 @@ const robotMoodView: Record<RobotMood, { mascot: React.ReactNode; title: string;
     tone: "border-emerald-200 bg-emerald-50 dark:border-emerald-900/60 dark:bg-emerald-950/40",
   },
 };
-
-const SHOW_QUEST_DEMO_CONTROLS =
-  process.env.NEXT_PUBLIC_SHOW_QUEST_DEBUG === "true";
 
 const useQuestResetCountdown = (nextResetAt: string) => {
   const router = useRouter();
@@ -848,13 +835,9 @@ const DailyCompletionDots = ({ completed, total }: { completed: number; total: n
 
 const QuestsHero = ({
   data,
-  onResetDemo,
-  presetName,
   resetCountdown,
 }: {
   data: QuestsPageData;
-  onResetDemo: () => void;
-  presetName: QuestSnapshotPresetName;
   resetCountdown: string;
 }) => {
   const remaining = Math.max(data.summary.dailyTotal - data.summary.dailyCompleted, 0);
@@ -911,40 +894,6 @@ const QuestsHero = ({
             <HeroStat label="XP hôm nay" value={`${data.summary.todayXp} XP`} icon={<Zap className="size-4" strokeWidth={3} />} />
             <HeroStat label="Làm mới sau" value={resetCountdown} icon={<Clock className="size-4" strokeWidth={3} />} />
           </div>
-          {SHOW_QUEST_DEMO_CONTROLS ? (
-
-          <details className="mt-4 rounded-2xl border border-white/80 bg-white/90 px-3 py-2 text-xs font-black uppercase tracking-[0.12em] text-slate-500 dark:border-[#20313a] dark:bg-[#10191d]/90">
-            <summary className="cursor-pointer select-none text-[#1486CC] dark:text-sky-300">Chế độ test</summary>
-            <div className="mt-3 flex flex-wrap items-center gap-2">
-              <button type="button" className="inline-flex items-center gap-1.5 rounded-full border border-slate-200 bg-white/80 px-3 py-1.5 text-slate-500 transition-colors hover:text-[#1486CC] dark:border-[#20313a] dark:bg-[#10191d]/70" onClick={onResetDemo}>
-                <RotateCcw className="size-3.5" strokeWidth={3} />
-                Xóa trạng thái thử
-              </button>
-              <Link className="rounded-full border border-slate-200 bg-white/80 px-3 py-1.5 text-slate-500 transition-colors hover:text-[#1486CC] dark:border-[#20313a] dark:bg-[#10191d]/70" href="/quests?state=loading">
-                Đang tải
-              </Link>
-              <Link className="rounded-full border border-slate-200 bg-white/80 px-3 py-1.5 text-slate-500 transition-colors hover:text-[#1486CC] dark:border-[#20313a] dark:bg-[#10191d]/70" href="/quests?state=empty">
-                Trống
-              </Link>
-              <Link className="rounded-full border border-slate-200 bg-white/80 px-3 py-1.5 text-slate-500 transition-colors hover:text-[#1486CC] dark:border-[#20313a] dark:bg-[#10191d]/70" href="/quests?state=error">
-                Lỗi
-              </Link>
-              <span className="hidden text-slate-300 sm:inline">|</span>
-              {(["empty", "oneQuestDone", "almostPerfect", "perfectDay"] as const).map((preset) => (
-                <Link
-                  key={preset}
-                  className={cn(
-                    "rounded-full border border-slate-200 bg-white/80 px-3 py-1.5 text-slate-500 transition-colors hover:text-[#1486CC] dark:border-[#20313a] dark:bg-[#10191d]/70",
-                    presetName === preset ? "border-[#1486CC] text-[#1486CC] dark:border-sky-400 dark:text-sky-300" : null,
-                  )}
-                  href={`/quests?preset=${preset}`}
-                >
-                  {preset === "empty" ? "0/3" : preset === "oneQuestDone" ? "1/3" : preset === "almostPerfect" ? "2/3" : "3/3"}
-                </Link>
-              ))}
-            </div>
-          </details>
-          ) : null}
         </div>
 
         <div className={cn("rounded-[28px] border-2 p-4 text-center shadow-[0_16px_34px_rgba(20,134,204,0.11)] transition-transform duration-300 hover:-translate-y-1 dark:shadow-none", mood.tone)}>
@@ -1456,7 +1405,7 @@ const QuestsErrorState = () => {
   );
 };
 
-export const QuestsClient = ({ initialData, demoState = "normal", presetName = "empty" }: QuestsClientProps) => {
+export const QuestsClient = ({ initialData }: QuestsClientProps) => {
   const [localQuestData, setLocalQuestData] = useState<{
     source: QuestsPageData;
     value: QuestsPageData;
@@ -1467,21 +1416,9 @@ export const QuestsClient = ({ initialData, demoState = "normal", presetName = "
     ? localQuestData.value
     : initialData;
   const resetCountdown = useQuestResetCountdown(questData.nextResetAt);
-  const storageSnapshot = useSyncExternalStore(
-    subscribeToQuestStorage,
-    getQuestStorageSnapshot,
-    getQuestServerSnapshot,
-  );
   const [toast, setToast] = useState<ToastState | null>(null);
 
-  const data = storageSnapshot === getQuestServerSnapshot()
-    ? questData
-    : getQuestsPageDataFromSnapshotSync(questData.snapshot, {
-        dataSource: questData.dataSource,
-        syncStatus: questData.syncStatus,
-        weekActivity: questData.summary.weekActivity,
-        nextResetAt: questData.nextResetAt,
-      });
+  const data = questData;
   const perfectDayQuest = data.bonusQuests.find((quest) => quest.type === "perfect-day");
   const longTermQuests = data.bonusQuests.filter((quest) => quest.type !== "perfect-day");
 
@@ -1528,19 +1465,6 @@ export const QuestsClient = ({ initialData, demoState = "normal", presetName = "
     }
   };
 
-  const handleResetDemo = () => {
-    clearQuestStorage();
-    showToast({
-      title: "Đã xóa trạng thái thử",
-      description: "Trạng thái nhận thưởng tạm thời đã được làm mới.",
-      tone: "info",
-    });
-  };
-
-  if (demoState === "loading") return <QuestsLoadingState />;
-  if (demoState === "empty") return <QuestsEmptyState />;
-  if (demoState === "error") return <QuestsErrorState />;
-
   return (
     <div className="mx-auto w-full max-w-[1320px] px-3 pb-10 sm:px-4 xl:px-0 xl:pb-14">
       <QuestPolishStyles />
@@ -1548,8 +1472,6 @@ export const QuestsClient = ({ initialData, demoState = "normal", presetName = "
         <div className="space-y-3.5 sm:space-y-4">
           <QuestsHero
             data={data}
-            onResetDemo={handleResetDemo}
-            presetName={presetName}
             resetCountdown={resetCountdown}
           />
           <QuestMobileOverview data={data} />

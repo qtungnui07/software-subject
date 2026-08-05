@@ -20,11 +20,6 @@ import {
 } from "@/components/lesson-study-timer";
 import { LessonResultScreen } from "@/components/lesson-result-screen";
 import { Button } from "@/components/ui/button";
-import { lessonNodes } from "@/constants/lessons";
-import {
-  saveChapterOneProgress,
-  setChapterOneProgressOwner,
-} from "@/lib/chapter-one-progress";
 import { StreakNotification } from "@/components/streak/streak-notification";
 import type { StreakNotificationInput } from "@/components/streak/streak-data";
 import { STREAK_UPDATED_EVENT } from "@/components/streak/use-streak";
@@ -34,10 +29,8 @@ import { SessionSaveStatus } from "@/components/lesson/session-save-status";
 import { SilentModeToggle } from "@/components/lesson/silent-mode-toggle";
 import { ExerciseRenderer } from "@/components/lesson/exercise-renderer";
 import {
-  checkExerciseAnswer,
   isExerciseAnswerComplete,
 } from "@/lib/exercises/check-exercise-answer";
-import { getExercisesForLesson } from "@/lib/exercises/exercise-catalog";
 import {
   canRetryExerciseAttempt,
   recordExerciseAttempt,
@@ -53,9 +46,13 @@ import { createExerciseCatalogFingerprint } from "@/lib/learning-session/draft-f
 import { getLearningSessionDraftKey } from "@/lib/learning-session/draft-storage";
 import { validateLearningSessionDraft } from "@/lib/learning-session/draft-validator";
 import { getCourseNodeAccess } from "@/lib/courses/course-access";
-import { projectCourseProgressToChapterOne } from "@/lib/courses/chapter-one-adapter";
 import type { CourseProgressState } from "@/lib/courses/course-progress";
-import type { ExerciseAnswer, ExerciseCheckResult } from "@/types/exercise";
+import type { CourseDefinition } from "@/types/course";
+import type {
+  Exercise,
+  ExerciseAnswer,
+  ExerciseCheckResult,
+} from "@/types/exercise";
 import type { ExerciseAttemptResult } from "@/types/lesson-session";
 import type { LearningCompletionResult } from "@/types/learning-completion";
 import type {
@@ -65,6 +62,7 @@ import type {
 
 const LESSON_PASS_THRESHOLD = 60;
 const CHECKPOINT_PASS_THRESHOLD = 70;
+const EMPTY_EXERCISES: Exercise[] = [];
 
 type ResolvedLessonNode = {
   nodeId: string;
@@ -92,30 +90,18 @@ const LessonContent = () => {
   const router = useRouter();
   const searchParams = useSearchParams();
   const rawLessonId = searchParams.get("id") || "lesson-1";
-  const legacyLessonId = Number.parseInt(rawLessonId, 10);
-
-  // Resolve both the legacy Chapter 1 nodes and the new Section 2-3 nodes.
-  // Numeric ids remain supported for old links, while unknown ids no longer
-  // silently open lesson-1.
-  const legacyRequestedNode =
-    lessonNodes.find((node) => node.nodeId === rawLessonId) ||
-    lessonNodes.find((node) => node.id === legacyLessonId);
-  const catalogRequestedNode = getLearningNodeById(rawLessonId);
-  const requestedNode: ResolvedLessonNode | undefined = legacyRequestedNode
+  const [course, setCourse] = useState<CourseDefinition | null>(null);
+  const catalogRequestedNode = course
+    ? getLearningNodeById(course, rawLessonId)
+    : undefined;
+  const requestedNode: ResolvedLessonNode | undefined = catalogRequestedNode
     ? {
-        nodeId: legacyRequestedNode.nodeId,
-        type: legacyRequestedNode.type,
-        title: legacyRequestedNode.title,
-        xp: legacyRequestedNode.xp,
+        nodeId: catalogRequestedNode.id,
+        type: catalogRequestedNode.type,
+        title: catalogRequestedNode.title,
+        xp: catalogRequestedNode.xp,
       }
-    : catalogRequestedNode
-      ? {
-          nodeId: catalogRequestedNode.id,
-          type: catalogRequestedNode.type,
-          title: catalogRequestedNode.title,
-          xp: catalogRequestedNode.xp,
-        }
-      : undefined;
+    : undefined;
   const shouldRedirectToLearn = requestedNode?.type === "chest";
   const checkpointRedirectId =
     requestedNode?.type === "checkpoint" ? requestedNode.nodeId : null;
@@ -129,9 +115,27 @@ const LessonContent = () => {
         title: "Bài học không tồn tại",
         xp: 0,
       };
-  const isChapterOneNode = lessonNodes.some(
-    (node) => node.nodeId === lessonNode.nodeId,
-  );
+
+  useEffect(() => {
+    let cancelled = false;
+    void fetch("/api/content/courses/english", { cache: "no-store" })
+      .then(async (response) => {
+        if (!response.ok) {
+          throw new Error(`Course content request failed: ${response.status}`);
+        }
+        return response.json() as Promise<{ course: CourseDefinition }>;
+      })
+      .then((payload) => {
+        if (!cancelled) setCourse(payload.course);
+      })
+      .catch((error) => {
+        console.warn("Could not load course content from backend:", error);
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   useEffect(() => {
     if (shouldRedirectToLearn) {
@@ -181,6 +185,14 @@ const LessonContent = () => {
   const [reviewResults, setReviewResults] = useState<
     Record<string, { exerciseId: string; recovered: boolean }>
   >({});
+  const [exerciseContent, setExerciseContent] = useState<{
+    nodeId: string;
+    exercises: Exercise[];
+  } | null>(null);
+  const exercises =
+    exerciseContent?.nodeId === lessonNode.nodeId
+      ? exerciseContent.exercises
+      : EMPTY_EXERCISES;
 
   // XP + Streak states
   const [xpResult, setXpResult] = useState<
@@ -205,10 +217,34 @@ const LessonContent = () => {
   const studyDurationSecondsRef = useRef(0);
   const studyTimerRef = useRef<LessonStudyTimerHandle | null>(null);
 
-  const exercises = useMemo(
-    () => getExercisesForLesson(lessonNode.nodeId),
-    [lessonNode.nodeId],
-  );
+  useEffect(() => {
+    let cancelled = false;
+
+    const loadExercises = async () => {
+      const response = await fetch(
+        `/api/content/nodes/${encodeURIComponent(lessonNode.nodeId)}/exercises`,
+        { cache: "no-store" },
+      );
+      if (!response.ok) {
+        throw new Error(`Exercise content request failed: ${response.status}`);
+      }
+      const payload = (await response.json()) as { exercises: Exercise[] };
+      if (!cancelled) {
+        setExerciseContent({
+          nodeId: lessonNode.nodeId,
+          exercises: payload.exercises,
+        });
+      }
+    };
+
+    void loadExercises().catch((error) => {
+      console.warn("Could not load lesson content from backend:", error);
+    });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [lessonNode.nodeId]);
   const catalogFingerprint = useMemo(
     () => createExerciseCatalogFingerprint(exercises),
     [exercises],
@@ -415,6 +451,7 @@ const LessonContent = () => {
     let isMounted = true;
 
     const resolveAccess = async () => {
+      if (!course) return;
       if (
         !hasKnownLessonNode ||
         shouldRedirectToLearn ||
@@ -434,7 +471,6 @@ const LessonContent = () => {
         });
 
         if (response.status === 401) {
-          setChapterOneProgressOwner(null);
           if (isMounted) {
             setAccessState("redirecting");
             const redirectTarget = `/lesson?id=${encodeURIComponent(rawLessonId)}`;
@@ -450,13 +486,13 @@ const LessonContent = () => {
         }
 
         const data = (await response.json()) as CourseProgressApiResult;
-        const access = getCourseNodeAccess(data.progress, lessonNode.nodeId);
-
-        setChapterOneProgressOwner(data.user.id);
-        setCurrentUserId(data.user.id);
-        saveChapterOneProgress(
-          projectCourseProgressToChapterOne(data.progress),
+        const access = getCourseNodeAccess(
+          data.progress,
+          lessonNode.nodeId,
+          course,
         );
+
+        setCurrentUserId(data.user.id);
 
         if (!access.allowed) {
           if (isMounted) {
@@ -487,6 +523,7 @@ const LessonContent = () => {
       isMounted = false;
     };
   }, [
+    course,
     hasKnownLessonNode,
     lessonNode.nodeId,
     rawLessonId,
@@ -551,12 +588,6 @@ const LessonContent = () => {
         const completion = (await response.json()) as LearningCompletionResult;
         if (isCancelled) return;
         clearLessonDraft();
-
-        if (isChapterOneNode) {
-          saveChapterOneProgress(
-            projectCourseProgressToChapterOne(completion.progress),
-          );
-        }
 
         setXpResult(completion.xp);
 
@@ -630,7 +661,6 @@ const LessonContent = () => {
     accuracy,
     afkCount,
     clearLessonDraft,
-    isChapterOneNode,
     isCheckpoint,
     isFinished,
     isProgressReady,
@@ -639,11 +669,40 @@ const LessonContent = () => {
 
   // Check every exercise through the shared pure checker. XP/progress are still
   // handled only after the whole lesson is finished and passed.
-  const onCheck = useCallback(() => {
+  const onCheck = useCallback(async () => {
     if (!currentExercise || !exerciseAnswer || !answerComplete || isAnswered)
       return;
 
-    const result = checkExerciseAnswer(currentExercise, exerciseAnswer);
+    const response = await fetch(
+      `/api/content/exercises/${encodeURIComponent(currentExercise.id)}/check`,
+      {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ answer: exerciseAnswer }),
+      },
+    );
+    if (!response.ok) {
+      console.warn(`Exercise grading request failed: ${response.status}`);
+      return;
+    }
+    const payload = (await response.json()) as {
+      result: ExerciseCheckResult & { reveal?: Partial<Exercise> };
+    };
+    const { reveal, ...result } = payload.result;
+    if (reveal) {
+      setExerciseContent((currentContent) =>
+        currentContent?.nodeId === lessonNode.nodeId
+          ? {
+              ...currentContent,
+              exercises: currentContent.exercises.map((exercise) =>
+                exercise.id === currentExercise.id
+                  ? ({ ...exercise, ...reveal } as Exercise)
+                  : exercise,
+              ),
+            }
+          : currentContent,
+      );
+    }
     setCheckResult(result);
 
     if (!usesSectionOneV2Session) {
@@ -694,6 +753,7 @@ const LessonContent = () => {
     exerciseAnswer,
     isAnswered,
     isReviewMode,
+    lessonNode.nodeId,
     usesSectionOneV2Session,
   ]);
 

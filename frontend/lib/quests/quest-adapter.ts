@@ -11,7 +11,6 @@ import {
 import type {
   QuestDataSource,
   QuestSyncStatus,
-  QuestClaimResponse,
   QuestsPageData,
   UserQuestSnapshot,
   WeekActivityDay,
@@ -133,25 +132,4 @@ export const getQuestsPageData = async (
   presetName: QuestSnapshotPresetName = defaultQuestSnapshotPreset,
 ): Promise<QuestsPageData> => {
   return getQuestsPageDataSync(presetName);
-};
-
-export const claimQuestReward = async (questId: string): Promise<QuestClaimResponse> => {
-  const response = await fetch("/api/quests/claim", {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify({ questId }),
-  });
-
-  if (!response.ok) {
-    const payload = await response.json().catch(() => null);
-    throw new Error(payload?.error || "Không thể nhận thưởng nhiệm vụ.");
-  }
-
-  const result = (await response.json()) as QuestClaimResponse;
-
-  notifyQuestStorageChange();
-
-  return result;
 };

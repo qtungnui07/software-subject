@@ -2,16 +2,13 @@ import { notFound, redirect } from "next/navigation";
 
 import { auth } from "@/auth";
 import { CheckpointClient } from "@/components/checkpoint/checkpoint-client";
-import {
-  SECTION_ONE_CHECKPOINT_ESTIMATED_MINUTES,
-  SECTION_ONE_CHECKPOINT_ID,
-  SECTION_ONE_CHECKPOINT_PASS_THRESHOLD,
-  sectionOneCheckpointExercises,
-} from "@/data/exercises/english/section-1/checkpoint";
-import { toPublicCheckpointExercises } from "@/lib/checkpoints/checkpoint-public";
 import { getLearningNodeById } from "@/lib/courses/course-catalog";
 import { canAttemptCheckpoint } from "@/lib/courses/course-unlock-policy";
 import { getCourseProgressForUser } from "@/services/course-progress-service";
+import {
+  getContentCheckpoint,
+  getContentCourse,
+} from "@/services/content-service";
 import type { CheckpointPageData } from "@/types/checkpoint";
 
 export const dynamic = "force-dynamic";
@@ -22,7 +19,11 @@ type Props = {
 
 export default async function CheckpointPage({ params }: Props) {
   const { checkpointId } = await params;
-  if (checkpointId !== SECTION_ONE_CHECKPOINT_ID) notFound();
+  const [course, checkpointContent] = await Promise.all([
+    getContentCourse("english"),
+    getContentCheckpoint(checkpointId).catch(() => null),
+  ]);
+  if (!checkpointContent) notFound();
 
   const session = await auth();
   const userId = session?.user?.id;
@@ -32,25 +33,34 @@ export default async function CheckpointPage({ params }: Props) {
     );
   }
 
-  const node = getLearningNodeById(checkpointId);
+  const node = getLearningNodeById(course, checkpointId);
   if (!node || node.type !== "checkpoint") notFound();
 
   const progress = await getCourseProgressForUser(userId, "english");
-  if (!canAttemptCheckpoint(progress, checkpointId)) {
+  if (!canAttemptCheckpoint(progress, checkpointId, course)) {
     redirect("/learn?checkpoint=locked");
   }
 
+  const checkpointSection = course.sections.find((section) =>
+    section.chapter.nodes.some((candidate) => candidate.id === checkpointId),
+  );
+  const nextSection = checkpointSection
+    ? course.sections.find(
+        (section) => section.order === checkpointSection.order + 1,
+      )
+    : null;
+
   const data: CheckpointPageData = {
     checkpointId,
-    title: node.title,
-    description: node.description,
-    passThreshold: SECTION_ONE_CHECKPOINT_PASS_THRESHOLD,
-    estimatedMinutes: SECTION_ONE_CHECKPOINT_ESTIMATED_MINUTES,
-    exercises: toPublicCheckpointExercises(sectionOneCheckpointExercises),
+    title: checkpointContent.title,
+    description: checkpointContent.description,
+    passThreshold: checkpointContent.passThreshold,
+    estimatedMinutes: checkpointContent.estimatedMinutes,
+    exercises: checkpointContent.exercises,
     bestScore: progress.checkpointScores[checkpointId] ?? null,
-    sectionTwoUnlocked: progress.unlockedSectionIds.includes(
-      "english-section-2",
-    ),
+    sectionTwoUnlocked: nextSection
+      ? progress.unlockedSectionIds.includes(nextSection.id)
+      : false,
     userId,
   };
 

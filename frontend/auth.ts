@@ -7,6 +7,7 @@ import { syncClerkUser } from "@/services/auth-service";
 import { getValidLocalSessionUser } from "@/services/local-session-service";
 import { getRemoteApiUrl } from "@/lib/remote-api";
 import { resolveUserAvatar } from "@/constants/user-avatar";
+import { getProfile } from "@/services/profile-service";
 
 const syncUserToDatabase = async (user: NonNullable<Awaited<ReturnType<typeof currentUser>>>) => {
   const email = user.emailAddresses[0]?.emailAddress;
@@ -20,6 +21,7 @@ const syncUserToDatabase = async (user: NonNullable<Awaited<ReturnType<typeof cu
     name,
     email,
     imageSrc: resolveUserAvatar(user.imageUrl),
+    createIfMissing: false,
   });
 
   if (!result.ok) {
@@ -59,6 +61,23 @@ export const auth = cache(async () => {
     const { userId } = await clerkAuth();
     if (!userId) return null;
 
+    // Clerk verifies the session, while PostgreSQL remains the fast source of
+    // truth for users that have already been synchronized. This avoids a
+    // Clerk API round-trip and a database update on every protected request.
+    const persistedProfile = await getProfile(userId).catch(() => null);
+    if (persistedProfile?.ok) {
+      return {
+        user: {
+          id: userId,
+          name: persistedProfile.data.profile.name,
+          email: persistedProfile.data.profile.email,
+          image: resolveUserAvatar(persistedProfile.data.profile.imageSrc),
+        },
+      };
+    }
+
+    // Link an existing email account to Clerk, but never create a database
+    // account from a sign-in request. Account creation belongs to sign-up.
     const user = await currentUser();
     if (user) {
       try {

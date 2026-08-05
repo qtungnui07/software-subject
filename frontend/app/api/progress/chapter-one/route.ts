@@ -5,11 +5,12 @@ import {
   migrateChapterOneProgressToCourseProgress,
   projectCourseProgressToChapterOne,
 } from "@/lib/courses/chapter-one-adapter";
-import { normalizeChapterOneProgressState } from "@/lib/chapter-one-progress";
 import {
   getCourseProgressForUser,
   saveCourseProgressForUser,
 } from "@/services/course-progress-service";
+import { getContentCourse } from "@/services/content-service";
+import type { ChapterOneProgressState } from "@/lib/chapter-one-progress";
 
 export const dynamic = "force-dynamic";
 
@@ -20,8 +21,11 @@ export async function GET() {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  const courseProgress = await getCourseProgressForUser(session.user.id);
-  const progress = projectCourseProgressToChapterOne(courseProgress);
+  const [courseProgress, course] = await Promise.all([
+    getCourseProgressForUser(session.user.id),
+    getContentCourse("english"),
+  ]);
+  const progress = projectCourseProgressToChapterOne(courseProgress, course);
 
   return NextResponse.json({
     success: true,
@@ -38,23 +42,23 @@ export async function PATCH(request: Request) {
   }
 
   const body = await request.json().catch(() => ({}));
-  const legacyProgress = normalizeChapterOneProgressState(
-    body?.progress ?? body
-  );
-  const existingCourseProgress = await getCourseProgressForUser(
-    session.user.id
-  );
+  const legacyProgress = (body?.progress ?? body) as Partial<ChapterOneProgressState>;
+  const [existingCourseProgress, course] = await Promise.all([
+    getCourseProgressForUser(session.user.id),
+    getContentCourse("english"),
+  ]);
   const courseProgress = await saveCourseProgressForUser(
     session.user.id,
     migrateChapterOneProgressToCourseProgress(
       legacyProgress,
-      existingCourseProgress
+      course,
+      existingCourseProgress,
     )
   );
 
   return NextResponse.json({
     success: true,
-    progress: projectCourseProgressToChapterOne(courseProgress),
+    progress: projectCourseProgressToChapterOne(courseProgress, course),
     courseProgress,
   });
 }
